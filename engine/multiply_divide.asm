@@ -139,5 +139,5 @@ _Divide: ; 37da5 (d:7da5)
 	ld a, [H_DIVIDEBUFFER+2]
 	ld [H_QUOTIENT+1], a ; (aliases: H_MULTIPLICAND)
 	ld a, [H_DIVIDEBUFFER+1]
-	ld [H_DIVIDEND], a ; (aliases: H_PRODUCT, H_PASTLEADINGZEROES, H_QUOTIENT)
+	ld [H_QUOTIENT], a ; (aliases: H_PRODUCT, H_PASTLEADINGZEROES, H_QUOTIENT)
 	ret
