@@ -36,11 +36,11 @@ BluesHouseText1: ; 19b5d (6:5b5d)
 .GiveMap
 	ld hl,DaisyOfferMapText
 	call PrintText
-	ld bc,(TOWN_MAP << 8) | 1
+	lb bc, TOWN_MAP, 1
 	call GiveItem
 	jr nc, .BagFull
 	ld a,HS_TOWN_MAP
-	ld [wcc4d],a
+	ld [wMissableObjectIndex],a
 	predef HideObject ; hide table map object
 	ld hl,GotMapText
 	call PrintText

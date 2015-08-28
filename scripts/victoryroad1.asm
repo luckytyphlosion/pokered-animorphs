@@ -14,8 +14,8 @@ VictoryRoad1Script: ; 5da0a (17:5a0a)
 	CheckEvent EVENT_VICTORY_ROAD_1_BOULDER_ON_SWITCH
 	ret z
 	ld a, $1d
-	ld [wd09f], a
-	ld bc, $604
+	ld [wNewTileBlockID], a
+	lb bc, 6, 4
 	predef_jump ReplaceTileBlock
 
 VictoryRoad1ScriptPointers: ; 5da3a (17:5a3a)

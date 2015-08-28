@@ -26,8 +26,8 @@ RocketHideout4Script_45473: ; 45473 (11:5473)
 .asm_45496
 	ld a, $e
 .asm_45498
-	ld [wd09f], a
-	ld bc, $050c
+	ld [wNewTileBlockID], a
+	lb bc, 5, 12
 	predef_jump ReplaceTileBlock
 
 RocketHideout4Script_454a3: ; 454a3 (11:54a3)
@@ -56,10 +56,10 @@ RocketHideout4Script3: ; 454b6 (11:54b6)
 	call DisplayTextID
 	call GBFadeOutToBlack
 	ld a, HS_ROCKET_HIDEOUT_4_GIOVANNI
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	ld a, HS_ROCKET_HIDEOUT_4_ITEM_4
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef ShowObject
 	call UpdateSprites
 	call GBFadeInFromBlack
@@ -211,7 +211,7 @@ RocketHideout4AfterBattleText4: ; 455cf (11:55cf)
 	CheckAndSetEvent EVENT_ROCKET_DROPPED_LIFT_KEY
 	jr nz, .asm_455e9
 	ld a, HS_ROCKET_HIDEOUT_4_ITEM_5
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef ShowObject
 .asm_455e9
 	jp TextScriptEnd

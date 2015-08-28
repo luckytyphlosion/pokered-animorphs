@@ -23,7 +23,7 @@ PokemonTower2Script0: ; 6050f (18:450f)
 	call ArePlayerCoordsInArray
 	ret nc
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	ld c, BANK(Music_MeetRival)
 	ld a, MUSIC_MEET_RIVAL
@@ -77,7 +77,7 @@ PokemonTower2Script1: ; 60563 (18:4563)
 	ld [H_SPRITEINDEX], a
 	call MoveSprite
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateStart
 	ld a, $2
@@ -112,7 +112,7 @@ PokemonTower2Script2: ; 605bb (18:45bb)
 	bit 0, a
 	ret nz
 	ld a, HS_POKEMONTOWER_2_RIVAL
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	xor a
 	ld [wJoyIgnore], a
@@ -142,7 +142,7 @@ PokemonTower2Text1: ; 605df (18:45df)
 	ld hl, PokemonTower2Text_60632
 	ld de, PokemonTower2Text_60637
 	call SaveEndBattleTextPointers
-	ld a, SONY2 + $c8
+	ld a, OPP_SONY2
 	ld [W_CUROPPONENT], a
 
 	; select which team to use during the encounter

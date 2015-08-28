@@ -13,27 +13,29 @@ SilphCo4Script_19d21: ; 19d21 (6:5d21)
 	bit 5, [hl]
 	res 5, [hl]
 	ret z
-	ld hl, SilphCo4Data19d58
+	ld hl, SilphCo4GateCoords
 	call SilphCo4Script_19d5d
 	call SilphCo4Script_19d89
 	CheckEvent EVENT_SILPH_CO_4_UNLOCKED_DOOR1
 	jr nz, .asm_19d48
 	push af
 	ld a, $54
-	ld [wd09f], a
-	ld bc, $0602
+	ld [wNewTileBlockID], a
+	lb bc, 6, 2
 	predef ReplaceTileBlock
 	pop af
 .asm_19d48
 	CheckEventAfterBranchReuseA EVENT_SILPH_CO_4_UNLOCKED_DOOR2, EVENT_SILPH_CO_4_UNLOCKED_DOOR1
 	ret nz
 	ld a, $54
-	ld [wd09f], a
-	ld bc, $0406
+	ld [wNewTileBlockID], a
+	lb bc, 4, 6
 	predef_jump ReplaceTileBlock
 
-SilphCo4Data19d58: ; 19d58 (6:5d58)
-	db $06, $02, $04, $06, $ff
+SilphCo4GateCoords: ; 19d58 (6:5d58)
+	db $06,$02
+	db $04,$06
+	db $FF
 
 SilphCo4Script_19d5d: ; 19d5d (6:5d5d)
 	push hl

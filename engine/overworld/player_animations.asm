@@ -47,7 +47,7 @@ EnterMapAnim: ; 70510 (1c:4510)
 	pop hl
 	ld de, BirdSprite
 	ld hl, vNPCSprites
-	ld bc, (BANK(BirdSprite) << 8) + $0c
+	lb bc, BANK(BirdSprite), $0c
 	call CopyVideoData
 	call LoadBirdSpriteGraphics
 	ld a, SFX_FLY
@@ -250,11 +250,11 @@ DoFlyAnimation: ; 706ae (1c:46ae)
 LoadBirdSpriteGraphics: ; 706d7 (1c:46d7)
 	ld de, BirdSprite
 	ld hl, vNPCSprites
-	ld bc, (BANK(BirdSprite) << 8) + $0c
+	lb bc, BANK(BirdSprite), $0c
 	call CopyVideoData
 	ld de, BirdSprite + $c0 ; moving animation sprite
 	ld hl, vNPCSprites2
-	ld bc, (BANK(BirdSprite) << 8) + $0c
+	lb bc, BANK(BirdSprite), $0c
 	jp CopyVideoData
 
 InitFacingDirectionList: ; 706ef (1c:46ef)
@@ -370,10 +370,10 @@ IsPlayerStandingOnWarpPadOrHole: ; 70787 (1c:4787)
 	ld b, [hl]
 .done
 	ld a, b
-	ld [wcd5b], a
+	ld [wStandingOnWarpPadOrHole], a
 	ret
 
-; format: db tileset id, tile id, value to be put in wcd5b
+; format: db tileset id, tile id, value to be put in [wStandingOnWarpPadOrHole]
 .warpPadAndHoleData: ; 707a9 (1c:47a9)
 	db FACILITY, $20, 1 ; warp pad
 	db FACILITY, $11, 2 ; hole
@@ -388,7 +388,7 @@ FishingAnim: ; 707b6 (1c:47b6)
 	set 6, [hl] ; reserve the last 4 OAM entries
 	ld de, RedSprite
 	ld hl, vNPCSprites
-	ld bc, (BANK(RedSprite) << 8) + $0c
+	lb bc, BANK(RedSprite), $0c
 	call CopyVideoData
 	ld a, $4
 	ld hl, RedFishingTiles

@@ -37,8 +37,8 @@ VermilionGymScript_5ca6d: ; 5ca6d (17:4a6d)
 	call PlaySound
 	ld a, $5
 .asm_5ca7f
-	ld [wd09f], a
-	ld bc, $202
+	ld [wNewTileBlockID], a
+	lb bc, 2, 2
 	predef_jump ReplaceTileBlock
 
 VermilionGymScript_5ca8a: ; 5ca8a (17:4a8a)
@@ -66,7 +66,7 @@ VermilionGymScript_5caaa: ; 5caaa (17:4aaa)
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	SetEvent EVENT_BEAT_LT_SURGE
-	ld bc, (TM_24 << 8) | 1
+	lb bc, TM_24, 1
 	call GiveItem
 	jr nc, .BagFull
 	ld a, $7
@@ -81,7 +81,7 @@ VermilionGymScript_5caaa: ; 5caaa (17:4aaa)
 .asm_5cad3
 	ld hl, W_OBTAINEDBADGES
 	set 2, [hl]
-	ld hl, wd72a
+	ld hl, wBeatGymFlags
 	set 2, [hl]
 
 	; deactivate gym trainers
@@ -247,7 +247,7 @@ VermilionGymAfterBattleText3: ; 5cbd6 (17:4bd6)
 
 VermilionGymText5: ; 5cbdb (17:4bdb)
 	TX_ASM
-	ld a, [wd72a]
+	ld a, [wBeatGymFlags]
 	bit 2, a
 	jr nz, .asm_5cbeb
 	ld hl, VermilionGymText_5cbf4

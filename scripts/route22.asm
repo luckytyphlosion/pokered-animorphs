@@ -55,7 +55,7 @@ Route22RivalMovementData: ; 50efb (14:4efb)
 	db $FF
 
 Route22Script0: ; 50f00 (14:4f00)
-	CheckEvent EVENT_ROUTE22_RIVAL_WANTS_FIGHT
+	CheckEvent EVENT_ROUTE22_RIVAL_WANTS_BATTLE
 	ret z
 	ld hl, .Route22RivalBattleCoords
 	call ArePlayerCoordsInArray
@@ -89,7 +89,7 @@ Route22Script0: ; 50f00 (14:4f00)
 	and a
 	jr z, .asm_50f4e
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 .asm_50f4e
 	ld c, BANK(Music_MeetRival)
@@ -131,7 +131,7 @@ Route22Script1: ; 50f62 (14:4f62)
 	ld hl, Route22RivalDefeatedText1
 	ld de, Route22Text_511bc
 	call SaveEndBattleTextPointers
-	ld a, SONY1 + $c8
+	ld a, OPP_SONY1
 	ld [W_CUROPPONENT], a
 	ld hl, StarterMons_50faf
 	call Route22Script_50ed6
@@ -163,12 +163,12 @@ Route22Script2: ; 50fb5 (14:4fb5)
 	call SetSpriteFacingDirectionAndDelay
 	ld a, $f0
 	ld [wJoyIgnore], a
-	SetEvent EVENT_BEAT_ROUTE22_RIVAL_1ST_FIGHT
+	SetEvent EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE
 	ld a, $1
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateStart
 	ld a, [wcf0d]
@@ -224,10 +224,10 @@ Route22Script3: ; 5102a (14:502a)
 	xor a
 	ld [wJoyIgnore], a
 	ld a, HS_ROUTE_22_RIVAL_1
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	call PlayDefaultMusic
-	ResetEvents EVENT_1ST_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_FIGHT
+	ResetEvents EVENT_1ST_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_BATTLE
 	ld a, $0
 	ld [W_ROUTE22CURSCRIPT], a
 	ret
@@ -242,11 +242,11 @@ Route22Script_5104e: ; 5104e (14:504e)
 	and a
 	jr z, .skipYVisibilityTesta
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 .skipYVisibilityTesta
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateTempo
 	ld a, $2
@@ -287,7 +287,7 @@ Route22Script4: ; 51087 (14:5087)
 	ld hl, Route22RivalDefeatedText2
 	ld de, Route22Text_511d0
 	call SaveEndBattleTextPointers
-	ld a, SONY2 + $c8
+	ld a, OPP_SONY2
 	ld [W_CUROPPONENT], a
 	ld hl, StarterMons_510d9
 	call Route22Script_50ed6
@@ -322,12 +322,12 @@ Route22Script5: ; 510df (14:50df)
 	call SetSpriteFacingDirectionAndDelay
 	ld a, $f0
 	ld [wJoyIgnore], a
-	SetEvent EVENT_BEAT_ROUTE22_RIVAL_2ND_FIGHT
+	SetEvent EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE
 	ld a, $2
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateStartAndTempo
 	ld a, [wcf0d]
@@ -369,10 +369,10 @@ Route22Script6: ; 51151 (14:5151)
 	xor a
 	ld [wJoyIgnore], a
 	ld a, HS_ROUTE_22_RIVAL_2
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	call PlayDefaultMusic
-	ResetEvents EVENT_2ND_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_FIGHT
+	ResetEvents EVENT_2ND_ROUTE22_RIVAL_BATTLE, EVENT_ROUTE22_RIVAL_WANTS_BATTLE
 	ld a, $7
 	ld [W_ROUTE22CURSCRIPT], a
 	ret
@@ -384,7 +384,7 @@ Route22TextPointers: ; 51175 (14:5175)
 
 Route22Text1: ; 5117b (14:517b)
 	TX_ASM
-	CheckEvent EVENT_BEAT_ROUTE22_RIVAL_1ST_FIGHT
+	CheckEvent EVENT_BEAT_ROUTE22_RIVAL_1ST_BATTLE
 	jr z, .asm_5118b
 	ld hl, Route22RivalAfterBattleText1
 	call PrintText
@@ -397,7 +397,7 @@ Route22Text1: ; 5117b (14:517b)
 
 Route22Text2: ; 51194 (14:5194)
 	TX_ASM
-	CheckEvent EVENT_BEAT_ROUTE22_RIVAL_2ND_FIGHT
+	CheckEvent EVENT_BEAT_ROUTE22_RIVAL_2ND_BATTLE
 	jr z, .asm_511a4
 	ld hl, Route22RivalAfterBattleText2
 	call PrintText

@@ -47,7 +47,7 @@ CeladonGymText_48963: ; 48963 (12:4963)
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	SetEvent EVENT_BEAT_ERIKA
-	ld bc, (TM_21 << 8) | 1
+	lb bc, TM_21, 1
 	call GiveItem
 	jr nc, .BagFull
 	ld a, $a
@@ -62,7 +62,7 @@ CeladonGymText_48963: ; 48963 (12:4963)
 .asm_4898c
 	ld hl, W_OBTAINEDBADGES
 	set 3, [hl]
-	ld hl, wd72a
+	ld hl, wBeatGymFlags
 	set 3, [hl]
 
 	; deactivate gym trainers

@@ -13,15 +13,15 @@ SilphCo9Script_5d7d1: ; 5d7d1 (17:57d1)
 	bit 5, [hl]
 	res 5, [hl]
 	ret z
-	ld hl, DataTable_5d82e
+	ld hl, SilphCo9GateCoords
 	call SilphCo9Script_5d837
 	call SilphCo9Script_5d863
 	CheckEvent EVENT_SILPH_CO_9_UNLOCKED_DOOR1
 	jr nz, .asm_5d7f8
 	push af
 	ld a, $5f
-	ld [wd09f], a
-	ld bc, $401
+	ld [wNewTileBlockID], a
+	lb bc, 4, 1
 	predef ReplaceTileBlock
 	pop af
 .asm_5d7f8
@@ -29,8 +29,8 @@ SilphCo9Script_5d7d1: ; 5d7d1 (17:57d1)
 	jr nz, .asm_5d80b
 	push af
 	ld a, $54
-	ld [wd09f], a
-	ld bc, $209
+	ld [wNewTileBlockID], a
+	lb bc, 2, 9
 	predef ReplaceTileBlock
 	pop af
 .asm_5d80b
@@ -38,20 +38,24 @@ SilphCo9Script_5d7d1: ; 5d7d1 (17:57d1)
 	jr nz, .asm_5d81e
 	push af
 	ld a, $54
-	ld [wd09f], a
-	ld bc, $509
+	ld [wNewTileBlockID], a
+	lb bc, 5, 9
 	predef ReplaceTileBlock
 	pop af
 .asm_5d81e
 	CheckEventAfterBranchReuseA EVENT_SILPH_CO_9_UNLOCKED_DOOR4, EVENT_SILPH_CO_9_UNLOCKED_DOOR3
 	ret nz
 	ld a, $5f
-	ld [wd09f], a
-	ld bc, $605
+	ld [wNewTileBlockID], a
+	lb bc, 6, 5
 	predef_jump ReplaceTileBlock
 
-DataTable_5d82e: ; 5d82e (17:582e)
-	db $04,$01,$02,$09,$05,$09,$06,$05,$FF
+SilphCo9GateCoords: ; 5d82e (17:582e)
+	db $04,$01
+	db $02,$09
+	db $05,$09
+	db $06,$05
+	db $FF
 
 SilphCo9Script_5d837: ; 5d837 (17:5837)
 	push hl

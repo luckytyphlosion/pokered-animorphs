@@ -15,32 +15,32 @@ Mansion1Subscript1: ; 442c5 (11:42c5)
 	ret z
 	CheckEvent EVENT_MANSION_SWITCH_ON
 	jr nz, .asm_442ec
-	ld bc, $060c
+	lb bc, 6, 12
 	call Mansion1Script_4430b
-	ld bc, $0308
+	lb bc, 3, 8
 	call Mansion1Script_44304
-	ld bc, $080a
+	lb bc, 8, 10
 	call Mansion1Script_44304
-	ld bc, $0d0d
+	lb bc, 13, 13
 	jp Mansion1Script_44304
 .asm_442ec
-	ld bc, $060c
+	lb bc, 6, 12
 	call Mansion1Script_44304
-	ld bc, $0308
+	lb bc, 3, 8
 	call Mansion1Script_4430b
-	ld bc, $080a
+	lb bc, 8, 10
 	call Mansion1Script_4430b
-	ld bc, $0d0d
+	lb bc, 13, 13
 	jp Mansion1Script_4430b
 
 Mansion1Script_44304: ; 44304 (11:4304)
 	ld a, $2d
-	ld [wd09f], a
+	ld [wNewTileBlockID], a
 	jr Mansion1ReplaceBlock
 
 Mansion1Script_4430b: ; 4430b (11:430b)
 	ld a, $e
-	ld [wd09f], a
+	ld [wNewTileBlockID], a
 Mansion1ReplaceBlock: ; 44310 (11:4310)
 	predef ReplaceTileBlock
 	ret

@@ -9,7 +9,7 @@ CeruleanCityScript_1948c: ; 1948c (6:548c)
 	ld [wJoyIgnore], a
 	ld [W_CERULEANCITYCURSCRIPT], a
 	ld a, HS_CERULEAN_RIVAL
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef_jump HideObject
 
 CeruleanCityScriptPointers: ; 1949d (6:549d)
@@ -65,7 +65,7 @@ CeruleanCityScript0: ; 194c8 (6:54c8)
 	and a
 	jr z, .asm_19512
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 .asm_19512
 	ld c, BANK(Music_MeetRival)
@@ -86,7 +86,7 @@ CeruleanCityScript0: ; 194c8 (6:54c8)
 	ld [hl], $19
 .asm_19535
 	ld a, HS_CERULEAN_RIVAL
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef ShowObject
 	ld de, CeruleanCityMovement1
 	ld a, $1
@@ -134,7 +134,7 @@ CeruleanCityScript1: ; 19567 (6:5567)
 	ld hl, CeruleanCityText_1966d
 	ld de, CeruleanCityText_19672
 	call SaveEndBattleTextPointers
-	ld a, SONY1 + $c8
+	ld a, OPP_SONY1
 	ld [W_CUROPPONENT], a
 
 	; select which team to use during the encounter
@@ -172,7 +172,7 @@ CeruleanCityScript2: ; 195b1 (6:55b1)
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	ld a, $ff
-	ld [wc0ee], a
+	ld [wNewSoundID], a
 	call PlaySound
 	callba Music_RivalAlternateStart
 	ld a, $1
@@ -218,7 +218,7 @@ CeruleanCityScript3: ; 19610 (6:5610)
 	bit 0, a
 	ret nz
 	ld a, HS_CERULEAN_RIVAL
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	xor a
 	ld [wJoyIgnore], a
@@ -299,7 +299,7 @@ CeruleanCityText2: ; 1967c (6:567c)
 .asm_4ca20
 	ld hl, CeruleanCityText_196f3
 	call PrintText
-	ld bc, (TM_28 << 8) + 1
+	lb bc, TM_28, 1
 	call GiveItem
 	jr c, .Success
 	ld hl, TM28NoRoomText

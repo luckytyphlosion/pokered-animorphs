@@ -26,8 +26,8 @@ RocketHideout1Script_44be0: ; 44be0 (11:4be0)
 .asm_44c01
 	ld a, $e
 .asm_44c03
-	ld [wd09f], a
-	ld bc, $080c
+	ld [wNewTileBlockID], a
+	lb bc, 8, 12
 	predef_jump ReplaceTileBlock
 
 RocketHideout1ScriptPointers: ; 44c0e (11:4c0e)

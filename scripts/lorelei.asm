@@ -22,8 +22,8 @@ LoreleiScript_76191: ; 76191 (1d:6191)
 .asm_761a9
 	ld a, $24
 .asm_761ab
-	ld [wd09f], a
-	ld bc, $2
+	ld [wNewTileBlockID], a
+	lb bc, 0, 2
 	predef_jump ReplaceTileBlock
 
 LoreleiScript_761b6: ; 761b6 (1d:61b6)

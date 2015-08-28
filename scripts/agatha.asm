@@ -21,8 +21,8 @@ AgathaScript_76443: ; 76443 (1d:6443)
 	ld a, $3b
 
 AgathaScript_76459: ; 76459 (1d:6459)
-	ld [wd09f], a
-	ld bc, $2
+	ld [wNewTileBlockID], a
+	lb bc, 0, 2
 	predef_jump ReplaceTileBlock
 
 AgathaScript_76464: ; 76464 (1d:6464)

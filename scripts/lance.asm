@@ -24,13 +24,13 @@ LanceScript_5a2c4: ; 5a2c4 (16:62c4)
 
 LanceScript_5a2de: ; 5a2de (16:62de)
 	push bc
-	ld [wd09f], a
-	ld bc, $602
+	ld [wNewTileBlockID], a
+	lb bc, 6, 2
 	call LanceScript_5a2f0
 	pop bc
 	ld a, b
-	ld [wd09f], a
-	ld bc, $603
+	ld [wNewTileBlockID], a
+	lb bc, 6, 3
 
 LanceScript_5a2f0: ; 5a2f0 (16:62f0)
 	predef_jump ReplaceTileBlock

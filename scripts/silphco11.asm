@@ -13,18 +13,19 @@ SilphCo11Script_62110: ; 62110 (18:6110)
 	bit 5, [hl]
 	res 5, [hl]
 	ret z
-	ld hl, DataTable_62134
+	ld hl, SilphCo11GateCoords
 	call SilphCo11Script_62137
 	call SilphCo11Script_62163
 	CheckEvent EVENT_SILPH_CO_11_UNLOCKED_DOOR
 	ret nz
 	ld a, $20
-	ld [wd09f], a
-	ld bc, $603
+	ld [wNewTileBlockID], a
+	lb bc, 6, 3
 	predef_jump ReplaceTileBlock
 
-DataTable_62134: ; 62134 (18:6134)
-	db $06,$03,$FF
+SilphCo11GateCoords: ; 62134 (18:6134)
+	db $06,$03
+	db $FF
 
 SilphCo11Script_62137: ; 62137 (18:6137)
 	push hl
@@ -76,7 +77,7 @@ SilphCo11Script_6216d: ; 6216d (18:616d)
 	cp $ff
 	jr z, .asm_62181
 	push hl
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef HideObject
 	pop hl
 	jr .asm_62170
@@ -87,7 +88,7 @@ SilphCo11Script_6216d: ; 6216d (18:616d)
 	cp $ff
 	ret z
 	push hl
-	ld [wcc4d], a
+	ld [wMissableObjectIndex], a
 	predef ShowObject
 	pop hl
 	jr .asm_62184
@@ -306,7 +307,7 @@ SilphCo11Text1: ; 622dc (18:62dc)
 	jp nz, .asm_62308
 	ld hl, SilphCoPresidentText
 	call PrintText
-	ld bc, (MASTER_BALL << 8) | 1
+	lb bc, MASTER_BALL, 1
 	call GiveItem
 	jr nc, .BagFull
 	ld hl, ReceivedSilphCoMasterBallText

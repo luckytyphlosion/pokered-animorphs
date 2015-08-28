@@ -13,15 +13,15 @@ SilphCo5Script_19f4d: ; 19f4d (6:5f4d)
 	bit 5, [hl]
 	res 5, [hl]
 	ret z
-	ld hl, SilphCo5Coords
+	ld hl, SilphCo5GateCoords
 	call SilphCo4Script_19d5d
 	call SilphCo5Script_19f9e
 	CheckEvent EVENT_SILPH_CO_5_UNLOCKED_DOOR1
 	jr nz, .asm_19f74
 	push af
 	ld a, $5f
-	ld [wd09f], a
-	ld bc, $0203
+	ld [wNewTileBlockID], a
+	lb bc, 2, 3
 	predef ReplaceTileBlock
 	pop af
 .asm_19f74
@@ -29,20 +29,23 @@ SilphCo5Script_19f4d: ; 19f4d (6:5f4d)
 	jr nz, .asm_19f87
 	push af
 	ld a, $5f
-	ld [wd09f], a
-	ld bc, $0603
+	ld [wNewTileBlockID], a
+	lb bc, 6, 3
 	predef ReplaceTileBlock
 	pop af
 .asm_19f87
 	CheckEventAfterBranchReuseA EVENT_SILPH_CO_5_UNLOCKED_DOOR3, EVENT_SILPH_CO_5_UNLOCKED_DOOR2
 	ret nz
 	ld a, $5f
-	ld [wd09f], a
-	ld bc, $0507
+	ld [wNewTileBlockID], a
+	lb bc, 5, 7
 	predef_jump ReplaceTileBlock
 
-SilphCo5Coords: ; 19f97 (6:5f97)
-	db $02, $03, $06, $03, $05, $07, $ff
+SilphCo5GateCoords: ; 19f97 (6:5f97)
+	db $02,$03
+	db $06,$03
+	db $05,$07
+	db $FF
 
 SilphCo5Script_19f9e: ; 19f9e (6:5f9e)
 	EventFlagAddress hl, EVENT_SILPH_CO_5_UNLOCKED_DOOR1
