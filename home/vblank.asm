@@ -21,16 +21,12 @@ VBlank::
 .ok
 
 	call AutoBgMapTransfer
-	call VBlankCopyBgMap
+	call WriteCGBPalettes
 	call RedrawRowOrColumn
 	call VBlankCopy
 	call VBlankCopyDouble
 	call UpdateMovingBgTiles
 	call $ff80 ; hOAMDMA
-	ld a, Bank(PrepareOAMData)
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-	call PrepareOAMData
 
 	; VBlank-sensitive operations end.
 
@@ -94,7 +90,21 @@ DelayFrame::
 ; As a bonus, this saves battery.
 
 NOT_VBLANKED EQU 1
-
+	push bc
+	push de
+	push hl
+	ld a, [H_LOADEDROMBANK]
+	push af
+	ld a, Bank(PrepareOAMData)
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	call PrepareOAMData
+	pop af
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	pop hl
+	pop de
+	pop bc
 	ld a, NOT_VBLANKED
 	ld [H_VBLANKOCCURRED], a
 .halt

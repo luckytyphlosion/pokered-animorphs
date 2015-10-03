@@ -6560,7 +6560,7 @@ INCLUDE "engine/mon_party_sprites.asm"
 INCLUDE "engine/in_game_trades.asm"
 INCLUDE "engine/palettes.asm"
 INCLUDE "engine/save.asm"
-
+INCLUDE "engine/hblank.asm"
 
 SECTION "bank1D",ROMX,BANK[$1D]
 

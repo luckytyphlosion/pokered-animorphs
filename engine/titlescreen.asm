@@ -294,6 +294,7 @@ TitleScreenScrollInMon: ; 44c1 (1:44c1)
 
 ScrollTitleScreenGameVersion: ; 44cf (1:44cf)
 .wait
+	di
 	ld a, [rLY]
 	cp l
 	jr nz, .wait
@@ -305,7 +306,7 @@ ScrollTitleScreenGameVersion: ; 44cf (1:44cf)
 	ld a, [rLY]
 	cp h
 	jr z, .wait2
-	ret
+	reti
 
 DrawPlayerCharacter: ; 44dd (1:44dd)
 	ld hl, PlayerCharacterTitleGraphics

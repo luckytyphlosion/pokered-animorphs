@@ -1,9 +1,10 @@
 FarCopyData::
+FarCopyData2::
 ; Copy bc bytes from a:hl to de.
-	ld [wBuffer], a
+	ld [hROMBankTemp], a
 	ld a, [H_LOADEDROMBANK]
 	push af
-	ld a, [wBuffer]
+	ld a, [hROMBankTemp]
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	call CopyData
@@ -14,11 +15,23 @@ FarCopyData::
 
 CopyData::
 ; Copy bc bytes from hl to de.
+	ld a,b
+	and a
+	jr z, .copybytes
+	ld a,c
+	and a ; is lower byte 0
+	jr z, .loop
+	inc b ; if not, increment b as there are <$100 bytes to copy
+.loop
+	call .copybytes
+	dec b
+	jr nz,.loop
+	ret
+	
+.copybytes
 	ld a, [hli]
 	ld [de], a
 	inc de
-	dec bc
-	ld a, c
-	or b
-	jr nz, CopyData
+	dec c
+	jr nz, .copybytes
 	ret

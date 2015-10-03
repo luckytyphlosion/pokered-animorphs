@@ -16,8 +16,6 @@ hWarpDestinationMap EQU $FF8B
 
 hOAMTile EQU $FF8B
 
-hROMBankTemp EQU $FF8B
-
 hPreviousTileset EQU $FF8B
 
 hEastWestConnectedMapWidth EQU $FF8B
@@ -195,10 +193,7 @@ TRANSFERTOP    EQU 0
 TRANSFERMIDDLE EQU 1
 TRANSFERBOTTOM EQU 2
 
-; 00 = top third of background
-; 01 = middle third of background
-; 02 = bottom third of background
-H_AUTOBGTRANSFERPORTION EQU $FFBB
+hROMBankTemp EQU $FFBB
 
 ; the destination address of the automatic background transfer
 H_AUTOBGTRANSFERDEST EQU $FFBC ; 2 bytes
@@ -321,3 +316,6 @@ hDisableJoypadPolling EQU $FFF9
 
 hJoyInput EQU $FFF8
 
+hLastBGP EQU $FFFA
+hLastOBP0 EQU $FFFB
+hLastOBP1 EQU $FFFC

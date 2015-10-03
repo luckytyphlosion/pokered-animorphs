@@ -69,6 +69,7 @@ _TitleScroll: ; 3726a (d:726a)
 
 .ScrollBetween ; 37292 (d:7292)
 .wait
+	di
 	ld a, [rLY] ; rLY
 	cp l
 	jr nz, .wait
@@ -80,7 +81,7 @@ _TitleScroll: ; 3726a (d:726a)
 	ld a, [rLY] ; rLY
 	cp h
 	jr z, .wait2
-	ret
+	reti
 
 TitleBallYTable: ; 372a0 (d:72a0)
 ; OBJ y-positions for the Poke Ball held by Red in the title screen.

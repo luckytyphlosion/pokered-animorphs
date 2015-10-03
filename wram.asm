@@ -2509,7 +2509,14 @@ wDestinationWarpID:: ; d42f
 ; if $ff, the player's coordinates are not updated when entering the map
 	ds 1
 
-	ds 128
+wTempBGP::
+	ds 8
+wTempOBP0::
+	ds 8
+wTempOBP1::
+	ds 8
+	
+	ds 104
 
 wNumSigns:: ; d4b0
 ; number of signs in the current map (up to 16)

@@ -172,6 +172,11 @@ dbw: MACRO
 	dw \2
 	ENDM
 
+realRGB: MACRO
+	db \1 | ((\2 >> 2) & %111)
+	db (\2 & %11) | (\3 << 2)
+	ENDM
+
 ; data format macros
 RGB: MACRO
 	dw (\3 << 10 | \2 << 5 | \1)

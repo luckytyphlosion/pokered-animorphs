@@ -21,7 +21,7 @@ SECTION "rst 38", ROM0 [$38]
 SECTION "vblank", ROM0 [$40]
 	jp VBlank
 SECTION "hblank", ROM0 [$48]
-	rst $38
+	jp HBlank
 SECTION "timer",  ROM0 [$50]
 	jp Timer
 SECTION "serial", ROM0 [$58]
@@ -4655,6 +4655,26 @@ SetMapTextPointer:: ; 3f0f (0:3f0f)
 	ld [wMapTextPtr + 1], a
 	ret
 
+HBlank::
+	push af
+	push bc
+	push de
+	push hl
+	ld a, [H_LOADEDROMBANK]
+	push af
+	ld a, BANK(CopyScreenTilesToWRAMBuffer)
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	call CopyScreenTilesToWRAMBuffer
+	pop af
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	pop hl
+	pop de
+	pop bc
+	pop af
+	reti
+	
 TextPredefs::
 	add_tx_pre CardKeySuccessText                   ; 01
 	add_tx_pre CardKeyFailText                      ; 02

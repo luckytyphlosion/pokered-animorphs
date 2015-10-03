@@ -119,6 +119,7 @@ ScrollCreditsMonLeft: ; 74140 (1d:4140)
 	ret
 
 ScrollCreditsMonLeft_SetSCX: ; 74152 (1d:4152)
+	di
 	ld a, [rLY]
 	cp l
 	jr nz, ScrollCreditsMonLeft_SetSCX
@@ -128,7 +129,7 @@ ScrollCreditsMonLeft_SetSCX: ; 74152 (1d:4152)
 	ld a, [rLY]
 	cp h
 	jr z, .loop
-	ret
+	reti
 
 HoFGBPalettes: ; 74160 (1d:4160)
 	db %11000000

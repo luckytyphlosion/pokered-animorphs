@@ -1,21 +1,3 @@
-; this function seems to be used only once
-; it store the address of a row and column of the VRAM background map in hl
-; INPUT: h - row, l - column, b - high byte of background tile map address in VRAM
-GetRowColAddressBgMap:: ; 1cdd (0:1cdd)
-	xor a
-	srl h
-	rr a
-	srl h
-	rr a
-	srl h
-	rr a
-	or l
-	ld l,a
-	ld a,b
-	or h
-	ld h,a
-	ret
-
 ; clears a VRAM background map with blank space tiles
 ; INPUT: h - high byte of background tile map address in VRAM
 ClearBgMap:: ; 1cf0 (0:1cf0)
@@ -123,109 +105,78 @@ AutoBgMapTransfer:: ; 1d57 (0:1d57)
 	ld a,[H_AUTOBGTRANSFERENABLED]
 	and a
 	ret z
-	ld hl,[sp + 0]
-	ld a,h
-	ld [H_SPTEMP],a
-	ld a,l
-	ld [H_SPTEMP + 1],a ; save stack pinter
-	ld a,[H_AUTOBGTRANSFERPORTION]
-	and a
-	jr z,.transferTopThird
-	dec a
-	jr z,.transferMiddleThird
-.transferBottomThird
-	coord hl, 0, 12
-	ld sp,hl
-	ld a,[H_AUTOBGTRANSFERDEST + 1]
-	ld h,a
-	ld a,[H_AUTOBGTRANSFERDEST]
-	ld l,a
-	ld de,(12 * 32)
-	add hl,de
-	xor a ; TRANSFERTOP
-	jr .doTransfer
-.transferTopThird
-	coord hl, 0, 0
-	ld sp,hl
-	ld a,[H_AUTOBGTRANSFERDEST + 1]
-	ld h,a
-	ld a,[H_AUTOBGTRANSFERDEST]
-	ld l,a
-	ld a,TRANSFERMIDDLE
-	jr .doTransfer
-.transferMiddleThird
-	coord hl, 0, 6
-	ld sp,hl
-	ld a,[H_AUTOBGTRANSFERDEST + 1]
-	ld h,a
-	ld a,[H_AUTOBGTRANSFERDEST]
-	ld l,a
-	ld de,(6 * 32)
-	add hl,de
-	ld a,TRANSFERBOTTOM
-.doTransfer
-	ld [H_AUTOBGTRANSFERPORTION],a ; store next portion
-	ld b,6
-
-TransferBgRows:: ; 1d9e (0:1d9e)
-; unrolled loop and using pop for speed
-
-	rept 20 / 2 - 1
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], d
-	inc l
-	endr
-
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], d
-
-	ld a, 32 - (20 - 1)
-	add l
-	ld l, a
-	jr nc, .ok
-	inc h
-.ok
-	dec b
-	jr nz, TransferBgRows
-
-	ld a, [H_SPTEMP]
-	ld h, a
-	ld a, [H_SPTEMP + 1]
-	ld l, a
-	ld sp, hl
+	
+	ld a, 2
+	ld [rSVBK], a ; change wram bank to 1 to get tilemap buffer
+	ld a, $d0 ; write source in wram
+	ld [rHDMA1], a
+	xor a
+	ld [rHDMA2], a
+	ld a,[H_AUTOBGTRANSFERDEST + 1] ; copy address from H_AUTOBGTRANSFERDEST to rHDMA3 and 4
+	ld [rHDMA3], a					; note that hall of fame breaks because it sets H_AUTOBGTRANSFERDEST to a non-multiple of $10
+	ld a,[H_AUTOBGTRANSFERDEST]		; luckily, it's the only thing that does so
+	ld [rHDMA4], a
+	ld a, 36						; number of multiple of $10 chunks to copy
+	ld [rHDMA5], a					; writing this also doubles as starting the transfer
+	xor a
+	ld [rSVBK], a ; change wram bank back to normal
 	ret
 
-; Copies [H_VBCOPYBGNUMROWS] rows from H_VBCOPYBGSRC to H_VBCOPYBGDEST.
-; If H_VBCOPYBGSRC is XX00, the transfer is disabled.
-VBlankCopyBgMap:: ; 1de1 (0:1de1)
-	ld a,[H_VBCOPYBGSRC] ; doubles as enabling byte
-	and a
+WriteCGBPalettes::
+	ld a, [hLastBGP]
+	ld b, a
+	ld a, [rBGP]
+	cp b ; has the BGP changed since the last check?
+	ld [hLastBGP], a
+	jr z, .checkOBP0 ; if not, check OBP0
+	
+	ld hl, wTempBGP
+	lb bc, 8, rBGPI & $ff
+	ld a, %10000000
+	ld [$ff00+c], a
+	inc c
+.bgpLoop
+	ld a, [hli]
+	ld [$ff00+c], a
+	dec b
+	jr nz, .bgpLoop
+.checkOBP0
+	ld a, [hLastOBP0]
+	ld b, a
+	ld a, [rOBP0]
+	cp b ; has the OBP0 changed?
+	ld [hLastOBP0], a
+	jr z, .checkOBP1
+	
+	ld hl, wTempOBP0
+	lb bc, 8, rOBPI & $ff
+	ld a, %10000000
+	ld [$ff00+c], a
+	inc c
+.obp0Loop
+	ld a, [hli]
+	ld [$ff00+c], a
+	dec b
+	jr nz, .obp0Loop
+.checkOBP1
+	ld a, [hLastOBP1]
+	ld b, a
+	ld a, [rOBP1]
+	cp b ; has the OBP1 changed?
+	ld [hLastOBP1], a
 	ret z
-	ld hl,[sp + 0]
-	ld a,h
-	ld [H_SPTEMP],a
-	ld a,l
-	ld [H_SPTEMP + 1],a ; save stack pointer
-	ld a,[H_VBCOPYBGSRC]
-	ld l,a
-	ld a,[H_VBCOPYBGSRC + 1]
-	ld h,a
-	ld sp,hl
-	ld a,[H_VBCOPYBGDEST]
-	ld l,a
-	ld a,[H_VBCOPYBGDEST + 1]
-	ld h,a
-	ld a,[H_VBCOPYBGNUMROWS]
-	ld b,a
-	xor a
-	ld [H_VBCOPYBGSRC],a ; disable transfer so it doesn't continue next V-blank
-	jr TransferBgRows
-
-
+	ld hl, wTempOBP1
+	lb bc, 8, rOBPI & $ff
+	ld a, %10000000 | 8
+	ld [$ff00+c], a
+	inc c
+.obp1Loop
+	ld a, [hli]
+	ld [$ff00+c], a
+	dec b
+	jr nz, .obp1Loop
+	ret
+	
 VBlankCopyDouble::
 ; Copy [H_VBCOPYDOUBLESIZE] 1bpp tiles
 ; from H_VBCOPYDOUBLESRC to H_VBCOPYDOUBLEDEST.

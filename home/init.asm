@@ -38,7 +38,32 @@ rLCDC_DEFAULT EQU %11100011
 	ld a, rLCDC_ENABLE_MASK
 	ld [rLCDC], a
 	call DisableLCD
-
+	
+	lb bc, $3f, rBGPI & $ff
+	ld a, %10000000
+	ld [$ff00+c], a
+	inc c
+	ld a, $ff
+.bgpClearLoop
+	ld [$ff00+c], a
+	dec b
+	jr nz, .bgpClearLoop
+	lb bc, $3f, rOBPI & $ff
+	ld a, %10000000
+	ld [$ff00+c], a
+	inc c
+	ld a, $ff
+.obpClearLoop
+	ld [$ff00+c], a
+	dec b
+	jr nz, .obpClearLoop
+	ld a, 1
+	ld [rKEY1], a
+	dec a
+	ld [rJOYP], a
+	stop
+	ld a, $30
+	ld [rJOYP], a
 	ld sp, wStack
 
 	ld hl, $c000 ; start of WRAM
@@ -52,6 +77,11 @@ rLCDC_DEFAULT EQU %11100011
 	jr nz, .loop
 
 	call ClearVram
+	ld a, 1
+	ld [rVBK], a
+	call ClearVram
+	xor a
+	ld [rVBK], a
 
 	ld hl, $ff80
 	ld bc, $ffff - $ff80
@@ -64,15 +94,18 @@ rLCDC_DEFAULT EQU %11100011
 	ld [MBC1RomBank], a
 	call WriteDMACodeToHRAM
 
+	ld a, %1000000
+	ld [rSTAT], a
 	xor a
 	ld [hTilesetType], a
-	ld [rSTAT], a
 	ld [hSCX], a
 	ld [hSCY], a
 	ld [rIF], a
-	ld a, 1 << VBLANK + 1 << TIMER + 1 << SERIAL
+	ld a, 1 << LCD_STAT + 1 << VBLANK + 1 << TIMER + 1 << SERIAL
 	ld [rIE], a
-
+	
+	ld a, $75
+	ld [rLYC], a
 	ld a, 144 ; move the window off-screen
 	ld [hWY], a
 	ld [rWY], a
