@@ -57,6 +57,9 @@ rLCDC_DEFAULT EQU %11100011
 	ld [$ff00+c], a
 	dec b
 	jr nz, .obpClearLoop
+	ld a, [rKEY1]
+	bit 7, a
+	jr nz, .skipSpeedSwitch
 	ld a, 1
 	ld [rKEY1], a
 	dec a
@@ -64,6 +67,7 @@ rLCDC_DEFAULT EQU %11100011
 	stop
 	ld a, $30
 	ld [rJOYP], a
+.skipSpeedSwitch
 	ld sp, wStack
 
 	ld hl, $c000 ; start of WRAM
