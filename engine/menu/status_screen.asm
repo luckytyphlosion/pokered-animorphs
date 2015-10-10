@@ -166,7 +166,7 @@ StatusScreen: ; 12953 (4:6953)
 	call PrintNumber ; ID Number
 	ld d, $0
 	call PrintStatsBox
-	call Delay3
+	call DelayFrame
 	call GBPalNormal
 	coord hl, 1, 0
 	call LoadFlippedFrontSpriteByMonIndex ; draw Pokémon picture
@@ -424,7 +424,7 @@ StatusScreen2: ; 12b57 (4:6b57)
 	call PlaceString
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	call WaitForTextScrollButtonPress ; wait for button
 	pop af
 	ld [hTilesetType], a

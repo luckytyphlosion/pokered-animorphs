@@ -363,7 +363,7 @@ PrintAlphabet: ; 676f (1:676f)
 	call PlaceString
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	jp Delay3
+	jp DelayFrame
 
 LowerCaseAlphabet: ; 679e (1:679e)
 	db "abcdefghijklmnopqrstuvwxyz ×():;[]",$e1,$e2,"-?!♂♀/",$f2,",¥UPPER CASE@"

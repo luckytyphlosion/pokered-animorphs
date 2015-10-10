@@ -143,8 +143,9 @@ UpdateHPBar_AnimateHPBar: ; fab1 (3:7ab1)
 	push de
 	ld d, $6
 	call DrawHPBar
-	ld c, 2
-	call DelayFrames
+	call DelayFrame
+	;ld c, 2
+	;call DelayFrames
 	pop de
 	ld a, [wHPBarDelta] ; +1 or -1
 	add e

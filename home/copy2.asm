@@ -180,4 +180,4 @@ ClearScreen::
 	jr nz, .loop
 	dec b
 	jr nz, .loop
-	jp Delay3
+	jp DelayFrame

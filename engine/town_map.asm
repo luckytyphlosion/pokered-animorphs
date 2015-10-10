@@ -316,7 +316,7 @@ LoadTownMap: ; 7109b (1c:509b)
 	call EnableLCD
 	ld b, SET_PAL_TOWN_MAP
 	call RunPaletteCommand
-	call Delay3
+	call DelayFrame
 	call GBPalNormal
 	xor a
 	ld [wAnimCounter], a

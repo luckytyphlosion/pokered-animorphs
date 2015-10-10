@@ -1312,7 +1312,7 @@ AnimationSlideMonDown: ; 79297 (1e:5297)
 	push bc
 	push de
 	call CopyPicTiles
-	call Delay3
+	call DelayFrame
 	call AnimationHideMonPic
 	pop de
 	pop bc
@@ -1516,7 +1516,7 @@ AnimationShowMonPic: ; 7939e (1e:539e)
 	call GetTileIDList
 	call GetMonSpriteTileMapPointerFromRowCount
 	call CopyPicTiles
-	jp Delay3
+	jp DelayFrame
 
 AnimationShowEnemyMonPic: ; 793ab (1e:53ab)
 ; Shows the emenmy mon's front sprite. Used in animations like Seismic Toss
@@ -1551,7 +1551,7 @@ AnimationShakeBackAndForth: ; 793b1 (1e:53b1)
 	call GetTileIDList
 	pop hl
 	call CopyPicTiles
-	call Delay3
+	call DelayFrame
 	pop hl
 	lb bc, 7, 9
 	call ClearScreenArea
@@ -1559,7 +1559,7 @@ AnimationShakeBackAndForth: ; 793b1 (1e:53b1)
 	call GetTileIDList
 	pop hl
 	call CopyPicTiles
-	call Delay3
+	call DelayFrame
 	pop hl
 	lb bc, 7, 9
 	call ClearScreenArea
@@ -1735,7 +1735,7 @@ _AnimationSquishMonPic: ; 794d4 (1e:54d4)
 	pop bc
 	dec c
 	jr nz, .loop
-	jp Delay3
+	jp DelayFrame
 
 AnimationShootBallsUpward: ; 794f9 (1e:54f9)
 ; Shoots one pillar of "energy" balls upwards. Used in Teleport/Sky Attack
@@ -1863,7 +1863,7 @@ AnimationMinimizeMon: ; 7959f (1e:559f)
 	dec c
 	jr nz, .loop
 	call CopyTempPicToMonPic
-	call Delay3
+	call DelayFrame
 	jp AnimationShowMonPic
 
 MinimizedMonSprite: ; 795c4 (1e:55c4)
@@ -1974,7 +1974,7 @@ AnimationSlideMonHalfOff: ; 79645 (1e:5645)
 	ld a, 4
 	ld [wSlideMonDelay], a
 	call _AnimationSlideMonOff
-	jp Delay3
+	jp DelayFrame
 
 CopyTempPicToMonPic: ; 79652 (1e:5652)
 	ld a, [H_WHOSETURN]
@@ -1991,7 +1991,7 @@ AnimationWavyScreen: ; 79666 (1e:5666)
 ; used in Psywave/Psychic etc.
 	ld hl, vBGMap0
 	call BattleAnimCopyTileMapToVRAM
-	call Delay3
+	call DelayFrame
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ld a, SCREEN_HEIGHT_PIXELS
@@ -2022,7 +2022,7 @@ AnimationWavyScreen: ; 79666 (1e:5666)
 	call ClearScreen
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	call LoadScreenTilesFromBuffer2
 	ld hl, vBGMap1
 	call BattleAnimCopyTileMapToVRAM
@@ -2181,7 +2181,7 @@ AnimationHideEnemyMonPic: ; 797d8 (1e:57d8)
 	call CallWithTurnFlipped
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	jp Delay3
+	jp DelayFrame
 
 InitMultipleObjectsOAM: ; 797e8 (1e:57e8)
 ; Writes c OAM entries with tile d.
@@ -2888,7 +2888,7 @@ AnimationShakeEnemyHUD: ; 79d77 (1e:5d77)
 
 ; Remove the back pic from the BG map.
 	call AnimationHideMonPic
-	call Delay3
+	call DelayFrame
 
 ; Use SCX to shake the regular BG. The window and the back pic OAM copy are
 ; not affected.
@@ -2908,7 +2908,7 @@ AnimationShakeEnemyHUD: ; 79d77 (1e:5d77)
 	ld hl, vBGMap0
 	call BattleAnimCopyTileMapToVRAM
 	call ClearScreen
-	call Delay3
+	call DelayFrame
 	call LoadScreenTilesFromBuffer1
 	ld hl, vBGMap1
 	jp BattleAnimCopyTileMapToVRAM
@@ -2950,7 +2950,7 @@ BattleAnimCopyTileMapToVRAM: ; 79e0d (1e:5e0d)
 	ld [H_AUTOBGTRANSFERDEST + 1], a
 	ld a, l
 	ld [H_AUTOBGTRANSFERDEST], a
-	jp Delay3
+	jp DelayFrame
 
 TossBallAnimation: ; 79e16 (1e:5e16)
 	ld a,[wIsInBattle]

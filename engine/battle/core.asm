@@ -183,7 +183,7 @@ SlidePlayerAndEnemySilhouettesOnScreen: ; 3c04c (f:404c)
 	ld [rWY], a
 	inc a
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	ld b, SET_PAL_BATTLE
 	call RunPaletteCommand
 	call HideSprites
@@ -1873,7 +1873,7 @@ AnimateRetreatingPlayerMon: ; 3ccfa (f:4cfa)
 	xor a
 	ld [hBaseTileID], a
 	predef CopyDownscaledMonTiles
-	call Delay3
+	call DelayFrame
 	call .clearScreenArea
 	ld a, $4c
 	Coorda 5, 11
@@ -2360,7 +2360,7 @@ UseBagItem:
 ; not a safari battle
 	call LoadScreenTilesFromBuffer1
 	call DrawHUDsAndHPBars
-	call Delay3
+	call DelayFrame
 .returnAfterUsingItem_NoCapture
 
 	call GBPalNormal
@@ -2979,7 +2979,7 @@ PrintMenuItem: ; 3d4b6 (f:54b6)
 .moveDisabled
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	jp Delay3
+	jp DelayFrame
 
 DisabledText: ; 3d555 (f:5555)
 IF DEF(_YELLOW)
@@ -6953,7 +6953,7 @@ _InitBattleCommon: ; 3efeb (f:6feb)
 	ld [H_AUTOBGTRANSFERDEST + 1], a
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	ld a, $9c
 	ld [H_AUTOBGTRANSFERDEST + 1], a
 	call LoadScreenTilesFromBuffer1

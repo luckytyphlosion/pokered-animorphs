@@ -1431,7 +1431,7 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 	call PrintListMenuEntries
 	ld a,1
 	ld [H_AUTOBGTRANSFERENABLED],a ; enable transfer
-	call Delay3
+	call DelayFrame ; Delay3
 	ld a,[wBattleType]
 	and a ; is it the Old Man battle?
 	jr z,.notOldManBattle
@@ -3525,7 +3525,8 @@ Divide:: ; 38b9 (0:38b9)
 ; screen unless the player presses the A/B button or the delay is turned off
 ; through the [wd730] or [wLetterPrintingDelayFlags] flags.
 PrintLetterDelay:: ; 38d3 (0:38d3)
-	ld a,[wd730]
+	ret
+	ds 2
 	bit 6,a
 	ret nz
 	ld a,[wLetterPrintingDelayFlags]
@@ -3913,7 +3914,7 @@ HandleMenuInput_:: ; 3ac2 (0:3ac2)
 	xor a
 	ld [wAnimCounter],a ; counter for pokemon shaking animation
 	call PlaceMenuCursor
-	call Delay3
+	call DelayFrame ; Delay3
 .loop2
 	push hl
 	ld a,[wPartyMenuAnimMonEnabled]
@@ -4185,7 +4186,7 @@ PrintText:: ; 3c49 (0:3c49)
 	ld [wTextBoxID],a
 	call DisplayTextBoxID
 	call UpdateSprites
-	call Delay3
+	call DelayFrame
 	pop hl
 PrintText_NoCreatingTextBox:: ; 3c59 (0:3c59)
 	coord bc, 1, 14
@@ -4470,7 +4471,7 @@ RestoreScreenTilesAndReloadTilePatterns:: ; 3dbe (0:3dbe)
 	call LoadScreenTilesFromBuffer2
 	call LoadTextBoxTilePatterns
 	call RunDefaultPaletteCommand
-	jr Delay3
+	jp DelayFrame
 
 
 GBPalWhiteOutWithDelay3::

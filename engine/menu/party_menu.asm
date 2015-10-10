@@ -214,7 +214,7 @@ RedrawPartyMenu_: ; 12ce3 (4:6ce3)
 	ld [hl],a
 	ld a,1
 	ld [H_AUTOBGTRANSFERENABLED],a
-	call Delay3
+	call DelayFrame
 	jp GBPalNormal
 .printItemUseMessage
 	and a,$0F

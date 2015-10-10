@@ -1694,7 +1694,7 @@ ItemUseXStat: ; e104 (3:6104)
 	ld a,XSTATITEM_ANIM ; X stat item animation ID
 	ld [wPlayerMoveNum],a
 	call LoadScreenTilesFromBuffer1 ; restore saved screen
-	call Delay3
+	call DelayFrame
 	xor a
 	ld [H_WHOSETURN],a ; set turn to player's turn
 	callba StatModifierUpEffect ; do stat increase move
@@ -2335,7 +2335,7 @@ ItemUseNotYoursToUse: ; e586 (3:6586)
 ThrowBallAtTrainerMon: ; e58b (3:658b)
 	call RunDefaultPaletteCommand
 	call LoadScreenTilesFromBuffer1 ; restore saved screen
-	call Delay3
+	call DelayFrame
 	ld a,TOSS_ANIM
 	ld [wAnimationID],a
 	predef MoveAnimation ; do animation

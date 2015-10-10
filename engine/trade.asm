@@ -138,7 +138,7 @@ Trade_Delay100: ; 41181 (10:5181)
 Trade_CopyTileMapToVRAM: ; 41186 (10:5186)
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ret
@@ -340,7 +340,7 @@ Trade_AnimateBallEnteringLinkCable: ; 412d2 (10:52d2)
 	call ClearScreen
 	ld b, $98
 	call CopyScreenTileBufferToVRAM
-	call Delay3
+	call DelayFrame
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ret

@@ -135,7 +135,7 @@ Evolution_ChangeMonPic: ; 7bed6 (1e:7ed6)
 	jr nz, .loop
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	pop bc
 	ret
 

@@ -149,15 +149,38 @@ WriteCGBPalettes::
 	jr z, .checkOBP1
 	
 	ld hl, wTempOBP0
+	ld d, h ; save address to copy non-sequentially to palettes 2 and 3 (see below)
+	ld e, l
 	lb bc, 8, rOBPI & $ff
 	ld a, %10000000
 	ld [$ff00+c], a
 	inc c
-.obp0Loop
+.obp0Loop1
 	ld a, [hli]
 	ld [$ff00+c], a
 	dec b
-	jr nz, .obp0Loop
+	jr nz, .obp0Loop1
+; the oam code writes 02 and 03 to the flags byte for the bottom half of sprites for some reason
+; the hblank function clears these useless writes, but sprite flickering still occurs
+; therefore, we write to palettes 2 and 3 to hide the sprite flickering
+	ld a, %10000000 | 16
+	ld [rOBPI], a
+	ld b, 8
+	ld h, d ; saves cycles over push/pop
+	ld l, e
+.obp0Loop2
+	ld a, [hli]
+	ld [$ff00+c], a
+	dec b
+	jr nz, .obp0Loop2
+	ld b, 8
+	ld h, d
+	ld l, e
+.obp0Loop3
+	ld a, [hli]
+	ld [$ff00+c], a
+	dec b
+	jr nz, .obp0Loop3
 .checkOBP1
 	ld a, [hLastOBP1]
 	ld b, a

@@ -360,7 +360,7 @@ LoadTitleMonSprite: ; 4524 (1:4524)
 
 TitleScreenCopyTileMapToVRAM: ; 4533 (1:4533)
 	ld [H_AUTOBGTRANSFERDEST + 1], a
-	jp Delay3
+	jp DelayFrame
 
 LoadCopyrightAndTextBoxTiles: ; 4538 (1:4538)
 	xor a

@@ -363,7 +363,7 @@ Next1B18:: ; 1b18 (0:1b18)
 
 ProtectedDelay3:: ; 1b3a (0:1b3a)
 	push bc
-	call Delay3
+	call DelayFrame
 	pop bc
 	ret
 

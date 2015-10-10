@@ -169,7 +169,7 @@ BillsPCMenu: ; 214e8 (8:54e8)
 	call PlaceString
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	call DelayFrame
 	call HandleMenuInput
 	bit 1, a
 	jp nz, ExitBillsPC ; b button
