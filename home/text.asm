@@ -624,6 +624,7 @@ TextCommand0B:: ; 1c31 (0:1c31)
 	pop bc
 	jp NextTextCommand
 
+SECTION "Randomizer Compatibility", ROM0 [$1c64]
 ; format: text command ID, sound ID or cry ID
 TextCommandSounds:: ; 1c64 (0:1c64)
 	db $0B,SFX_GET_ITEM_1
