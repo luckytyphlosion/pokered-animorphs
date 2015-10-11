@@ -579,7 +579,7 @@ DisplayOptionMenu: ; 5e8a (1:5e8a)
 	jp .eraseOldMenuCursor
 
 TextSpeedOptionText: ; 5fc0 (1:5fc0)
-	db   "TEXT SPEED"
+	db   "MENU SPEED"
 	next " FAST  MEDIUM SLOW@"
 
 BattleAnimationOptionText: ; 5fde (1:5fde)

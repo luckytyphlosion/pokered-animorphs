@@ -3411,8 +3411,8 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	and a ; have any buttons been newly pressed since last check?
 	jr z,.noNewlyPressedButtons
 .newlyPressedButtons
-	ld a,30 ; half a second delay
-	ld [H_FRAMECOUNTER],a
+	ld a, 5
+	ld [H_FRAMECOUNTER], a
 	ret
 .noNewlyPressedButtons
 	ld a,[H_FRAMECOUNTER]
@@ -3433,7 +3433,8 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	xor a
 	ld [hJoy5],a
 .setShortDelay
-	ld a,5 ; 1/12 of a second delay
+	ld a, [wOptions]
+	and $f
 	ld [H_FRAMECOUNTER],a
 	ret
 
@@ -3467,18 +3468,7 @@ WaitForTextScrollButtonPress:: ; 3865 (0:3865)
 	ld [H_DOWNARROWBLINKCNT1], a
 	ret
 
-; (unless in link battle) waits for A or B being pressed and outputs the scrolling sound effect
-ManualTextScroll:: ; 3898 (0:3898)
-	ld a, [wLinkState]
-	cp LINK_STATE_BATTLING
-	jr z, .inLinkBattle
-	call WaitForTextScrollButtonPress
-	ld a, SFX_PRESS_AB
-	jp PlaySound
-.inLinkBattle
-	ld c, 65
-	jp DelayFrames
-
+SECTION "bwexpfix", ROM0 [$38ac]
 ; function to do multiplication
 ; all values are big endian
 ; INPUT
@@ -3520,6 +3510,18 @@ Divide:: ; 38b9 (0:38b9)
 	pop de
 	pop hl
 	ret
+	
+; (unless in link battle) waits for A or B being pressed and outputs the scrolling sound effect
+ManualTextScroll:: ; 3898 (0:3898)
+	ld a, [wLinkState]
+	cp LINK_STATE_BATTLING
+	jr z, .inLinkBattle
+	call WaitForTextScrollButtonPress
+	ld a, SFX_PRESS_AB
+	jp PlaySound
+.inLinkBattle
+	ld c, 65
+	jp DelayFrames
 
 ; This function is used to wait a short period after printing a letter to the
 ; screen unless the player presses the A/B button or the delay is turned off
@@ -3914,8 +3916,8 @@ HandleMenuInput_:: ; 3ac2 (0:3ac2)
 	xor a
 	ld [wAnimCounter],a ; counter for pokemon shaking animation
 	call PlaceMenuCursor
-	call DelayFrame ; Delay3
 .loop2
+	call DelayFrame ; Delay3
 	push hl
 	ld a,[wPartyMenuAnimMonEnabled]
 	and a ; is it a pokemon selection menu?
@@ -4013,6 +4015,13 @@ HandleMenuInput_:: ; 3ac2 (0:3ac2)
 	ld a,[wMenuWatchMovingOutOfBounds]
 	and a ; should we return if the user tried to go past the top or bottom?
 	jr z,.checkOtherKeys
+	;ld a, [wMenuWatchedKeys]
+	;and D_LEFT | D_RIGHT
+	;jr nz,.checkIfAButtonOrBButtonPressed
+	ld a, D_LEFT | D_RIGHT
+	and b
+	jr z,.checkIfAButtonOrBButtonPressed
+	call Delay3
 	jr .checkIfAButtonOrBButtonPressed
 
 PlaceMenuCursor:: ; 3b7c (0:3b7c)
