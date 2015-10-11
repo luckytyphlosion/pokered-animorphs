@@ -67,8 +67,8 @@ rLCDC_DEFAULT EQU %11100011
 	stop
 	ld a, $30
 	ld [rJOYP], a
-	ld sp, wStack
 .skipSpeedSwitch
+	ld sp, wStack
 	ld hl, $c000 ; start of WRAM
 	ld bc, $2000 ; size of WRAM
 .loop
