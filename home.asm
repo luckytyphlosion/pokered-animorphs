@@ -1431,7 +1431,7 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 	call PrintListMenuEntries
 	ld a,1
 	ld [H_AUTOBGTRANSFERENABLED],a ; enable transfer
-	call DelayFrame ; Delay3
+	call Delay3
 	ld a,[wBattleType]
 	and a ; is it the Old Man battle?
 	jr z,.notOldManBattle
@@ -3369,20 +3369,6 @@ GetItemPrice:: ; 37df (0:37df)
 	ld [MBC1RomBank], a
 	ret
 
-; copies a string from [de] to [wcf4b]
-CopyStringToCF4B:: ; 3826 (0:3826)
-	ld hl, wcf4b
-	; fall through
-
-; copies a string from [de] to [hl]
-CopyString:: ; 3829 (0:3829)
-	ld a, [de]
-	inc de
-	ld [hli], a
-	cp "@"
-	jr nz, CopyString
-	ret
-
 ; this function is used when lower button sensitivity is wanted (e.g. menus)
 ; OUTPUT: [hJoy5] = pressed buttons in usual format
 ; there are two flags that control its functionality, [hJoy6] and [hJoy7]
@@ -3435,6 +3421,7 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 .setShortDelay
 	ld a, [wOptions]
 	and $f
+	add $3
 	ld [H_FRAMECOUNTER],a
 	ret
 
@@ -3459,7 +3446,7 @@ WaitForTextScrollButtonPress:: ; 3865 (0:3865)
 	pop hl
 	call JoypadLowSensitivity
 	predef CableClub_Run
-	ld a, [hJoy5]
+	ld a, [hJoyHeld]
 	and A_BUTTON | B_BUTTON
 	jr z, .loop
 	pop af
@@ -3509,6 +3496,20 @@ Divide:: ; 38b9 (0:38b9)
 	pop bc
 	pop de
 	pop hl
+	ret
+	
+; copies a string from [de] to [wcf4b]
+CopyStringToCF4B:: ; 3826 (0:3826)
+	ld hl, wcf4b
+	; fall through
+
+; copies a string from [de] to [hl]
+CopyString:: ; 3829 (0:3829)
+	ld a, [de]
+	inc de
+	ld [hli], a
+	cp "@"
+	jr nz, CopyString
 	ret
 	
 ; (unless in link battle) waits for A or B being pressed and outputs the scrolling sound effect
@@ -4672,10 +4673,14 @@ HBlank::
 	push hl
 	ld a, [H_LOADEDROMBANK]
 	push af
+	ld a, [rSVBK]
+	push af
 	ld a, BANK(CopyScreenTilesToWRAMBuffer)
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	call CopyScreenTilesToWRAMBuffer
+	pop af
+	ld [rSVBK], a
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a

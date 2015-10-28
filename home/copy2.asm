@@ -5,21 +5,33 @@ FarCopyDataDouble::
 	ld a,[H_LOADEDROMBANK]
 	push af
 	ld a,[hROMBankTemp]
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a
-.loop
-	ld a,[hli]
-	ld [de],a
-	inc de
-	ld [de],a
-	inc de
-	dec bc
+	ld [H_LOADEDROMBANK], a
+	ld [$2000], a
+	push hl ; swap hl and de
+	ld h,d
+	ld l,e
+	pop de
+	
+	ld a,b
+	and a
+	jr z,.eightbitcopyamount
 	ld a,c
-	or b
-	jr nz,.loop
+	and a ; multiple of $100
+	jr z, .expandloop ; if so, do not increment b because the first instance of dec c results in underflow
+.eightbitcopyamount
+	inc b
+.expandloop
+	ld a,[de]
+	inc de
+	ld [hli],a
+	ld [hli],a
+	dec c
+	jr nz, .expandloop
+	dec b
+	jr nz, .expandloop
 	pop af
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a
+	ld [H_LOADEDROMBANK], a
+	ld [$2000], a
 	ret
 
 CopyVideoData::
@@ -31,47 +43,59 @@ CopyVideoData::
 	push af
 	xor a ; disable auto-transfer while copying
 	ld [H_AUTOBGTRANSFERENABLED], a
-
-	ld a, [H_LOADEDROMBANK]
-	ld [hROMBankTemp], a
-
-	ld a, b
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-
-	ld a, e
-	ld [H_VBCOPYSRC], a
-	ld a, d
-	ld [H_VBCOPYSRC + 1], a
-
+	
 	ld a, l
 	ld [H_VBCOPYDEST], a
 	ld a, h
 	ld [H_VBCOPYDEST + 1], a
-
-.loop
+	
 	ld a, c
-	cp 8
-	jr nc, .keepgoing
-
-.done
 	ld [H_VBCOPYSIZE], a
-	call DelayFrame
-	ld a, [hROMBankTemp]
+	
+	ld h,d 
+	ld l,e
+	
+	ld de, $d000 ; set de to 3:d000
+	
+	ld a, [H_LOADEDROMBANK]
+	push af ; save bank
+	
+	ld a,b
 	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-	pop af
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
+	ld [$2000], a
+	
+	swap c
+	ld a,$f
+	and c
+	ld b,a
+	ld a,$f0
+	and c
+	ld c,a
 
-.keepgoing
-	ld a, 8
-	ld [H_VBCOPYSIZE], a
-	call DelayFrame
-	ld a, c
-	sub 8
-	ld c, a
-	jr .loop
+	ld a, [rSVBK]
+	ld [hSavedWRAMBank], a
+	
+	ld a, $3
+	ld [rSVBK], a
+; input is now:
+; hl = source
+; de = destination
+; bc = raw bytes to copy
+; a = bank
+	
+	inc b  ; we bail the moment b hits 0, so include the last run
+	inc c  ; same thing; include last byte
+	jr .HandleLoop
+.CopyByte
+	ld a, [hli]
+	ld [de], a
+	inc de
+.HandleLoop
+	dec c
+	jr nz, .CopyByte
+	dec b
+	jr nz, .CopyByte
+	jr CopyVideoDataCommon
 
 CopyVideoDataDouble::
 ; Wait for the next VBlank, then copy c 1bpp
@@ -81,46 +105,104 @@ CopyVideoDataDouble::
 	push af
 	xor a ; disable auto-transfer while copying
 	ld [H_AUTOBGTRANSFERENABLED], a
-	ld a, [H_LOADEDROMBANK]
-	ld [hROMBankTemp], a
-
-	ld a, b
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-
-	ld a, e
-	ld [H_VBCOPYDOUBLESRC], a
-	ld a, d
-	ld [H_VBCOPYDOUBLESRC + 1], a
-
+	; save destination for later
 	ld a, l
 	ld [H_VBCOPYDOUBLEDEST], a
 	ld a, h
 	ld [H_VBCOPYDOUBLEDEST + 1], a
-
-.loop
+	
 	ld a, c
-	cp 8
-	jr nc, .keepgoing
-
-.done
 	ld [H_VBCOPYDOUBLESIZE], a
-	call DelayFrame
-	ld a, [hROMBankTemp]
+
+	ld hl, $d000 ; set hl to 3:d000 (scratch space)
+	
+	ld a,[H_LOADEDROMBANK]
+	push af
+	
+	ld a, b ; get bank
 	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
+	ld [$2000], a
+	
+	push hl
+	ld h,$0
+	ld l,c
+	add hl,hl ; get raw length of bytes to copy
+	add hl,hl
+	add hl,hl
+	ld b,h
+	ld c,l
+	pop hl
+	
+	ld a, [rSVBK]
+	ld [hSavedWRAMBank], a
+	
+	ld a, $3
+	ld [rSVBK], a
+	
+; input is now:
+; hl = source
+; de = fixed destination
+; bc = raw number of bytes to copy
+; a = bank
+
+	ld a,b
+	and a
+	jr z,.eightbitcopyamount
+	ld a,c
+	and a ; multiple of $100
+	jr z, .expandloop ; if so, do not increment b because the first instance of dec c results in underflow
+.eightbitcopyamount
+	inc b
+.expandloop
+	ld a,[de]
+	inc de
+	ld [hli],a
+	ld [hli],a
+	dec c
+	jr nz, .expandloop
+	dec b
+	jr nz, .expandloop
+
+CopyVideoDataCommon:
+	ld a, [hSavedWRAMBank]
+	ld [rSVBK], a
+	
+	pop af
+	ld [H_LOADEDROMBANK], a
+	ld [$2000], a
+	
+	ld a, $d0
+	ld [H_VBCOPYDOUBLESRC + 1], a
+	xor a
+	ld [H_VBCOPYDOUBLESRC], a
+	
+	ld a, [H_VBCOPYDOUBLESIZE]
+	ld b, $40
+	sub b ; $40 or more tiles to copy?
+	jr c, .oneframe
+	
+	ld c, a ; save the difference
+	
+	ld a, b
+	ld [H_VBCOPYDOUBLESIZE], a ; copy $40 bytes first
+	call DelayFrame
+	
+	ld a, $d4
+	ld [H_VBCOPYDOUBLESRC + 1], a
+	xor a
+	ld [H_VBCOPYDOUBLESRC], a
+	
+	ld a, [H_VBCOPYDOUBLEDEST + 1]
+	add $4
+	ld [H_VBCOPYDOUBLEDEST + 1], a
+	
+	ld a, c
+	ld [H_VBCOPYDOUBLESIZE], a ; then copy the difference
+.oneframe
+	call DelayFrame
 	pop af
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ret
-
-.keepgoing
-	ld a, 8
-	ld [H_VBCOPYDOUBLESIZE], a
-	call DelayFrame
-	ld a, c
-	sub 8
-	ld c, a
-	jr .loop
 
 ClearScreenArea::
 ; Clear tilemap area cxb at hl.

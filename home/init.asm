@@ -71,14 +71,45 @@ rLCDC_DEFAULT EQU %11100011
 	ld sp, wStack
 	ld hl, $c000 ; start of WRAM
 	ld bc, $2000 ; size of WRAM
-.loop
+.clearwram1
 	ld [hl], 0
 	inc hl
 	dec bc
 	ld a, b
 	or c
-	jr nz, .loop
-
+	jr nz, .clearwram1
+	
+	ld hl, $d000
+	ld bc, $1000
+	lb de, $d0, $10
+	
+	ld a, 2
+	ld [rSVBK], a
+	
+.clearwram2
+	ld [hl], 0
+	inc hl
+	dec bc
+	ld a, b
+	or c
+	jr nz, .clearwram2
+	
+	ld h, d
+	ld b, e
+	
+	ld a, 3
+	ld [rSVBK], a
+.clearwram3
+	ld [hl], 0
+	inc hl
+	dec bc
+	ld a, b
+	or c
+	jr nz, .clearwram3
+	
+	xor a
+	ld [rSVBK], a
+	
 	call ClearVram
 	ld a, 1
 	ld [rVBK], a

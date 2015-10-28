@@ -14,24 +14,17 @@ FarCopyData2::
 	ret
 
 CopyData::
-; Copy bc bytes from hl to de.
-	ld a,b
-	and a
-	jr z, .copybytes
-	ld a,c
-	and a ; is lower byte 0
-	jr z, .loop
-	inc b ; if not, increment b as there are <$100 bytes to copy
-.loop
-	call .copybytes
-	dec b
-	jr nz,.loop
-	ret
-	
-.copybytes
+; copy bc bytes from hl to de
+	inc b  ; we bail the moment b hits 0, so include the last run
+	inc c  ; same thing; include last byte
+	jr .HandleLoop
+.CopyByte
 	ld a, [hli]
 	ld [de], a
 	inc de
+.HandleLoop
 	dec c
-	jr nz, .copybytes
+	jr nz, .CopyByte
+	dec b
+	jr nz, .CopyByte
 	ret

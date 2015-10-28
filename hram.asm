@@ -218,20 +218,25 @@ H_VBCOPYBGNUMROWS EQU $FFC5
 ; size of VBlankCopy transfer in 16-byte units
 H_VBCOPYSIZE EQU $FFC6
 
+; size of source data for VBlankCopyDouble in 8-byte units
+H_VBCOPYDOUBLESIZE EQU $FFC6
+
 ; source address for VBlankCopy function
 H_VBCOPYSRC EQU $FFC7
+
+; source address for VBlankCopyDouble function
+H_VBCOPYDOUBLESRC EQU $FFC7
 
 ; destination address for VBlankCopy function
 H_VBCOPYDEST EQU $FFC9
 
-; size of source data for VBlankCopyDouble in 8-byte units
-H_VBCOPYDOUBLESIZE EQU $FFCB
-
-; source address for VBlankCopyDouble function
-H_VBCOPYDOUBLESRC EQU $FFCC
-
 ; destination address for VBlankCopyDouble function
-H_VBCOPYDOUBLEDEST EQU $FFCE
+H_VBCOPYDOUBLEDEST EQU $FFC9
+
+hSavedWRAMBank EQU $FFCB
+hSavedWRAMBankVBlank EQU $FFCC
+
+hSavedAReg EQU $FFCD
 
 ; controls whether a row or column of 2x2 tile blocks is redrawn in V-blank
 ; 00 = no redraw

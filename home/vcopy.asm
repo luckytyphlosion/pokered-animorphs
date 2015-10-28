@@ -116,7 +116,7 @@ AutoBgMapTransfer:: ; 1d57 (0:1d57)
 	ld [rHDMA3], a					; note that hall of fame breaks because it sets H_AUTOBGTRANSFERDEST to a non-multiple of $10
 	ld a,[H_AUTOBGTRANSFERDEST]		; luckily, it's the only thing that does so
 	ld [rHDMA4], a
-	ld a, 36						; number of multiple of $10 chunks to copy
+	ld a, 36 - 1					; number of multiple of $10 chunks to copy
 	ld [rHDMA5], a					; writing this also doubles as starting the transfer
 	xor a
 	ld [rSVBK], a ; change wram bank back to normal
@@ -199,87 +199,8 @@ WriteCGBPalettes::
 	dec b
 	jr nz, .obp1Loop
 	ret
-	
-VBlankCopyDouble::
-; Copy [H_VBCOPYDOUBLESIZE] 1bpp tiles
-; from H_VBCOPYDOUBLESRC to H_VBCOPYDOUBLEDEST.
 
-; While we're here, convert to 2bpp.
-; The process is straightforward:
-; copy each byte twice.
-
-	ld a, [H_VBCOPYDOUBLESIZE]
-	and a
-	ret z
-
-	ld hl, [sp + 0]
-	ld a, h
-	ld [H_SPTEMP], a
-	ld a, l
-	ld [H_SPTEMP + 1], a
-
-	ld a, [H_VBCOPYDOUBLESRC]
-	ld l, a
-	ld a, [H_VBCOPYDOUBLESRC + 1]
-	ld h, a
-	ld sp, hl
-
-	ld a, [H_VBCOPYDOUBLEDEST]
-	ld l, a
-	ld a, [H_VBCOPYDOUBLEDEST + 1]
-	ld h, a
-
-	ld a, [H_VBCOPYDOUBLESIZE]
-	ld b, a
-	xor a ; transferred
-	ld [H_VBCOPYDOUBLESIZE], a
-
-.loop
-	rept 3
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], e
-	inc l
-	ld [hl], d
-	inc l
-	ld [hl], d
-	inc l
-	endr
-
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], e
-	inc l
-	ld [hl], d
-	inc l
-	ld [hl], d
-	inc hl
-	dec b
-	jr nz, .loop
-
-	ld a, l
-	ld [H_VBCOPYDOUBLEDEST], a
-	ld a, h
-	ld [H_VBCOPYDOUBLEDEST + 1], a
-
-	ld hl, [sp + 0]
-	ld a, l
-	ld [H_VBCOPYDOUBLESRC], a
-	ld a, h
-	ld [H_VBCOPYDOUBLESRC + 1], a
-
-	ld a, [H_SPTEMP]
-	ld h, a
-	ld a, [H_SPTEMP + 1]
-	ld l, a
-	ld sp, hl
-
-	ret
-
-
-VBlankCopy::
+VBlankCopyCommon::
 ; Copy [H_VBCOPYSIZE] 2bpp tiles (or 16 * [H_VBCOPYSIZE] tile map entries)
 ; from H_VBCOPYSRC to H_VBCOPYDEST.
 
@@ -289,65 +210,29 @@ VBlankCopy::
 	ld a, [H_VBCOPYSIZE]
 	and a
 	ret z
-
-	ld hl, [sp + 0]
-	ld a, h
-	ld [H_SPTEMP], a
-	ld a, l
-	ld [H_SPTEMP + 1], a
-
-	ld a, [H_VBCOPYSRC]
-	ld l, a
+	
+	ld a, $3
+	ld [rSVBK], a
+	
 	ld a, [H_VBCOPYSRC + 1]
-	ld h, a
-	ld sp, hl
+	ld [rHDMA1], a
+	ld a, [H_VBCOPYSRC]
+	ld [rHDMA2], a
 
-	ld a, [H_VBCOPYDEST]
-	ld l, a
 	ld a, [H_VBCOPYDEST + 1]
-	ld h, a
-
+	ld [rHDMA3], a
+	ld a, [H_VBCOPYDEST]
+	ld [rHDMA4], a
+	
 	ld a, [H_VBCOPYSIZE]
-	ld b, a
+	dec a
+	ld [rHDMA5], a
+
 	xor a ; transferred
 	ld [H_VBCOPYSIZE], a
-
-.loop
-	rept 7
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], d
-	inc l
-	endr
-
-	pop de
-	ld [hl], e
-	inc l
-	ld [hl], d
-	inc hl
-	dec b
-	jr nz, .loop
-
-	ld a, l
-	ld [H_VBCOPYDEST], a
-	ld a, h
-	ld [H_VBCOPYDEST + 1], a
-
-	ld hl, [sp + 0]
-	ld a, l
-	ld [H_VBCOPYSRC], a
-	ld a, h
-	ld [H_VBCOPYSRC + 1], a
-
-	ld a, [H_SPTEMP]
-	ld h, a
-	ld a, [H_SPTEMP + 1]
-	ld l, a
-	ld sp, hl
-
+	ld [rSVBK], a
+	
 	ret
-
 
 UpdateMovingBgTiles::
 ; Animate water and flower
@@ -356,7 +241,11 @@ UpdateMovingBgTiles::
 	ld a, [hTilesetType]
 	and a
 	ret z ; no animations if indoors (or if a menu set this to 0)
-
+	
+	ld a, [rLY]
+	cp $90
+	ret c
+	
 	ld a, [hMovingBGTilesCounter1]
 	inc a
 	ld [hMovingBGTilesCounter1], a

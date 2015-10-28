@@ -1,10 +1,20 @@
 VBlank::
 
+	ld [hSavedAReg], a
+	
+	ld a, [rSVBK]
+	ld [hSavedWRAMBankVBlank], a
+	
+	ld a, $0
+	ld [rSVBK], a
+	
+	ld a, [hSavedAReg]
+	
 	push af
 	push bc
 	push de
 	push hl
-
+	
 	ld a, [H_LOADEDROMBANK]
 	ld [wVBlankSavedROMBank], a
 
@@ -23,8 +33,7 @@ VBlank::
 	call AutoBgMapTransfer
 	call WriteCGBPalettes
 	call RedrawRowOrColumn
-	call VBlankCopy
-	call VBlankCopyDouble
+	call VBlankCopyCommon
 	call UpdateMovingBgTiles
 	call $ff80 ; hOAMDMA
 
@@ -32,13 +41,9 @@ VBlank::
 
 	call Random
 
-	ld a, [H_VBLANKOCCURRED]
-	and a
-	jr z, .skipZeroing
 	xor a
 	ld [H_VBLANKOCCURRED], a
-
-.skipZeroing
+	
 	ld a, [H_FRAMECOUNTER]
 	and a
 	jr z, .skipDec
@@ -77,11 +82,17 @@ VBlank::
 	ld a, [wVBlankSavedROMBank]
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
-
+	
 	pop hl
 	pop de
 	pop bc
 	pop af
+	ld [hSavedAReg], a
+	
+	ld a, [hSavedWRAMBankVBlank]
+	ld [rSVBK], a
+	
+	ld a, [hSavedAReg]
 	reti
 
 
