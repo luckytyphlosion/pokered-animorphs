@@ -238,6 +238,8 @@ hSavedWRAMBankVBlank EQU $FFCC
 
 hSavedAReg EQU $FFCD
 
+hSavedVBCopySize EQU $FFCE
+
 ; controls whether a row or column of 2x2 tile blocks is redrawn in V-blank
 ; 00 = no redraw
 ; 01 = redraw column

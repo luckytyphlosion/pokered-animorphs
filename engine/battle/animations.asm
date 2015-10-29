@@ -466,7 +466,7 @@ AnimationTypePointerTable: ; 78dcf (1e:4dcf)
 	dw ShakeScreenVertically ; enemy mon has used a damaging move without a side effect
 	dw ShakeScreenHorizontallyHeavy ; enemy mon has used a damaging move with a side effect
 	dw ShakeScreenHorizontallySlow ; enemy mon has used a non-damaging move
-	dw BlinkEnemyMonSprite ; player mon has used a damaging move without a side effect
+	dw ShakeScreenHorizontallyLight ; player mon has used a damaging move without a side effect
 	dw ShakeScreenHorizontallyLight ; player mon has used a damaging move with a side effect
 	dw ShakeScreenHorizontallySlow2 ; player mon has used a non-damaging move
 
@@ -1483,7 +1483,7 @@ AnimationBlinkEnemyMon: ; 79369 (1e:5369)
 AnimationBlinkMon: ; 7936f (1e:536f)
 ; Make the mon's sprite blink on and off for a second or two.
 	push af
-	ld c, 6
+	ld c, 3
 .loop
 	push bc
 	call AnimationHideMonPic

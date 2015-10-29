@@ -50,7 +50,7 @@ CopyVideoData::
 	ld [H_VBCOPYDEST + 1], a
 	
 	ld a, c
-	ld [H_VBCOPYSIZE], a
+	ld [hSavedVBCopySize], a
 	
 	ld h,d 
 	ld l,e
@@ -112,7 +112,7 @@ CopyVideoDataDouble::
 	ld [H_VBCOPYDOUBLEDEST + 1], a
 	
 	ld a, c
-	ld [H_VBCOPYDOUBLESIZE], a
+	ld [hSavedVBCopySize], a
 
 	ld hl, $d000 ; set hl to 3:d000 (scratch space)
 	
@@ -170,13 +170,14 @@ CopyVideoDataCommon:
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [$2000], a
-	
+
 	ld a, $d0
 	ld [H_VBCOPYDOUBLESRC + 1], a
 	xor a
 	ld [H_VBCOPYDOUBLESRC], a
 	
-	ld a, [H_VBCOPYDOUBLESIZE]
+	ld a, [hSavedVBCopySize]
+	ld [H_VBCOPYDOUBLESIZE], a
 	ld b, $40
 	sub b ; $40 or more tiles to copy?
 	jr c, .oneframe

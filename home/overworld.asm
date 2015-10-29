@@ -2340,6 +2340,12 @@ LoadMapData:: ; 1241 (0:1241)
 .noCarry
 	dec b
 	jr nz,.vramCopyLoop
+	push de
+	push hl
+	ld h, vBGMap1 / $100
+	call ClearBgMap
+	pop hl
+	pop de
 	ld a,$01
 	ld [wUpdateSpritesEnabled],a
 	call EnableLCD

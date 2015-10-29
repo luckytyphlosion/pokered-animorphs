@@ -542,15 +542,6 @@ PrintLevelCommon:: ; 1523 (0:1523)
 	ld b,LEFT_ALIGN | 1 ; 1 byte
 	jp PrintNumber
 
-GetwMoves:: ; 152e (0:152e)
-; Unused. Returns the move at index a from wMoves in a
-	ld hl,wMoves
-	ld c,a
-	ld b,0
-	add hl,bc
-	ld a,[hl]
-	ret
-
 ; copies the base stat data of a pokemon to wMonHeader
 ; INPUT:
 ; [wd0b5] = pokemon ID
@@ -1147,15 +1138,17 @@ AfterDisplayingTextID:: ; 29d6 (0:29d6)
 	ld a,[wEnteringCableClub]
 	and a
 	jr nz,HoldTextDisplayOpen
-	call WaitForTextScrollButtonPress ; wait for a button press after displaying all the text
+	;call WaitForTextScrollButtonHold ; wait for a button press after displaying all the text
 
 ; loop to hold the dialogue box open as long as the player keeps holding down the A button
 HoldTextDisplayOpen:: ; 29df (0:29df)
 	call Joypad
 	ld a,[hJoyHeld]
-	bit 0,a ; is the A button being pressed?
-	jr nz,HoldTextDisplayOpen
-
+	and A_BUTTON | B_BUTTON ; is the A or B button being held?
+	jr z,HoldTextDisplayOpen
+	bit 0, a ; is the A button being held?
+	call nz, WaitForHalfASecondOrBButton
+	
 CloseTextDisplay:: ; 29e8 (0:29e8)
 	ld a,[wCurMap]
 	call SwitchToMapRomBank
@@ -1192,6 +1185,20 @@ CloseTextDisplay:: ; 29e8 (0:29e8)
 	ld [MBC1RomBank],a
 	jp UpdateSprites
 
+WaitForHalfASecondOrBButton::
+	ld c, 30
+.loop
+	call DelayFrame
+	call Joypad
+	ld a, [hJoyHeld]
+	bit 0, a ; holding A button?
+	ret z ; no more delay if not holding A button
+	bit 1, a ; holding B button?
+	ret nz ; no more delay if holding B button
+	dec c ; half second passed?
+	jr nz, .loop
+	ret
+	
 DisplayPokemartDialogue:: ; 2a2e (0:2a2e)
 	push hl
 	ld hl,PokemartGreetingText
@@ -1422,8 +1429,7 @@ DisplayListMenuID:: ; 2be6 (0:2be6)
 	ld [wTopMenuItemX],a
 	ld a,A_BUTTON | B_BUTTON | SELECT
 	ld [wMenuWatchedKeys],a
-	ld c,10
-	call DelayFrames
+	call DelayFrame
 
 DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 	xor a
@@ -3405,16 +3411,24 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	and a ; is the delay over?
 	jr z,.delayOver
 .delayNotOver
+	ld a, [hJoy6]
+	inc a
+	ret z ; report buttons if [hJoy6] = $ff
+	
 	xor a
 	ld [hJoy5],a ; report no buttons as pressed
 	ret
 .delayOver
 ; if [hJoy6] = 0 and A or B is pressed, report no buttons as pressed
+; else, if [hJoy6] = $ff, do not add any delay
+; else, get buttons with delay
 	ld a,[hJoyHeld]
 	and A_BUTTON | B_BUTTON
 	jr z,.setShortDelay
 	ld a,[hJoy6] ; flag
-	and a
+	inc a
+	ret z ; no delay
+	dec a
 	jr nz,.setShortDelay
 	xor a
 	ld [hJoy5],a
@@ -3446,7 +3460,7 @@ WaitForTextScrollButtonPress:: ; 3865 (0:3865)
 	pop hl
 	call JoypadLowSensitivity
 	predef CableClub_Run
-	ld a, [hJoyHeld]
+	ld a, [hJoy5]
 	and A_BUTTON | B_BUTTON
 	jr z, .loop
 	pop af
@@ -3498,6 +3512,12 @@ Divide:: ; 38b9 (0:38b9)
 	pop hl
 	ret
 	
+; This function is used to wait a short period after printing a letter to the
+; screen unless the player presses the A/B button or the delay is turned off
+; through the [wd730] or [wLetterPrintingDelayFlags] flags.
+PrintLetterDelay:: ; 38d3 (0:38d3)
+	ret
+	
 ; copies a string from [de] to [wcf4b]
 CopyStringToCF4B:: ; 3826 (0:3826)
 	ld hl, wcf4b
@@ -3517,60 +3537,40 @@ ManualTextScroll:: ; 3898 (0:3898)
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
 	jr z, .inLinkBattle
-	call WaitForTextScrollButtonPress
+	ld a, [hJoy7]
+	push af
+	ld a, [hJoy6]
+	push af
+	ld a, $1
+	ld [hJoy7], a
+	ld a, $ff
+	ld [hJoy6], a
+	call WaitForTextScrollButtonHold
+	pop af
+	ld [hJoy6], a
+	pop af
+	ld [hJoy7], a
 	ld a, SFX_PRESS_AB
 	jp PlaySound
 .inLinkBattle
 	ld c, 65
 	jp DelayFrames
 
-; This function is used to wait a short period after printing a letter to the
-; screen unless the player presses the A/B button or the delay is turned off
-; through the [wd730] or [wLetterPrintingDelayFlags] flags.
-PrintLetterDelay:: ; 38d3 (0:38d3)
+WaitForTextScrollButtonHold:
+	ld a, [hJoy7]
+	push af
+	ld a, [hJoy6]
+	push af
+	ld a, $1
+	ld [hJoy7], a
+	ld a, $ff
+	ld [hJoy6], a
+	call WaitForTextScrollButtonPress
+	pop af
+	ld [hJoy6], a
+	pop af
+	ld [hJoy7], a
 	ret
-	ds 2
-	bit 6,a
-	ret nz
-	ld a,[wLetterPrintingDelayFlags]
-	bit 1,a
-	ret z
-	push hl
-	push de
-	push bc
-	ld a,[wLetterPrintingDelayFlags]
-	bit 0,a
-	jr z,.waitOneFrame
-	ld a,[wOptions]
-	and $f
-	ld [H_FRAMECOUNTER],a
-	jr .checkButtons
-.waitOneFrame
-	ld a,1
-	ld [H_FRAMECOUNTER],a
-.checkButtons
-	call Joypad
-	ld a,[hJoyHeld]
-.checkAButton
-	bit 0,a ; is the A button pressed?
-	jr z,.checkBButton
-	jr .endWait
-.checkBButton
-	bit 1,a ; is the B button pressed?
-	jr z,.buttonsNotPressed
-.endWait
-	call DelayFrame
-	jr .done
-.buttonsNotPressed ; if neither A nor B is pressed
-	ld a,[H_FRAMECOUNTER]
-	and a
-	jr nz,.checkButtons
-.done
-	pop bc
-	pop de
-	pop hl
-	ret
-
 ; Copies [hl, bc) to [de, bc - hl).
 ; In other words, the source data is from hl up to but not including bc,
 ; and the destination is de.
@@ -4016,13 +4016,6 @@ HandleMenuInput_:: ; 3ac2 (0:3ac2)
 	ld a,[wMenuWatchMovingOutOfBounds]
 	and a ; should we return if the user tried to go past the top or bottom?
 	jr z,.checkOtherKeys
-	;ld a, [wMenuWatchedKeys]
-	;and D_LEFT | D_RIGHT
-	;jr nz,.checkIfAButtonOrBButtonPressed
-	ld a, D_LEFT | D_RIGHT
-	and b
-	jr z,.checkIfAButtonOrBButtonPressed
-	call Delay3
 	jr .checkIfAButtonOrBButtonPressed
 
 PlaceMenuCursor:: ; 3b7c (0:3b7c)
@@ -4667,20 +4660,26 @@ SetMapTextPointer:: ; 3f0f (0:3f0f)
 	ret
 
 HBlank::
+	ld [hSavedAReg], a
+	
+	ld a, [rSVBK]
+	ld [hSavedWRAMBankVBlank], a
+	
+	ld a, $0
+	ld [rSVBK], a
+	
+	ld a, [hSavedAReg]
+	
 	push af
 	push bc
 	push de
 	push hl
 	ld a, [H_LOADEDROMBANK]
 	push af
-	ld a, [rSVBK]
-	push af
 	ld a, BANK(CopyScreenTilesToWRAMBuffer)
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	call CopyScreenTilesToWRAMBuffer
-	pop af
-	ld [rSVBK], a
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
@@ -4688,6 +4687,12 @@ HBlank::
 	pop de
 	pop bc
 	pop af
+	ld [hSavedAReg], a
+	
+	ld a, [hSavedWRAMBankVBlank]
+	ld [rSVBK], a
+	
+	ld a, [hSavedAReg]
 	reti
 	
 TextPredefs::
