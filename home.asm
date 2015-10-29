@@ -1437,7 +1437,7 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 	call PrintListMenuEntries
 	ld a,1
 	ld [H_AUTOBGTRANSFERENABLED],a ; enable transfer
-	call Delay3
+	call DelayFrame
 	ld a,[wBattleType]
 	and a ; is it the Old Man battle?
 	jr z,.notOldManBattle
@@ -3403,7 +3403,13 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	and a ; have any buttons been newly pressed since last check?
 	jr z,.noNewlyPressedButtons
 .newlyPressedButtons
+	ld a, [wOptions]
+	and $f
+	cp $5 ; slow
+	ld a, $9
+	jr z, .slowOption
 	ld a, 5
+.slowOption
 	ld [H_FRAMECOUNTER], a
 	ret
 .noNewlyPressedButtons
@@ -3414,7 +3420,6 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	ld a, [hJoy6]
 	inc a
 	ret z ; report buttons if [hJoy6] = $ff
-	
 	xor a
 	ld [hJoy5],a ; report no buttons as pressed
 	ret
@@ -3433,10 +3438,20 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	xor a
 	ld [hJoy5],a
 .setShortDelay
+	push bc
 	ld a, [wOptions]
 	and $f
-	add $3
+	cp $1 ; superfast
+	ld b, $0
+	jr z, .loadFrameCounter
+	cp $3
+	ld b, $5
+	jr z, .loadFrameCounter
+	ld b, $8
+.loadFrameCounter
+	ld a, b
 	ld [H_FRAMECOUNTER],a
+	pop bc
 	ret
 
 WaitForTextScrollButtonPress:: ; 3865 (0:3865)
