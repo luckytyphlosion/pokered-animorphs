@@ -100,8 +100,7 @@ LeaguePCShowMon: ; 76610 (1d:6610)
 	call LoadFrontSpriteByMonIndex
 	call GBPalNormal
 	coord hl, 0, 13
-	ld b, 2
-	ld c, $12
+	lb bc, 2, 18
 	call TextBoxBorder
 	coord hl, 1, 15
 	ld de, HallOfFameNoText

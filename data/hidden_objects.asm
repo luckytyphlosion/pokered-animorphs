@@ -86,7 +86,6 @@ HiddenObjectMaps: ; 46a40 (11:6a40)
 	db ROUTE_4
 	db $FF
 
-	ds 1
 HiddenObjectPointers: ; 46a96 (11:6a96)
 ; each of these pointers is for the corresponding map in HiddenObjectMaps
 	dw RedsHouse2FHiddenObjects

@@ -361,7 +361,7 @@ DisplayContinueGameInfo: ; 5db5 (1:5db5)
 	call PrintPlayTime
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	ld c, 30
+	ld c, 1
 	jp DelayFrames
 
 PrintSaveScreenText: ; 5def (1:5def)
@@ -387,7 +387,7 @@ PrintSaveScreenText: ; 5def (1:5def)
 	call PrintPlayTime
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	ld c, 30
+	ld c, 1
 	jp DelayFrames
 
 PrintNumBadges: ; 5e2f (1:5e2f)
