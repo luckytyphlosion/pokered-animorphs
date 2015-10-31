@@ -542,7 +542,7 @@ wSwitchPartyMonTempBuffer:: ; cc97
 wNumStepsToTake:: ; cca1
 ; used in Pallet Town scripted movement
 	ds 49
-
+	
 wRLEByteCount:: ; ccd2
 	ds 1
 
@@ -1147,7 +1147,6 @@ wFlags_0xcd60:: ; cd60
 	ds 1
 
 	ds 9
-
 wActionResultOrTookBattleTurn:: ; cd6a
 ; This has overlapping related uses.
 ; When the player tries to use an item or use certain field moves, 0 is stored
@@ -2180,7 +2179,16 @@ wSavedSpriteMapY:: ; d132
 wSavedSpriteMapX:: ; d133
 	ds 1
 
-	ds 5
+wSavedBattleTransitionPtr::
+	ds 2
+
+wCopySpriteToVRAM::
+	ds 1
+	
+wDoOAMUpdate::
+	ds 1
+	
+	ds 1
 
 wWhichPrize:: ; d139
 	ds 1
@@ -2515,8 +2523,15 @@ wTempOBP0::
 	ds 8
 wTempOBP1::
 	ds 8
+
+	ds 52
+wBattleTransitionReturnPointer::
+wBattleTransitionSP::
+	ds 2
+wBattleTransitionSPPointer::
+	ds 2
 	
-	ds 104
+	ds 48
 
 wNumSigns:: ; d4b0
 ; number of signs in the current map (up to 16)
@@ -3159,8 +3174,7 @@ wBoxMonNicks:: ds NAME_LENGTH * MONS_PER_BOX ; de06
 wBoxMonNicksEnd:: ; dee2
 
 wBoxDataEnd::
-
-
+	
 SECTION "Stack", WRAMX[$dfff], BANK[1]
 wStack:: ; dfff
 	ds -$100

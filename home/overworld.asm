@@ -109,20 +109,8 @@ OverworldLoopLessDelay::
 	ld a,[wEnteringCableClub]
 	and a
 	jr z,.checkForOpponent
-	dec a
-	ld a,0
-	ld [wEnteringCableClub],a
-	jr z,.changeMap
-; XXX can this code be reached?
-	predef LoadSAV
-	ld a,[wCurMap]
-	ld [wDestinationMap],a
-	call SpecialWarpIn
-	ld a,[wCurMap]
-	call SwitchToMapRomBank ; switch to the ROM bank of the current map
-	ld hl,wCurMapTileset
-	set 7,[hl]
-.changeMap
+	xor a
+	ld [wLinkTimeoutCounter],a
 	jp EnterMap
 .checkForOpponent
 	ld a,[wCurOpponent]

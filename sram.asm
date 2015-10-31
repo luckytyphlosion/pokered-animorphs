@@ -7,7 +7,7 @@ sSpriteBuffer2:: ds SPRITEBUFFERSIZE ; a310
 	ds $100
 
 sHallOfFame:: ds HOF_TEAM * HOF_TEAM_CAPACITY ; a598
-
+sSpriteBuffer3:: ds SPRITEBUFFERSIZE * 2
 
 SECTION "Save Data", SRAM, BANK[1]
 	ds $598

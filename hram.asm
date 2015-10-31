@@ -1,8 +1,6 @@
-hSoftReset EQU $FF8A
-; Initialized to 16.
-; Decremented each input iteration if the player
-; presses the reset sequence (A+B+SEL+START).
-; Soft reset when 0 is reached.
+hBattleTransitionSavedBCReg EQU $FF85
+hBattleTransitionSavedDEReg EQU $FF87
+hBattleTransitionSavedHLReg EQU $FF89
 
 ; base tile ID to which offsets are added
 hBaseTileID EQU $FF8B
@@ -319,10 +317,16 @@ hFlags_0xFFF6 EQU $FFF6
 
 hFieldMoveMonMenuTopMenuItemX EQU $FFF7
 
-hDisableJoypadPolling EQU $FFF9
-
 hJoyInput EQU $FFF8
+
+hDisableJoypadPolling EQU $FFF9
 
 hLastBGP EQU $FFFA
 hLastOBP0 EQU $FFFB
 hLastOBP1 EQU $FFFC
+hDoBattleTransition EQU $FFFD
+; Initialized to 16.
+; Decremented each input iteration if the player
+; presses the reset sequence (A+B+SEL+START).
+; Soft reset when 0 is reached.
+hSoftReset EQU $FFFE

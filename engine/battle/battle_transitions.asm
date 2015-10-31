@@ -59,11 +59,39 @@ BattleTransition: ; 7096d (1c:496d)
 	ld hl, BattleTransitions
 	add hl, bc
 	add hl, bc
+; save ptr in wram
+	ld de, wSavedBattleTransitionPtr
 	ld a, [hli]
-	ld h, [hl]
-	ld l, a
-	jp [hl]
-
+	ld [de], a
+	inc de
+	ld a, [hl]
+	ld [de], a
+	inc de
+	ld a, $1
+	ld [de], a
+; now write the SP that will be used for the battle transition
+	ld a, wBattleTransitionSP / $100 ; high
+	ld [wBattleTransitionSPPointer + 1], a
+	ld a, wBattleTransitionSP & $ff ; low
+	ld [wBattleTransitionSPPointer], a
+; write the return address for the battle transition
+	ld a, FinishedBattleTransition / $100 ; high
+	ld [wBattleTransitionReturnPointer + 1], a
+	ld a, FinishedBattleTransition & $ff ; low
+	ld [wBattleTransitionReturnPointer], a
+	
+	ld hl, hBattleTransitionSavedBCReg
+	ld c, hBaseTileID - hBattleTransitionSavedBCReg
+	xor a
+.clearSavedRegsloop
+	ld [hli], a
+	dec c
+	jr nz, .clearSavedRegsloop
+	
+	ld a, $1
+	ld [hDoBattleTransition], a
+	ret
+	
 ; the three GetBattleTransitionID functions set the first
 ; three bits of c, which determines what transition animation
 ; to play at the beginning of a battle
@@ -225,7 +253,7 @@ BattleTransition_Spiral: ; 70a72 (1c:4a72)
 	pop bc
 	dec c
 	jr nz, .innerLoop
-	call DelayFrame
+	call ReturnFromVBlankCall
 	dec b
 	jr nz, .loop
 .done
@@ -360,7 +388,7 @@ BattleTransition_FlashScreen_: ; 70b5d (1c:4b5d)
 	jr z, .done
 	ld [rBGP], a
 	ld c, 2
-	call DelayFrames
+	call BattleTransition_DelayFrames
 	jr .loop
 .done
 	dec b
@@ -397,13 +425,13 @@ BattleTransition_Shrink: ; 70b7f (1c:4b7f)
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ld c, 6
-	call DelayFrames
+	call BattleTransition_DelayFrames
 	pop bc
 	dec c
 	jr nz, .loop
 	call BattleTransition_BlackScreen
 	ld c, 10
-	jp DelayFrames
+	jp BattleTransition_DelayFrames
 
 ; used for high level trainer dungeon battles
 BattleTransition_Split: ; 70bca (1c:4bca)
@@ -429,13 +457,17 @@ BattleTransition_Split: ; 70bca (1c:4bca)
 	ld bc, 2
 	call BattleTransition_CopyTiles2
 	call BattleTransition_TransferDelay3
-	call Delay3
+	ld c, 3
+.delay3loop
+	call ReturnFromVBlankCall
+	dec c
+	jr nz, .delay3loop
 	pop bc
 	dec c
 	jr nz, .loop
 	call BattleTransition_BlackScreen
 	ld c, 10
-	jp DelayFrames
+	jp BattleTransition_DelayFrames
 
 BattleTransition_CopyTiles1: ; 70c12 (1c:4c12)
 	ld a, c
@@ -630,9 +662,19 @@ BattleTransition_Circle_Sub1: ; 70d06 (1c:4d06)
 BattleTransition_TransferDelay3: ; 70d19 (1c:4d19)
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
-	call Delay3
+	ld c, 3
+.loop
+	call ReturnFromVBlankCall
+	dec c
+	jr nz, .loop
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
+BattleTransition_DelayFrames:
+	call ReturnFromVBlankCall
+	dec c
+	jr nz, BattleTransition_DelayFrames
 	ret
 
 ; used for low level wild non-dungeon battles
@@ -805,7 +847,7 @@ BattleTransition_Circle_Sub3: ; 70dc5 (1c:4dc5)
 	dec c
 	jr nz, .loop2
 	jr BattleTransition_Circle_Sub3
-
+	
 BattleTransition_CircleData1: ; 70dfe (1c:4dfe)
 	db $02,$03,$05,$04,$09,$FF
 
@@ -820,3 +862,79 @@ BattleTransition_CircleData4: ; 70e20 (1c:4e20)
 
 BattleTransition_CircleData5: ; 70e2e (1c:4e2e)
 	db $04,$00,$03,$00,$03,$00,$02,$00,$02,$00,$01,$00,$01,$00,$01,$FF
+
+BattleTransitionPreparation:
+; multithreading on a gameboy lol
+	
+	ld [H_SPTEMP], sp
+	ld hl, wBattleTransitionSPPointer
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	ld sp, hl ; two stack pointers yay
+	
+	ld a, [wSavedBattleTransitionPtr]
+	ld e, a
+	ld a, [wSavedBattleTransitionPtr + 1]
+	ld d, a
+	push de
+	
+	ld hl, hBattleTransitionSavedBCReg
+	
+	ld a, [hli]
+	ld c, a
+	ld a, [hli]
+	ld b, a
+	
+	ld a, [hli]
+	ld e, a
+	ld a, [hli]
+	ld d, a
+	
+	
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	
+	ret
+
+FinishedBattleTransition:
+	xor a
+	ld [hDoBattleTransition], a
+	jr reloadSP
+ReturnFromVBlankCall:
+	ld a, l
+	ld [hBattleTransitionSavedHLReg], a
+	ld a, h
+	ld [hBattleTransitionSavedHLReg + 1], a
+	ld hl, hBattleTransitionSavedBCReg
+	
+	ld a, c
+	ld [hli], a
+	ld a, b
+	ld [hli], a
+	ld a, e
+	ld [hli], a
+	ld [hl], d
+
+	pop hl
+	ld a, h
+	ld [wSavedBattleTransitionPtr + 1], a
+	ld a, l
+	ld [wSavedBattleTransitionPtr], a
+	ld hl, [sp + 0]
+	ld a, h
+	ld [wBattleTransitionSPPointer + 1], a
+	ld a, l
+	ld [wBattleTransitionSPPointer], a
+reloadSP:
+	ld a, [H_SPTEMP + 1]
+	ld h, a
+	ld a, [H_SPTEMP]
+	ld l, a
+	ld sp, hl
+	
+	ret
+	
+	
+	

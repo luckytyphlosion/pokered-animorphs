@@ -71,18 +71,57 @@ CopyVideoData::
 	ld a,$f0
 	and c
 	ld c,a
-
+	
 	ld a, [rSVBK]
 	ld [hSavedWRAMBank], a
 	
 	ld a, $3
 	ld [rSVBK], a
+	
+	bit 7, h
+	jr z, .notCopyingFromVRAM
+	ld a, h ; sSpriteBuffer0 / $100
+	cp $a0
+	jr nc, .notCopyingFromVRAM
+; custom function incase we're copying from vram
+	inc b
+	inc c
+	dec c
+	jr nz, .waitForNonHBlank
+	dec b
+.waitForNonHBlank
+	ld a, [rSTAT]
+	bit 0, a ; in hblank/oam period?
+	jr z, .waitForNonHBlank ; wait until we've passed that to get the full effect
+.waitForHBlank
+	ld a, [rSTAT]
+	bit 0, a
+	jr nz, .waitForHBlank
+	ld a, [hli]
+	ld [de], a
+	inc e
+	ld a, [hli]
+	ld [de], a
+	inc e
+	ld a, [hli]
+	ld [de], a
+	inc e
+	ld a, [hli]
+	ld [de], a
+	inc de
+	
+	dec c
+	jr nz, .waitForNonHBlank
+	dec b
+	jr nz, .waitForNonHBlank
+	jr CopyVideoDataCommon
+
 ; input is now:
 ; hl = source
 ; de = destination
 ; bc = raw bytes to copy
 ; a = bank
-	
+.notCopyingFromVRAM	
 	inc b  ; we bail the moment b hits 0, so include the last run
 	inc c  ; same thing; include last byte
 	jr .HandleLoop
@@ -227,7 +266,7 @@ CopyScreenTileBufferToVRAM::
 ; Copy wTileMap to the BG Map starting at b * $100.
 ; This is done in thirds of 6 rows, so it takes 3 frames.
 	ld a, [rLY]
-	cp $75
+	cp $80
 	call nc, DelayFrame ; if ly is past $80, then wait for another vblank for the tilemap to be successfully copied
 						; not exactly sure if needed
 	ld a, [H_AUTOBGTRANSFERDEST + 1]

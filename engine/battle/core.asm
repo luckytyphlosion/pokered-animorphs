@@ -5435,6 +5435,7 @@ AIGetTypeEffectiveness: ; 3e449 (f:6449)
 	ld [wTypeEffectiveness],a ; store damage multiplier
 	ret
 
+SECTION "updated types", ROMX[$6474]
 INCLUDE "data/type_effects.asm"
 
 ; some tests that need to pass for a move to hit
@@ -6373,12 +6374,82 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 .next
 	call DelayFrame
 	predef BattleTransition
+	ld a, [wIsInBattle]
+	dec a
+	jr z, .wildBattle
+; trainer
+	callab ReadTrainer
+	ld a, $1
+	ld [wCopySpriteToVRAM], a
+	call _LoadTrainerPic
+	jr .continue
+
+.wildBattle
+	call LoadEnemyMonData
+	ld a, [wCurOpponent]
+	cp MAROWAK
+	jr z, .isGhost
+	call IsGhostBattle
+	jr nz, .isNoGhost
+.isGhost
+	ld hl, wMonHSpriteDim
+	ld a, $66
+	ld [hli], a   ; write sprite dimensions
+	ld hl, wMonHSpriteDim
+	ld a, $66
+	ld [hli], a   ; write sprite dimensions
+	ld bc, GhostPic
+	ld a, c
+	ld [hli], a   ; write front sprite pointer
+	ld [hl], b
+	ld hl, wEnemyMonNick  ; set name to "GHOST"
+	ld a, "G"
+	ld [hli], a
+	ld a, "H"
+	ld [hli], a
+	ld a, "O"
+	ld [hli], a
+	ld a, "S"
+	ld [hli], a
+	ld a, "T"
+	ld [hli], a
+	ld [hl], "@"
+	ld a, [wcf91]
+	push af
+	ld a, MON_GHOST
+	ld [wcf91], a
+	call LoadMonFrontSpriteDoNotCopyToVRAM ; load ghost sprite
+	pop af
+	ld [wcf91], a
+	jr .continue
+.isNoGhost
+	call LoadMonFrontSpriteDoNotCopyToVRAM
+.continue
+	ld hl, sSpriteBuffer1
+	ld de, sSpriteBuffer3
+	ld bc, 2*SPRITEBUFFERSIZE
+	call CopyData
+	call DecompressPlayerBackPic
+	jr .noDelay
+.waitForBattleTransition
+	call DelayFrame
+.noDelay
+	ld a, [hDoBattleTransition]
+	and a
+	jr nz, .waitForBattleTransition
 	callab LoadHudAndHpBarAndStatusTilePatterns
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ld a, $ff
 	ld [wUpdateSpritesEnabled], a
-	call ClearSprites
+	xor a
+	ld hl, wOAMBuffer + 21 * 4
+	ld b, 19 * 4
+.clearNonHeadSpritesLoop
+	ld [hli], a
+	dec b
+	jr nz, .clearNonHeadSpritesLoop
+	
 	call ClearScreen
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
@@ -6392,7 +6463,19 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	ld [hli], a
 	ld [hl], a
 	ld [wPlayerDisabledMove], a
-	ret
+	
+	ld hl, vFrontPic
+	ld de, sSpriteBuffer3
+	ld c, (2*SPRITEBUFFERSIZE)/16 ; $31, number of 16 byte chunks to be copied
+	ld a, [H_LOADEDROMBANK]
+	ld b, a
+	push bc
+	call CopyVideoData
+	ld hl, vBackPic
+	ld de, sSpriteBuffer1
+	pop bc
+	ld c, (2*SPRITEBUFFERSIZE)/16
+	jp CopyVideoData
 
 ; swaps the level values of the BattleMon and EnemyMon structs
 SwapPlayerAndEnemyLevels: ; 3ec81 (f:6c81)
@@ -6409,7 +6492,7 @@ SwapPlayerAndEnemyLevels: ; 3ec81 (f:6c81)
 ; loads either red back pic or old man back pic
 ; also writes OAM data and loads tile patterns for the Red or Old Man back sprite's head
 ; (for use when scrolling the player sprite and enemy's silhouettes on screen)
-LoadPlayerBackPic: ; 3ec92 (f:6c92)
+DecompressPlayerBackPic: ; 3ec92 (f:6c92)
 	ld a, [wBattleType]
 	dec a ; is it the old man tutorial?
 	ld de, RedPicBack
@@ -6419,6 +6502,8 @@ LoadPlayerBackPic: ; 3ec92 (f:6c92)
 	ld a, BANK(RedPicBack)
 	call UncompressSpriteFromDE
 	predef ScaleSpriteByTwo
+	ld a, $1
+	ld [wDoOAMUpdate], a
 	ld hl, wOAMBuffer
 	xor a
 	ld [hOAMTile], a ; initial tile number
@@ -6450,12 +6535,16 @@ LoadPlayerBackPic: ; 3ec92 (f:6c92)
 	ld e, a
 	dec b
 	jr nz, .loop
-	ld de, vBackPic
-	call InterlaceMergeSpriteBuffers
+	ld a, $1
+	ld [wCopySpriteToVRAM], a
+	jp InterlaceMergeSpriteBuffers
+
+LoadPlayerBackPic:
 	ld a, $a
 	ld [$0], a
 	xor a
 	ld [$4000], a
+	ld [wDoOAMUpdate], a
 	ld hl, vSprites
 	ld de, sSpriteBuffer1
 	ld a, [H_LOADEDROMBANK]
@@ -6873,9 +6962,9 @@ InitBattleCommon: ; 3ef3d (f:6f3d)
 	jp c, InitWildBattle
 	ld [wTrainerClass], a
 	call GetTrainerInformation
-	callab ReadTrainer
+	ld a, $2
+	ld [wIsInBattle], a
 	call DoBattleTransitionAndInitBattleVariables
-	call _LoadTrainerPic
 	xor a
 	ld [wEnemyMonSpecies2], a
 	ld [hStartTileID], a
@@ -6885,53 +6974,12 @@ InitBattleCommon: ; 3ef3d (f:6f3d)
 	predef CopyUncompressedPicToTilemap
 	ld a, $ff
 	ld [wEnemyMonPartyPos], a
-	ld a, $2
-	ld [wIsInBattle], a
 	jp _InitBattleCommon
 
 InitWildBattle: ; 3ef8b (f:6f8b)
 	ld a, $1
 	ld [wIsInBattle], a
-	call LoadEnemyMonData
 	call DoBattleTransitionAndInitBattleVariables
-	ld a, [wCurOpponent]
-	cp MAROWAK
-	jr z, .isGhost
-	call IsGhostBattle
-	jr nz, .isNoGhost
-.isGhost
-	ld hl, wMonHSpriteDim
-	ld a, $66
-	ld [hli], a   ; write sprite dimensions
-	ld bc, GhostPic
-	ld a, c
-	ld [hli], a   ; write front sprite pointer
-	ld [hl], b
-	ld hl, wEnemyMonNick  ; set name to "GHOST"
-	ld a, "G"
-	ld [hli], a
-	ld a, "H"
-	ld [hli], a
-	ld a, "O"
-	ld [hli], a
-	ld a, "S"
-	ld [hli], a
-	ld a, "T"
-	ld [hli], a
-	ld [hl], "@"
-	ld a, [wcf91]
-	push af
-	ld a, MON_GHOST
-	ld [wcf91], a
-	ld de, vFrontPic
-	call LoadMonFrontSprite ; load ghost sprite
-	pop af
-	ld [wcf91], a
-	jr .spriteLoaded
-.isNoGhost
-	ld de, vFrontPic
-	call LoadMonFrontSprite ; load mon sprite
-.spriteLoaded
 	xor a
 	ld [wTrainerClass], a
 	ld [hStartTileID], a

@@ -35,7 +35,11 @@ VBlank::
 	call RedrawRowOrColumn
 	call VBlankCopyCommon
 	call UpdateMovingBgTiles
-	call $ff80 ; hOAMDMA
+	ld a, [wDoOAMUpdate]
+	and a
+	ld a, wOAMBuffer / $100
+	lb bc, $29, rDMA & $ff
+	call z, $ff80 ; hOAMDMA
 
 	; VBlank-sensitive operations end.
 
@@ -52,7 +56,7 @@ VBlank::
 
 .skipDec
 	call FadeOutAudio
-
+	
 	ld a, [wAudioROMBank] ; music ROM bank
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
@@ -72,6 +76,16 @@ VBlank::
 .audio3
 	call Audio3_UpdateMusic
 .afterMusic
+	ld a, [hDoBattleTransition]
+	and a ; do battle transition?
+	jr z, .noBattleTransition
+	ld a, BANK(BattleTransition)
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	call BattleTransitionPreparation
+	
+.noBattleTransition
+
 
 	callba TrackPlayTime ; keep track of time played
 
@@ -94,8 +108,7 @@ VBlank::
 	
 	ld a, [hSavedAReg]
 	reti
-
-
+	
 DelayFrame::
 ; Wait for the next vblank interrupt.
 ; As a bonus, this saves battery.

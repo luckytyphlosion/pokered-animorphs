@@ -584,7 +584,7 @@ TextCommand0A:: ; 1c1d (0:1c1d)
 	pop bc
 	pop hl
 	jp NextTextCommand
-
+	
 ; plays sounds
 ; this actually handles various command ID's, not just 0B
 ; (no arguments)
@@ -637,7 +637,7 @@ TextCommandSounds:: ; 1c64 (0:1c64)
 	db $14,NIDORINA ; used in OakSpeech
 	db $15,PIDGEOT  ; used in SaffronCityText12
 	db $16,DEWGONG  ; unused?
-
+	
 ; draw ellipses
 ; 0CAA
 ; AA = number of ellipses to draw
