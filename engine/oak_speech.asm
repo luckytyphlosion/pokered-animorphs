@@ -64,6 +64,8 @@ OakSpeech: ; 6115 (1:6115)
 	call PrintText
 	call GBFadeOutToWhite
 	call ClearScreen
+	
+SECTION "intro pokemon",ROMX[$616c]
 	ld a,NIDORINO
 	ld [wd0b5],a
 	ld [wcf91],a
