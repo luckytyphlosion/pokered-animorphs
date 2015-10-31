@@ -84,6 +84,7 @@ InGameTrade_GetMonName: ; 71b6a (1c:5b6a)
 	ld bc, NAME_LENGTH
 	jp CopyData
 
+SECTION "random trades",ROMX[$5b7b],BANK[$1C]
 INCLUDE "data/trades.asm"
 
 InGameTrade_DoTrade: ; 71c07 (1c:5c07)

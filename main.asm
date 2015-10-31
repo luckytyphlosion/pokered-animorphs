@@ -5120,17 +5120,12 @@ INCLUDE "data/mapHeaders/billshouse.asm"
 INCLUDE "scripts/billshouse.asm"
 INCLUDE "data/mapObjects/billshouse.asm"
 BillsHouseBlocks: INCBIN "maps/billshouse.blk"
-IF DEF(_OPTION_BEACH_HOUSE)
-INCLUDE "data/mapHeaders/beach_house.asm"
-INCLUDE "scripts/beach_house.asm"
-BeachHouseBlockdata: INCBIN "maps/beach_house.blk"
-INCLUDE "data/mapObjects/beach_house.asm"
-ENDC
 
 INCLUDE "engine/menu/oaks_pc.asm"
 
 INCLUDE "engine/hidden_object_functions7.asm"
 
+INCLUDE "engine/hblank.asm"
 
 SECTION "Pics 1", ROMX, BANK[PICS_1]
 
@@ -6469,7 +6464,7 @@ INCLUDE "data/mapObjects/silphco11.asm"
 SilphCo11Blocks: INCBIN "maps/silphco11.blk"
 
 INCLUDE "engine/hidden_object_functions18.asm"
-
+INCLUDE "engine/battle/battle_transitions.asm"
 
 SECTION "bank19",ROMX,BANK[$19]
 
@@ -6554,13 +6549,11 @@ INCLUDE "engine/hall_of_fame.asm"
 INCLUDE "engine/overworld/healing_machine.asm"
 INCLUDE "engine/overworld/player_animations.asm"
 INCLUDE "engine/battle/ghost_marowak_anim.asm"
-INCLUDE "engine/battle/battle_transitions.asm"
 INCLUDE "engine/town_map.asm"
 INCLUDE "engine/mon_party_sprites.asm"
 INCLUDE "engine/in_game_trades.asm"
 INCLUDE "engine/palettes.asm"
 INCLUDE "engine/save.asm"
-INCLUDE "engine/hblank.asm"
 
 SECTION "bank1D",ROMX,BANK[$1D]
 
