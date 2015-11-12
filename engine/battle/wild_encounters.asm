@@ -63,6 +63,8 @@ TryDoWildEncounter: ; 13870 (4:7870)
 .gotEncounterSlot
 ; determine which wild pokemon (grass or water) can appear in the half-block we're standing in
 	ld c, [hl]
+	ld a, c
+	ld [wWhichEncounterSlot], a
 	ld hl, wGrassMons
 	aCoord 8, 9
 	cp $14 ; is the bottom left tile (8,9) of the half-block we're standing in a water tile?

@@ -2187,7 +2187,8 @@ wCopySpriteToVRAM::
 	
 wDoOAMUpdate::
 	ds 1
-	
+
+wWhichEncounterSlot::
 	ds 1
 
 wWhichPrize:: ; d139

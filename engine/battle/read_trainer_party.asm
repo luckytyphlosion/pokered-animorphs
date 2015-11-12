@@ -1,5 +1,5 @@
+SECTION "randomize trainers", ROMX[$5c53], BANK[$E]
 ReadTrainer: ; 39c53 (e:5c53)
-
 ; don't change any moves in a link battle
 	ld a,[wLinkState]
 	and a
@@ -31,21 +31,19 @@ ReadTrainer: ; 39c53 (e:5c53)
 ; and hl points to the trainer class.
 ; Our next task is to iterate through the trainers,
 ; decrementing b each time, until we get to the right one.
-.outer
-	dec b
-	jr z,.IterateTrainer
+	jr .outer
 .inner
 	ld a,[hli]
 	and a
 	jr nz,.inner
-	jr .outer
-
+.outer
+	dec b
+	jr nz,.inner
 ; if the first byte of trainer data is FF,
 ; - each pokemon has a specific level
 ;      (as opposed to the whole team being of the same level)
 ; - if [wLoneAttackNo] != 0, one pokemon on the team has a special move
 ; else the first byte is the level of every pokemon on the team
-.IterateTrainer
 	ld a,[hli]
 	cp $FF ; is the trainer special?
 	jr z,.SpecialTrainer ; if so, check for special moves

@@ -6378,6 +6378,8 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	dec a
 	jr z, .wildBattle
 ; trainer
+	xor a
+	ld [wCurEnemyLVL], a
 	callab ReadTrainer
 	ld a, $1
 	ld [wCopySpriteToVRAM], a
@@ -6443,8 +6445,15 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	ld a, $ff
 	ld [wUpdateSpritesEnabled], a
 	xor a
+	ld de, $4
+	ld hl, wOAMBuffer + 3
+	lb bc, 19 * 4, 8
+.clearHeadAttributesLoop
+	ld [hl], a
+	add hl, de
+	dec c
+	jr nz, .clearHeadAttributesLoop
 	ld hl, wOAMBuffer + 21 * 4
-	ld b, 19 * 4
 .clearNonHeadSpritesLoop
 	ld [hli], a
 	dec b

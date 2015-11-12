@@ -52,9 +52,9 @@ BattleTransition: ; 7096d (1c:496d)
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
 	jr z, .linkBattle
-	call GetBattleTransitionID_WildOrTrainer
 	call GetBattleTransitionID_CompareLevels
 	call GetBattleTransitionID_IsDungeonMap
+	call GetBattleTransitionID_WildOrTrainer
 .linkBattle
 	ld hl, BattleTransitions
 	add hl, bc
@@ -113,6 +113,10 @@ GetBattleTransitionID_WildOrTrainer: ; 709e2 (1c:49e2)
 	cp 200
 	jr nc, .trainer
 	res 0, c
+	;ld a, [wWhichEncounterSlot]
+	;cp $12
+	;ret nz
+	;set 4, c ; hardcode for now
 	ret
 .trainer
 	set 0, c
@@ -302,8 +306,8 @@ BattleTransition_InwardSpiral_: ; 70ae0 (1c:4ae0)
 	ld a, [wInwardSpiralUpdateScreenCounter]
 	dec a
 	jr nz, .skip
-	call BattleTransition_TransferDelay3
-	ld a, 7
+	call ReturnFromVBlankCall
+	ld a, 3
 .skip
 	ld [wInwardSpiralUpdateScreenCounter], a
 	pop bc

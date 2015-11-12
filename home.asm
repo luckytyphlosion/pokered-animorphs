@@ -2670,7 +2670,7 @@ FuncTX_SlotMachine:: ; 3474 (0:3474)
 	ld hl,CeladonPrizeMenu
 bankswitchAndContinue:: ; 3479 (0:3479)
 	call Bankswitch
-	jp HoldTextDisplayOpen        ; continue to main text-engine function
+	jp CloseTextDisplay        ; continue to main text-engine function
 
 FuncTX_PokemonCenterPC:: ; 347f (0:347f)
 	ld b, BANK(ActivatePC)
