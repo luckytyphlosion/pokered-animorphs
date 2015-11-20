@@ -514,7 +514,7 @@ duty: MACRO
 	db \1
 ENDM
 
-tldmpo: MACRO
+tempo: MACRO
 	db $ED
 	db \1 / $100
 	db \1 % $100
