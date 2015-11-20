@@ -647,7 +647,7 @@ EAST_MAP_CONNECTION: MACRO
 	dw wOverworldMap + 7 + \2_WIDTH ; window (position of the upper left block after entering the map)
 ENDM
 
-tlddlearn: MACRO
+tmlearn: MACRO
 x = 0
 	rept _NARG
 if \1 != 0
