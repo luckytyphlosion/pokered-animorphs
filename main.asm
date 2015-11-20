@@ -4795,7 +4795,6 @@ PlayerCharacterTitleGraphicsEnd:
 
 SECTION "Battle (bank 4)", ROMX, BANK[$4]
 
-INCLUDE "engine/overworld/is_player_just_outside_map.asm"
 INCLUDE "engine/menu/status_screen.asm"
 INCLUDE "engine/menu/party_menu.asm"
 
@@ -4813,7 +4812,7 @@ INCLUDE "engine/battle/moveEffects/conversion_effect.asm"
 INCLUDE "engine/battle/moveEffects/haze_effect.asm"
 INCLUDE "engine/battle/get_trainer_name.asm"
 INCLUDE "engine/random.asm"
-
+INCLUDE "engine/overworld/is_player_just_outside_map.asm"
 
 SECTION "NPC Sprites 2", ROMX, BANK[NPC_SPRITES_2]
 
