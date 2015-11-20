@@ -78,7 +78,6 @@ INCLUDE "engine/titlescreen.asm"
 NintenText: db "NINTEN@"
 SonyText:   db "SONY@"
 
-
 LoadMonData_:
 ; Load monster [wWhichPokemon] from list [wMonDataLocation]:
 ;  0: partymon
@@ -4900,8 +4899,6 @@ INCLUDE "data/mapHeaders/fuchsiacity.asm"
 INCLUDE "data/mapObjects/fuchsiacity.asm"
 FuchsiaCityBlocks: INCBIN "maps/fuchsiacity.blk"
 
-INCLUDE "engine/play_time.asm"
-
 INCLUDE "scripts/pallettown.asm"
 INCLUDE "scripts/viridiancity.asm"
 INCLUDE "scripts/pewtercity.asm"
@@ -4943,7 +4940,7 @@ SilphCo6Blocks: INCBIN "maps/silphco6.blk"
 INCLUDE "engine/overworld/npc_movement.asm"
 INCLUDE "engine/overworld/doors.asm"
 INCLUDE "engine/overworld/ledges.asm"
-
+INCLUDE "engine/play_time.asm"
 
 SECTION "bank7",ROMX,BANK[$7]
 
@@ -6686,6 +6683,10 @@ INCLUDE "engine/menu/league_pc.asm"
 
 INCLUDE "engine/overworld/hidden_items.asm"
 
+WhiteTileBuffer:
+	rept 224
+	db $7f
+	endr
 
 SECTION "bank1E",ROMX,BANK[$1E]
 

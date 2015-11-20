@@ -8,9 +8,11 @@ UncompressSpriteData:: ; 24fd (0:24fd)
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
 	ld a, $a
-	ld [$0], a
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	xor a
-	ld [$4000], a
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call _UncompressSpriteData
 	pop af
 	ld [H_LOADEDROMBANK], a

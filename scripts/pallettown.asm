@@ -1,3 +1,4 @@
+SECTION "Scripts randomizer fix",ROMX[$4e5b],BANK[$6]
 PalletTownScript: ; 18e5b (6:4e5b)
 	CheckEvent EVENT_GOT_POKEBALLS_FROM_OAK
 	jr z,.next
@@ -93,7 +94,7 @@ PalletTownScript3: ; 18f12 (6:4f12)
 	ld a,[wd730]
 	bit 0,a
 	ret nz
-	xor a ; ld a, SPRITE_FACING_DOWN
+	xor a ; [MBC1SRamEnable], a, SPRITE_FACING_DOWN
 	ld [wSpriteStateData1 + 9],a
 	ld a,1
 	ld [wcf0d],a

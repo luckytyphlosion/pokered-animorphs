@@ -34,9 +34,11 @@ FileDataDestroyedText: ; 7361e (1c:761e)
 LoadSAV0: ; 73623 (1c:7623)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, sPlayerName ; hero name located in SRAM
 	ld bc, sMainDataCheckSum - sPlayerName ; but here checks the full SAV
 	call SAVCheckSum
@@ -81,9 +83,11 @@ LoadSAV0: ; 73623 (1c:7623)
 LoadSAV1: ; 73690 (1c:7690)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, sPlayerName ; hero name located in SRAM
 	ld bc, sMainDataCheckSum - sPlayerName  ; but here checks the full SAV
 	call SAVCheckSum
@@ -101,9 +105,11 @@ LoadSAV1: ; 73690 (1c:7690)
 LoadSAV2: ; 736bd (1c:76bd)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, sPlayerName ; hero name located in SRAM
 	ld bc, sMainDataCheckSum - sPlayerName  ; but here checks the full SAV
 	call SAVCheckSum
@@ -129,6 +135,7 @@ SAVGoodChecksum: ; 736f8 (1c:76f8)
 	ld a, $0
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 LoadSAVIgnoreBadCheckSum: ; 73701 (1c:7701)
@@ -191,9 +198,11 @@ OlderFileWillBeErasedText: ; 73787 (1c:7787)
 SaveSAVtoSRAM0: ; 7378c (1c:778c)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, wPlayerName
 	ld de, sPlayerName
 	ld bc, NAME_LENGTH
@@ -219,15 +228,18 @@ SaveSAVtoSRAM0: ; 7378c (1c:778c)
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 SaveSAVtoSRAM1: ; 737e2 (1c:77e2)
 ; stored pokémon
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, wBoxDataStart
 	ld de, sCurBoxData
 	ld bc, wBoxDataEnd - wBoxDataStart
@@ -239,14 +251,17 @@ SaveSAVtoSRAM1: ; 737e2 (1c:77e2)
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 SaveSAVtoSRAM2: ; 7380f (1c:780f)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, wPartyDataStart
 	ld de, sPartyData
 	ld bc, wPartyDataEnd - wPartyDataStart
@@ -262,6 +277,7 @@ SaveSAVtoSRAM2: ; 7380f (1c:780f)
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 SaveSAVtoSRAM: ; 73848 (1c:7848)
@@ -387,10 +403,12 @@ CopyBoxToOrFromSRAM: ; 7390e (1c:790e)
 	push hl
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld a, b
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld bc, wBoxDataEnd - wBoxDataStart
 	call CopyData
 	pop hl
@@ -409,6 +427,7 @@ CopyBoxToOrFromSRAM: ; 7390e (1c:790e)
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 DisplayChangeBoxMenu: ; 7393f (1c:793f)
@@ -508,17 +527,21 @@ EmptyAllSRAMBoxes: ; 73a29 (1c:7a29)
 ; player changes the box)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld a, 2
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call EmptySRAMBoxesInBank
 	ld a, 3
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call EmptySRAMBoxesInBank
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 EmptySRAMBoxesInBank: ; 73a4b (1c:7a4b)
@@ -554,17 +577,21 @@ GetMonCountsForAllBoxes: ; 73a84 (1c:7a84)
 	push hl
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld a, $2
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call GetMonCountsForBoxesInBank
 	ld a, $3
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call GetMonCountsForBoxesInBank
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	pop hl
 
 ; copy the count for the current box from WRAM
@@ -599,9 +626,11 @@ SAVCheckRandomID: ; 73ad1 (1c:7ad1)
 ;(which are stored at wPlayerID)s
 	ld a,$0a
 	ld [MBC1SRamEnable],a
+	ld [wSRAMEnabled],a
 	ld a,$01
 	ld [MBC1SRamBankingMode],a
 	ld [MBC1SRamBank],a
+	ld [wSRAMBank],a
 	ld a,[sPlayerName]
 	and a
 	jr z,.next
@@ -625,6 +654,7 @@ SAVCheckRandomID: ; 73ad1 (1c:7ad1)
 	ld a,$00
 	ld [MBC1SRamBankingMode],a
 	ld [MBC1SRamEnable],a
+	ld [wSRAMEnabled],a
 	ret
 
 SaveHallOfFameTeams: ; 73b0d (1c:7b0d)
@@ -663,19 +693,23 @@ LoadHallOfFameTeams: ; 73b3f (1c:7b3f)
 HallOfFame_Copy: ; 73b51 (1c:7b51)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	xor a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	call CopyData
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 ClearSAV: ; 73b6a (1c:7b6a)
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	xor a
@@ -689,10 +723,12 @@ ClearSAV: ; 73b6a (1c:7b6a)
 	xor a
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ret
 
 PadSRAM_FF: ; 73b8f (1c:7b8f)
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, $a000
 	ld bc, $2000
 	ld a, $ff

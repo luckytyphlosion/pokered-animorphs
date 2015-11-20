@@ -112,9 +112,9 @@ AutoBgMapTransfer:: ; 1d57 (0:1d57)
 	ld [rHDMA1], a
 	xor a
 	ld [rHDMA2], a
-	ld a,[H_AUTOBGTRANSFERDEST + 1] ; copy address from H_AUTOBGTRANSFERDEST to rHDMA3 and 4
+	ld a, [H_AUTOBGTRANSFERDEST + 1] ; copy address from H_AUTOBGTRANSFERDEST to rHDMA3 and 4
 	ld [rHDMA3], a					; note that hall of fame breaks because it sets H_AUTOBGTRANSFERDEST to a non-multiple of $10
-	ld a,[H_AUTOBGTRANSFERDEST]		; luckily, it's the only thing that does so
+	ld a, [H_AUTOBGTRANSFERDEST]	; luckily, it's the only thing that does so
 	ld [rHDMA4], a
 	ld a, 36 - 1					; number of multiple of $10 chunks to copy
 	ld [rHDMA5], a					; writing this also doubles as starting the transfer

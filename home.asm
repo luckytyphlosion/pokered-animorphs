@@ -95,20 +95,6 @@ FillMemory:: ; 0x3041
 	jr nz, .PutByte
 	ret
 
-; copies a string from [de] to [wcf4b]
-CopyStringToCF4B:: ; 3826 (0:3826)
-	ld hl, wcf4b
-	; fall through
-
-; copies a string from [de] to [hl]
-CopyString:: ; 3829 (0:3829)
-	ld a, [de]
-	inc de
-	ld [hli], a
-	cp "@"
-	jr nz, CopyString
-	ret
-
 BankswitchCommon:
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
@@ -805,7 +791,8 @@ LoadUncompressedSpriteData:: ; 1672 (0:1672)
 	add a     ; 8*(7*((8-w)/2) + 7-h) ; combined overall offset (in bytes)
 	ld [H_SPRITEOFFSET], a
 	xor a
-	ld [$4000], a
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld hl, sSpriteBuffer0
 	call ZeroSpriteBuffer   ; zero buffer 0
 	ld de, sSpriteBuffer1
@@ -863,7 +850,8 @@ ZeroSpriteBuffer:: ; 16df (0:16df)
 ; de: output address
 InterlaceMergeSpriteBuffers:: ; 16ea (0:16ea)
 	xor a
-	ld [$4000], a
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	push de
 	ld hl, sSpriteBuffer2 + (SPRITEBUFFERSIZE - 1) ; destination: end of buffer 2
 	ld de, sSpriteBuffer1 + (SPRITEBUFFERSIZE - 1) ; source 2: end of buffer 1
@@ -2685,16 +2673,6 @@ StartSimulatingJoypadStates:: ; 3486 (0:3486)
 	set 7, [hl]
 	ret
 
-IsItemInBag:: ; 3493 (0:3493)
-; given an item_id in b
-; set zero flag if item isn't in player's bag
-; else reset zero flag
-; related to Pokémon Tower and ghosts
-	predef GetQuantityOfItemInBag
-	ld a,b
-	and a
-	ret
-
 DisplayPokedex:: ; 349b (0:349b)
 	ld [wd11e], a
 	jpba _DisplayPokedex
@@ -2710,6 +2688,17 @@ SetSpriteFacingDirection:: ; 34ae (0:34ae)
 	call GetPointerWithinSpriteStateData1
 	ld a, [hSpriteFacingDirection]
 	ld [hl], a
+	ret
+
+SECTION "bwexp fix isiteminbag", ROM0[$3493]
+IsItemInBag:: ; 3493 (0:3493)
+; given an item_id in b
+; set zero flag if item isn't in player's bag
+; else reset zero flag
+; related to Pokémon Tower and ghosts
+	predef GetQuantityOfItemInBag
+	ld a,b
+	and a
 	ret
 
 SetSpriteImageIndexAfterSettingFacingDirection:: ; 34b9 (0:34b9)
@@ -3528,6 +3517,24 @@ CopyDataUntil:: ; 3913 (0:3913)
 	jr nz,CopyDataUntil
 	ret
 
+; copies a string from [de] to [wcf4b]
+CopyStringToCF4B:: ; 3826 (0:3826)
+	ld hl, wcf4b
+	; fall through
+
+; copies a string from [de] to [hl]
+CopyString:: ; 3829 (0:3829)
+	push bc
+	ld b, "@"
+.copystringloop
+	ld a, [de]
+	inc de
+	ld [hli], a
+	cp b
+	jr nz, .copystringloop
+	pop bc
+	ret
+
 ; Function to remove a pokemon from the party or the current box.
 ; wWhichPokemon determines the pokemon.
 ; [wRemoveMonFromBox] == 0 specifies the party.
@@ -3768,14 +3775,7 @@ MoveMon:: ; 3a68 (0:3a68)
 ; skips a text entries, each of size NAME_LENGTH (like trainer name, OT name, rival name, ...)
 ; hl: base pointer, will be incremented by NAME_LENGTH * a
 SkipFixedLengthTextEntries:: ; 3a7d (0:3a7d)
-	and a
-	ret z
 	ld bc, NAME_LENGTH
-.skipLoop
-	add hl, bc
-	dec a
-	jr nz, .skipLoop
-	ret
 
 AddNTimes:: ; 3a87 (0:3a87)
 ; add bc to hl a times
@@ -3784,7 +3784,7 @@ AddNTimes:: ; 3a87 (0:3a87)
 .loop
 	add hl,bc
 	dec a
-	jr nz,.loop
+	jr nz, .loop
 	ret
 
 ; Compare strings, c bytes in length, at de and hl.

@@ -21,7 +21,7 @@ event_byte = ((\1) / 8)
 CheckEventReuseA: MACRO
 	IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld a, [wEventFlags + event_byte]
+		[MBC1SRamEnable], a, [wEventFlags + event_byte]
 	ENDC
 
 	bit (\1) % 8, a
@@ -33,7 +33,7 @@ CheckEventAfterBranchReuseA: MACRO
 event_byte = ((\2) / 8)
 	IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld a, [wEventFlags + event_byte]
+		[MBC1SRamEnable], a, [wEventFlags + event_byte]
 	ENDC
 
 	bit (\1) % 8, a
@@ -44,9 +44,9 @@ event_byte = ((\1) / 8)
 ;\3 = event index this event is relative to (optional, this is needed when there is a fixed flag address)
 EventFlagBit: MACRO
 	IF _NARG > 2
-		ld \1, ((\3) % 8) + ((\2) - (\3))
+		[MBC1SRamEnable], \1, ((\3) % 8) + ((\2) - (\3))
 	ELSE
-		ld \1, (\2) % 8
+		[MBC1SRamEnable], \1, (\2) % 8
 	ENDC
 	ENDM
 
@@ -68,7 +68,7 @@ event_byte = ((\1) / 8)
 CheckEventReuseHL: MACRO
 IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	bit (\1) % 8, [hl]
@@ -87,7 +87,7 @@ CheckEventAfterBranchReuseHL: MACRO
 event_byte = ((\2) / 8)
 IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	bit (\1) % 8, [hl]
@@ -136,7 +136,7 @@ event_byte = ((\1) / 8)
 SetEventReuseHL: MACRO
 	IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	set (\1) % 8, [hl]
@@ -148,7 +148,7 @@ SetEventAfterBranchReuseHL: MACRO
 event_byte = ((\2) / 8)
 IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	set (\1) % 8, [hl]
@@ -183,7 +183,7 @@ event_byte = ((\1) / 8)
 ResetEventReuseHL: MACRO
 	IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	res (\1) % 8, [hl]
@@ -195,7 +195,7 @@ ResetEventAfterBranchReuseHL: MACRO
 event_byte = ((\2) / 8)
 IF event_byte != ((\1) / 8)
 event_byte = ((\1) / 8)
-		ld hl, wEventFlags + event_byte
+		[MBC1SRamEnable], hl, wEventFlags + event_byte
 	ENDC
 
 	res (\1) % 8, [hl]
@@ -250,9 +250,9 @@ event_end_byte = ((\2) / 8)
 	ENDC
 
 	IF event_start_byte == event_end_byte
-		ld a, [wEventFlags + event_start_byte]
+		[MBC1SRamEnable], a, [wEventFlags + event_start_byte]
 		or (1 << (((\2) % 8) + 1)) - (1 << ((\1) % 8))
-		ld [wEventFlags + event_start_byte], a
+		[MBC1SRamEnable], [wEventFlags + event_start_byte], a
 	ELSE
 event_fill_start = event_start_byte + 1
 event_fill_count = event_end_byte - event_start_byte - 1
@@ -261,9 +261,9 @@ event_fill_count = event_end_byte - event_start_byte - 1
 event_fill_start = event_fill_start + -1
 event_fill_count = event_fill_count + 1
 		ELSE
-			ld a, [wEventFlags + event_start_byte]
+			[MBC1SRamEnable], a, [wEventFlags + event_start_byte]
 			or $ff - ((1 << ((\1) % 8)) - 1)
-			ld [wEventFlags + event_start_byte], a
+			[MBC1SRamEnable], [wEventFlags + event_start_byte], a
 		ENDC
 
 		IF ((\2) % 8) == 7
@@ -271,29 +271,29 @@ event_fill_count = event_fill_count + 1
 		ENDC
 
 		IF event_fill_count == 1
-			ld hl, wEventFlags + event_fill_start
-			ld [hl], $ff
+			[MBC1SRamEnable], hl, wEventFlags + event_fill_start
+			[MBC1SRamEnable], [hl], $ff
 		ENDC
 
 		IF event_fill_count > 1
-			ld a, $ff
-			ld hl, wEventFlags + event_fill_start
+			[MBC1SRamEnable], a, $ff
+			[MBC1SRamEnable], hl, wEventFlags + event_fill_start
 
 			REPT event_fill_count + -1
-				ld [hli], a
+				[MBC1SRamEnable], [hli], a
 			ENDR
 
-			ld [hl], a
+			[MBC1SRamEnable], [hl], a
 		ENDC
 
 		IF ((\2) % 8) == 0
-			ld hl, wEventFlags + event_end_byte
+			[MBC1SRamEnable], hl, wEventFlags + event_end_byte
 			set 0, [hl]
 		ELSE
 			IF ((\2) % 8) != 7
-				ld a, [wEventFlags + event_end_byte]
+				[MBC1SRamEnable], a, [wEventFlags + event_end_byte]
 				or (1 << (((\2) % 8) + 1)) - 1
-				ld [wEventFlags + event_end_byte], a
+				[MBC1SRamEnable], [wEventFlags + event_end_byte], a
 			ENDC
 		ENDC
 	ENDC
@@ -311,9 +311,9 @@ event_end_byte = ((\2) / 8)
 	ENDC
 
 	IF event_start_byte == event_end_byte
-		ld a, [wEventFlags + event_start_byte]
+		[MBC1SRamEnable], a, [wEventFlags + event_start_byte]
 		and ~((1 << (((\2) % 8) + 1)) - (1 << ((\1) % 8))) & $ff
-		ld [wEventFlags + event_start_byte], a
+		[MBC1SRamEnable], [wEventFlags + event_start_byte], a
 	ELSE
 event_fill_start = event_start_byte + 1
 event_fill_count = event_end_byte - event_start_byte - 1
@@ -322,9 +322,9 @@ event_fill_count = event_end_byte - event_start_byte - 1
 event_fill_start = event_fill_start + -1
 event_fill_count = event_fill_count + 1
 		ELSE
-			ld a, [wEventFlags + event_start_byte]
+			[MBC1SRamEnable], a, [wEventFlags + event_start_byte]
 			and ~($ff - ((1 << ((\1) % 8)) - 1)) & $ff
-			ld [wEventFlags + event_start_byte], a
+			[MBC1SRamEnable], [wEventFlags + event_start_byte], a
 		ENDC
 
 		IF ((\2) % 8) == 7
@@ -332,12 +332,12 @@ event_fill_count = event_fill_count + 1
 		ENDC
 
 		IF event_fill_count == 1
-			ld hl, wEventFlags + event_fill_start
-			ld [hl], 0
+			[MBC1SRamEnable], hl, wEventFlags + event_fill_start
+			[MBC1SRamEnable], [hl], 0
 		ENDC
 
 		IF event_fill_count > 1
-			ld hl, wEventFlags + event_fill_start
+			[MBC1SRamEnable], hl, wEventFlags + event_fill_start
 
 			; force xor a if we just to wrote to it above
 			IF (_NARG < 3) || (((\1) % 8) != 0)
@@ -345,20 +345,20 @@ event_fill_count = event_fill_count + 1
 			ENDC
 
 			REPT event_fill_count + -1
-				ld [hli], a
+				[MBC1SRamEnable], [hli], a
 			ENDR
 
-			ld [hl], a
+			[MBC1SRamEnable], [hl], a
 		ENDC
 
 		IF ((\2) % 8) == 0
-			ld hl, wEventFlags + event_end_byte
+			[MBC1SRamEnable], hl, wEventFlags + event_end_byte
 			res 0, [hl]
 		ELSE
 			IF ((\2) % 8) != 7
-				ld a, [wEventFlags + event_end_byte]
+				[MBC1SRamEnable], a, [wEventFlags + event_end_byte]
 				and ~((1 << (((\2) % 8) + 1)) - 1) & $ff
-				ld [wEventFlags + event_end_byte], a
+				[MBC1SRamEnable], [wEventFlags + event_end_byte], a
 			ENDC
 		ENDC
 	ENDC
@@ -374,7 +374,7 @@ CheckBothEventsSet: MACRO
 	IF ((\1) / 8) == ((\2) / 8)
 		IF (_NARG < 3) || (((\1) / 8) != event_byte)
 event_byte = ((\1) / 8)
-			ld a, [wEventFlags + ((\1) / 8)]
+			[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
 		ENDC
 		and (1 << ((\1) % 8)) | (1 << ((\2) % 8))
 		cp (1 << ((\1) % 8)) | (1 << ((\2) % 8))
@@ -382,18 +382,18 @@ event_byte = ((\1) / 8)
 		; This case doesn't happen in the original ROM.
 		IF ((\1) % 8) == ((\2) % 8)
 			push hl
-			ld a, [wEventFlags + ((\1) / 8)]
-			ld hl, wEventFlags + ((\2) / 8)
+			[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
+			[MBC1SRamEnable], hl, wEventFlags + ((\2) / 8)
 			and [hl]
 			cpl
 			bit ((\1) % 8), a
 			pop hl
 		ELSE
 			push bc
-			ld a, [wEventFlags + ((\1) / 8)]
+			[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
 			and (1 << ((\1) % 8))
-			ld b, a
-			ld a, [wEventFlags + ((\2) / 8)]
+			[MBC1SRamEnable], b, a
+			[MBC1SRamEnable], a, [wEventFlags + ((\2) / 8)]
 			and (1 << ((\2) % 8))
 			or b
 			cp (1 << ((\1) % 8)) | (1 << ((\2) % 8))
@@ -407,23 +407,23 @@ event_byte = ((\1) / 8)
 ;\2 = event index 2
 CheckEitherEventSet: MACRO
 	IF ((\1) / 8) == ((\2) / 8)
-		ld a, [wEventFlags + ((\1) / 8)]
+		[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
 		and (1 << ((\1) % 8)) | (1 << ((\2) % 8))
 	ELSE
 		; This case doesn't happen in the original ROM.
 		IF ((\1) % 8) == ((\2) % 8)
 			push hl
-			ld a, [wEventFlags + ((\1) / 8)]
-			ld hl, wEventFlags + ((\2) / 8)
+			[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
+			[MBC1SRamEnable], hl, wEventFlags + ((\2) / 8)
 			or [hl]
 			bit ((\1) % 8), a
 			pop hl
 		ELSE
 			push bc
-			ld a, [wEventFlags + ((\1) / 8)]
+			[MBC1SRamEnable], a, [wEventFlags + ((\1) / 8)]
 			and (1 << ((\1) % 8))
-			ld b, a
-			ld a, [wEventFlags + ((\2) / 8)]
+			[MBC1SRamEnable], b, a
+			[MBC1SRamEnable], a, [wEventFlags + ((\2) / 8)]
 			and (1 << ((\2) % 8))
 			or b
 			pop bc

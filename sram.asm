@@ -20,6 +20,10 @@ sCurBoxData::  ds wBoxDataEnd    - wBoxDataStart ; b0c0
 sTilesetType:: ds 1 ; b522
 sMainDataCheckSum:: ds 1 ; b523
 
+sPlayTimeHours:: ds 2
+sPlayTimeMinutes:: ds 2
+sPlayTimeSeconds:: ds 1
+sPlayTimeFrames:: ds 1
 
 SECTION "Saved Boxes 1", SRAM, BANK[2]
 

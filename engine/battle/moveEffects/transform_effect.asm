@@ -92,7 +92,7 @@ TransformEffect_: ; 3bab1 (e:7ab1)
 	ld bc, $8
 	call CopyData
 	ld bc, wBattleMonMoves - wBattleMonPP
-	add hl, bc ; ld hl, wBattleMonMoves
+	add hl, bc ; [MBC1SRamEnable], hl, wBattleMonMoves
 	ld b, NUM_MOVES
 .copyPPLoop
 ; 5 PP for all moves

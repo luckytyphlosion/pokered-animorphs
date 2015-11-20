@@ -600,16 +600,26 @@ DrawTrainerInfo: ; 1349a (4:749a)
 	ld de,wPlayerMoney
 	ld c,$e3
 	call PrintBCDNumber
-	coord hl, 9, 6
 	ld de,wPlayTimeHours + 1 ; hours
+	ld a, [de]
+	cp 100
+	coord hl, 9, 6
+	jr nc, .coord96
+	coord hl, 8, 6
+.coord96
 	lb bc, LEFT_ALIGN | 1, 3
 	call PrintNumber
 	ld [hl],$d6 ; colon tile ID
 	inc hl
 	ld de,wPlayTimeMinutes + 1 ; minutes
 	lb bc, LEADING_ZEROES | 1, 2
+	call PrintNumber
+	ld [hl], $d6
+	inc hl
+	ld de, wPlayTimeSeconds
+	lb bc, LEADING_ZEROES | 1, 2
 	jp PrintNumber
-
+	
 TrainerInfo_FarCopyData: ; 1357f (4:757f)
 	ld a,BANK(TrainerInfoTextBoxTileGraphics)
 	jp FarCopyData2

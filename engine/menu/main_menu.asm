@@ -163,7 +163,7 @@ LinkMenu: ; 5c0a (1:5c0a)
 	ld a, $2
 	ld [hli], a
 	inc a
-	; ld a, A_BUTTON | B_BUTTON
+	; [MBC1SRamEnable], a, A_BUTTON | B_BUTTON
 	ld [hli], a ; wMenuWatchedKeys
 	xor a
 	ld [hl], a
@@ -308,6 +308,18 @@ StartNewGame: ; 5d52 (1:5d52)
 	ld hl, wd732
 	res 1, [hl]
 	call OakSpeech
+	ld a, $1
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
+	ld a, SRAM_ENABLE
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
+	xor a
+	ld hl, sPlayTimeHours
+	ld bc, (sPlayTimeFrames + 1) - sPlayTimeHours
+	call FillMemory
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld c, 20
 	call DelayFrames
 
@@ -411,12 +423,20 @@ PrintNumOwnedMons: ; 5e42 (1:5e42)
 	jp PrintNumber
 
 PrintPlayTime: ; 5e55 (1:5e55)
+	dec hl
+	dec hl
+	dec hl ; make space for seconds
 	ld de, wPlayTimeHours + 1
 	lb bc, 1, 3
 	call PrintNumber
 	ld [hl], $6d
 	inc hl
 	ld de, wPlayTimeMinutes + 1
+	lb bc, LEADING_ZEROES | 1, 2
+	call PrintNumber
+	ld [hl], $6d
+	inc hl
+	ld de, wPlayTimeSeconds
 	lb bc, LEADING_ZEROES | 1, 2
 	jp PrintNumber
 
@@ -687,9 +707,11 @@ CheckForPlayerNameInSRAM: ; 609e (1:609e)
 ; in carry.
 	ld a, SRAM_ENABLE
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $1
 	ld [MBC1SRamBankingMode], a
 	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
 	ld b, NAME_LENGTH
 	ld hl, sPlayerName
 .loop
@@ -701,12 +723,14 @@ CheckForPlayerNameInSRAM: ; 609e (1:609e)
 ; not found
 	xor a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld [MBC1SRamBankingMode], a
 	and a
 	ret
 .found
 	xor a
 	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld [MBC1SRamBankingMode], a
 	scf
 	ret

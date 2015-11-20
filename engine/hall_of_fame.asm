@@ -223,13 +223,18 @@ HoFDisplayPlayerStats: ; 70377 (1c:4377)
 	coord hl, 1, 6
 	ld de, HoFPlayTimeText
 	call PlaceString
-	coord hl, 5, 7
+	coord hl, 2, 7
 	ld de, wPlayTimeHours + 1
 	lb bc, 1, 3
 	call PrintNumber
 	ld [hl], $6d
 	inc hl
 	ld de, wPlayTimeMinutes + 1
+	lb bc, LEADING_ZEROES | 1, 2
+	call PrintNumber
+	ld [hl], $6d
+	inc hl
+	ld de, wPlayTimeSeconds
 	lb bc, LEADING_ZEROES | 1, 2
 	call PrintNumber
 	coord hl, 1, 9

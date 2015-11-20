@@ -144,7 +144,7 @@ UpdateHPBar_AnimateHPBar: ; fab1 (3:7ab1)
 	ld d, $6
 	call DrawHPBar
 	call DelayFrame
-	;ld c, 2
+	;[MBC1SRamEnable], c, 2
 	;call DelayFrames
 	pop de
 	ld a, [wHPBarDelta] ; +1 or -1

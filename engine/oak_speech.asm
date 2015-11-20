@@ -1,36 +1,3 @@
-SetDefaultNames: ; 60ca (1:60ca)
-	ld a, [wLetterPrintingDelayFlags]
-	push af
-	ld a, [wOptions]
-	push af
-	ld a, [wd732]
-	push af
-	ld hl, wPlayerName
-	ld bc, $d8a
-	xor a
-	call FillMemory
-	ld hl, wSpriteStateData1
-	ld bc, $200
-	xor a
-	call FillMemory
-	pop af
-	ld [wd732], a
-	pop af
-	ld [wOptions], a
-	pop af
-	ld [wLetterPrintingDelayFlags], a
-	ld a, [wOptionsInitialized]
-	and a
-	call z, InitOptions
-	ld hl, NintenText
-	ld de, wPlayerName
-	ld bc, NAME_LENGTH
-	call CopyData
-	ld hl, SonyText
-	ld de, wRivalName
-	ld bc, NAME_LENGTH
-	jp CopyData
-
 OakSpeech: ; 6115 (1:6115)
 	ld a,$FF
 	call PlaySound ; stop music
@@ -65,7 +32,7 @@ OakSpeech: ; 6115 (1:6115)
 	call GBFadeOutToWhite
 	call ClearScreen
 	
-SECTION "intro pokemon",ROMX[$616c]
+SECTION "intro pokemon",ROMX[$616c],BANK[$1]
 	ld a,NIDORINO
 	ld [wd0b5],a
 	ld [wcf91],a
@@ -233,3 +200,36 @@ IntroDisplayPicCenteredOrUpperRight: ; 62a4 (1:62a4)
 	xor a
 	ld [hStartTileID],a
 	predef_jump CopyUncompressedPicToTilemap
+
+SetDefaultNames: ; 60ca (1:60ca)
+	ld a, [wLetterPrintingDelayFlags]
+	push af
+	ld a, [wOptions]
+	push af
+	ld a, [wd732]
+	push af
+	ld hl, wPlayerName
+	ld bc, $d8a
+	xor a
+	call FillMemory
+	ld hl, wSpriteStateData1
+	ld bc, $200
+	xor a
+	call FillMemory
+	pop af
+	ld [wd732], a
+	pop af
+	ld [wOptions], a
+	pop af
+	ld [wLetterPrintingDelayFlags], a
+	ld a, [wOptionsInitialized]
+	and a
+	call z, InitOptions
+	ld hl, NintenText
+	ld de, wPlayerName
+	ld bc, NAME_LENGTH
+	call CopyData
+	ld hl, SonyText
+	ld de, wRivalName
+	ld bc, NAME_LENGTH
+	jp CopyData

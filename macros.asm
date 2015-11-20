@@ -1,5 +1,5 @@
 
-text   EQUS "db $00," ; Start writing text.
+tldxt   EQUS "db $00," ; Start writing text.
 next   EQUS "db $4e," ; Move a line down.
 line   EQUS "db $4f," ; Start writing at the bottom line.
 para   EQUS "db $51," ; Start a new paragraph.
@@ -514,7 +514,7 @@ duty: MACRO
 	db \1
 ENDM
 
-tempo: MACRO
+tldmpo: MACRO
 	db $ED
 	db \1 / $100
 	db \1 % $100
@@ -647,7 +647,7 @@ EAST_MAP_CONNECTION: MACRO
 	dw wOverworldMap + 7 + \2_WIDTH ; window (position of the upper left block after entering the map)
 ENDM
 
-tmlearn: MACRO
+tlddlearn: MACRO
 x = 0
 	rept _NARG
 if \1 != 0

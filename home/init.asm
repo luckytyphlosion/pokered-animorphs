@@ -138,7 +138,7 @@ rLCDC_DEFAULT EQU %11100011
 	ld a, 1 << LCD_STAT + 1 << VBLANK + 1 << TIMER + 1 << SERIAL
 	ld [rIE], a
 	
-	ld a, $80
+	ld a, $81
 	ld [rLYC], a
 	ld a, 144 ; move the window off-screen
 	ld [hWY], a
@@ -161,6 +161,12 @@ rLCDC_DEFAULT EQU %11100011
 	call StopAllSounds
 
 	ei
+
+	call CheckForPlayerNameInSRAM
+	jr nc, .doNotCountIGT
+	ld hl, wd732
+	set 0, [hl]
+.doNotCountIGT
 
 	predef LoadSGB
 

@@ -145,18 +145,17 @@ SlidePlayerAndEnemySilhouettesOnScreen: ; 3c04c (f:404c)
 	ld [hSCY], a
 	dec a
 	ld [wUpdateSpritesEnabled], a
-	call Delay3
+	call DelayFrame
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
-	ld b, $70
-	ld c, $90
+	lb bc, $70, $90
 	ld a, c
 	ld [hSCX], a
-	call DelayFrame
 	ld a, %11100100 ; inverted palette for silhouette effect
 	ld [rBGP], a
 	ld [rOBP0], a
 	ld [rOBP1], a
+	call DelayFrame
 .slideSilhouettesLoop ; slide silhouettes of the player's pic and the enemy's pic onto the screen
 	ld h, b
 	ld l, $40
@@ -5435,7 +5434,7 @@ AIGetTypeEffectiveness: ; 3e449 (f:6449)
 	ld [wTypeEffectiveness],a ; store damage multiplier
 	ret
 
-SECTION "updated types", ROMX[$6474]
+SECTION "updated types", ROMX[$6474],BANK[$f]
 INCLUDE "data/type_effects.asm"
 
 ; some tests that need to pass for a move to hit
@@ -6550,10 +6549,12 @@ DecompressPlayerBackPic: ; 3ec92 (f:6c92)
 
 LoadPlayerBackPic:
 	ld a, $a
-	ld [$0], a
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	xor a
-	ld [$4000], a
+	ld [MBC1SRamBank], a
 	ld [wDoOAMUpdate], a
+	ld [wSRAMBank], a
 	ld hl, vSprites
 	ld de, sSpriteBuffer1
 	ld a, [H_LOADEDROMBANK]
@@ -6561,7 +6562,8 @@ LoadPlayerBackPic:
 	ld c, 7 * 7
 	call CopyVideoData
 	xor a
-	ld [$0], a
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
 	ld a, $31
 	ld [hStartTileID], a
 	coord hl, 1, 5

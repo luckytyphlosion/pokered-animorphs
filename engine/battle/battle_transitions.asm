@@ -113,7 +113,7 @@ GetBattleTransitionID_WildOrTrainer: ; 709e2 (1c:49e2)
 	cp 200
 	jr nc, .trainer
 	res 0, c
-	;ld a, [wWhichEncounterSlot]
+	;[MBC1SRamEnable], a, [wWhichEncounterSlot]
 	;cp $12
 	;ret nz
 	;set 4, c ; hardcode for now

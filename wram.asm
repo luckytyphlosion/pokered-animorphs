@@ -2029,7 +2029,10 @@ wSavedTilesetType:: ; d0d4
 ; saved at the start of a battle and then written back at the end of the battle
 	ds 1
 
-	ds 2
+wSRAMBank::
+	ds 1
+wSRAMEnabled::
+	ds 1
 
 
 wDamage:: ; d0d7

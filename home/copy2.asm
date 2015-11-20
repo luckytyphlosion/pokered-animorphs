@@ -139,7 +139,7 @@ CopyVideoData::
 CopyVideoDataDouble::
 ; Wait for the next VBlank, then copy c 1bpp
 ; tiles from b:de to hl, 8 tiles at a time.
-; This takes c/8 frames.
+; This takes 2 frames at most.
 	ld a, [H_AUTOBGTRANSFERENABLED]
 	push af
 	xor a ; disable auto-transfer while copying
@@ -266,7 +266,7 @@ CopyScreenTileBufferToVRAM::
 ; Copy wTileMap to the BG Map starting at b * $100.
 ; This is done in thirds of 6 rows, so it takes 3 frames.
 	ld a, [rLY]
-	cp $80
+	cp $81
 	call nc, DelayFrame ; if ly is past $80, then wait for another vblank for the tilemap to be successfully copied
 						; not exactly sure if needed
 	ld a, [H_AUTOBGTRANSFERDEST + 1]
