@@ -211,23 +211,19 @@ VBlankCopyCommon::
 	and a
 	ret z
 	
+	ld hl, rHDMA5
+	ld a, [hl]
+	inc a ; are we just really unlucky, and the vblank interrupt was triggered /just/ after finishing the transfer?
+	ret z
+
 	ld a, $3
 	ld [rSVBK], a
-	
-	ld a, [H_VBCOPYSRC + 1]
-	ld [rHDMA1], a
-	ld a, [H_VBCOPYSRC]
-	ld [rHDMA2], a
 
-	ld a, [H_VBCOPYDEST + 1]
-	ld [rHDMA3], a
-	ld a, [H_VBCOPYDEST]
-	ld [rHDMA4], a
+	ld a, [hl]
+	res 7, a
+	ld [hl], a ; first write stops the transfer
+	ld [hl], a ; second write initiates the gdma transfer
 	
-	ld a, [H_VBCOPYSIZE]
-	dec a
-	ld [rHDMA5], a
-
 	xor a ; transferred
 	ld [H_VBCOPYSIZE], a
 	ld [rSVBK], a

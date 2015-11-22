@@ -734,8 +734,7 @@ HandleBlackOut::
 	ld hl, wd72e
 	res 5, [hl]
 	ld a, Bank(ResetStatusAndHalveMoneyOnBlackout) ; also Bank(SpecialWarpIn) and Bank(SpecialEnterMap)
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
+	call BankswitchCommon
 	call ResetStatusAndHalveMoneyOnBlackout
 	call SpecialWarpIn
 	call PlayDefaultMusicFadeOutCurrent
@@ -765,8 +764,7 @@ HandleFlyWarpOrDungeonWarp::
 	res 5, [hl] ; forced to ride bike
 	call LeaveMapAnim
 	ld a, Bank(SpecialWarpIn)
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
+	call BankswitchCommon
 	call SpecialWarpIn
 	jp SpecialEnterMap
 
@@ -1343,8 +1341,7 @@ LoadCurrentMapView:: ; 0caa (0:0caa)
 	ld a,[H_LOADEDROMBANK]
 	push af
 	ld a,[wTileSetBank] ; tile data ROM bank
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a ; switch to ROM bank that contains tile data
+	call BankswitchCommon ; switch to ROM bank that contains tile data
 	ld a,[wCurrentTileBlockMapViewPointer] ; address of upper left corner of current map view
 	ld e,a
 	ld a,[wCurrentTileBlockMapViewPointer + 1]
@@ -1425,8 +1422,7 @@ LoadCurrentMapView:: ; 0caa (0:0caa)
 	dec b
 	jr nz,.rowLoop2
 	pop af
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a ; restore previous ROM bank
+	call BankswitchCommon ; restore previous ROM bank
 	ret
 
 AdvancePlayerSprite:: ; 0d27 (0:0d27)
@@ -2261,8 +2257,7 @@ LoadMapHeader:: ; 107c (0:107c)
 	ld a,[H_LOADEDROMBANK]
 	push af
 	ld a, BANK(MapSongBanks)
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a
+	call BankswitchCommon
 	ld hl, MapSongBanks
 	add hl,bc
 	add hl,bc
@@ -2271,8 +2266,7 @@ LoadMapHeader:: ; 107c (0:107c)
 	ld a,[hl]
 	ld [wMapMusicROMBank],a ; music 2
 	pop af
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a
+	call BankswitchCommon
 	ret
 
 ; function to copy map connection data from ROM to WRAM
@@ -2350,8 +2344,7 @@ LoadMapData:: ; 1241 (0:1241)
 	call PlayDefaultMusicFadeOutCurrent
 .restoreRomBank
 	pop af
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a
+	call BankswitchCommon
 	ret
 
 ; function to switch to the ROM bank that a map is stored in
@@ -2369,8 +2362,7 @@ SwitchToMapRomBank:: ; 12bc (0:12bc)
 	ld [$ffe8],a ; save map ROM bank
 	call BankswitchBack
 	ld a,[$ffe8]
-	ld [H_LOADEDROMBANK],a
-	ld [MBC1RomBank],a ; switch to map ROM bank
+	call BankswitchCommon ; switch to map ROM bank
 	pop bc
 	pop hl
 	ret

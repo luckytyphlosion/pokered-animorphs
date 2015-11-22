@@ -34,6 +34,54 @@ FarCopyDataDouble::
 	ld [$2000], a
 	ret
 
+;CopyDataInChunksOf16::
+;	ld [hROMBankTemp], a
+;	ld a, [H_LOADEDROMBANK]
+;	push af
+;	ld a, [hROMBankTemp]
+;	call BankswitchCommon
+;	xor a
+;	ld [hDidWRAMBankswitchFlag], a
+;	call CopyVideoTilesInChunksOf16Common
+;	pop af
+;	jp BankswitchCommon
+	
+;CopyDataInChunksOf16_WRAMBankswitch::
+;	ld [hROMBankTemp], a
+;	ld a, [rSVBK]
+;	ld [hSavedWRAMBank], a
+;	ld a, [hROMBankTemp]
+;	ld [rSVBK], a
+;	ld a, $1
+;	ld [hDidWRAMBankswitchFlag], a
+;CopyDataInChunksOf16Common::
+; copy data in chunks of 16
+; INPUT:
+; hl = source
+; de = dest
+; c = number of loops
+; assumes e = 0
+	
+;	rept 15
+;	ld a, [hli]
+;	ld [de], a
+;	inc e
+;	endr
+;	
+;	ld a, [hli]
+;	ld [de], a
+;	inc de
+;	dec c
+;	jr nz, CopyDataInChunksOf16Common
+;	ld a, [hDidWRAMBankswitchFlag]
+;	and a
+;	ld a, $0
+;	ld [hDidWRAMBankswitchFlag], a
+;	ret z
+;	ld a, [hSavedWRAMBank]
+;	ld [rSVBK], a
+;	ret
+	
 CopyVideoData::
 ; Wait for the next VBlank, then copy c 2bpp
 ; tiles from b:de to hl, 8 tiles at a time.
@@ -78,6 +126,14 @@ CopyVideoData::
 	ld a, $3
 	ld [rSVBK], a
 	
+	ld a, l
+	and $f
+	jr nz, .alignTiles
+	ld a, h
+	ld [rHDMA1], a
+	ld a, l
+	jp SkipAligningTiles
+.alignTiles
 	bit 7, h
 	jr z, .notCopyingFromVRAM
 	ld a, h ; sSpriteBuffer0 / $100
@@ -121,7 +177,7 @@ CopyVideoData::
 ; de = destination
 ; bc = raw bytes to copy
 ; a = bank
-.notCopyingFromVRAM	
+.notCopyingFromVRAM
 	inc b  ; we bail the moment b hits 0, so include the last run
 	inc c  ; same thing; include last byte
 	jr .HandleLoop
@@ -183,7 +239,6 @@ CopyVideoDataDouble::
 ; de = fixed destination
 ; bc = raw number of bytes to copy
 ; a = bank
-
 	ld a,b
 	and a
 	jr z,.eightbitcopyamount
@@ -203,43 +258,52 @@ CopyVideoDataDouble::
 	jr nz, .expandloop
 
 CopyVideoDataCommon:
+	ld a, $d0
+	ld [rHDMA1], a ; write source
+	xor a
+SkipAligningTiles:
+	ld [rHDMA2], a
+	ld a, [H_VBCOPYDEST + 1]
+	ld [rHDMA3], a
+	ld a, [H_VBCOPYDEST]
+	ld [rHDMA4], a
+	
+	ld a, [rIE] ; disable H-Blank interrupt for now
+	res LCD_STAT, a
+	ld [rIE], a
+	
+	ld a, [hSavedVBCopySize]
+	dec a
+	set 7, a
+	ld hl, rHDMA5
+	lb bc, $ff, (rSTAT & $ff)
+	ld d, a
+.waitForNonHBlankLoop
+	ld a, [$ff00+c]
+	and %11
+	jr nz, .waitForNonHBlankLoop
+	
+	ld [hl], d
+	ld a, d
+	ld [H_VBCOPYSIZE], a
+	ld a, b
+	
+.waitForHDMALoop
+	cp [hl]
+	jr nz, .waitForHDMALoop
+	
+	xor a
+	ld [H_VBCOPYSIZE], a
+
 	ld a, [hSavedWRAMBank]
 	ld [rSVBK], a
-	
+
+	ld a, [rIE]
+	set LCD_STAT, a
+	ld [rIE], a
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [$2000], a
-
-	ld a, $d0
-	ld [H_VBCOPYDOUBLESRC + 1], a
-	xor a
-	ld [H_VBCOPYDOUBLESRC], a
-	
-	ld a, [hSavedVBCopySize]
-	ld [H_VBCOPYDOUBLESIZE], a
-	ld b, $40
-	sub b ; $40 or more tiles to copy?
-	jr c, .oneframe
-	
-	ld c, a ; save the difference
-	
-	ld a, b
-	ld [H_VBCOPYDOUBLESIZE], a ; copy $40 bytes first
-	call DelayFrame
-	
-	ld a, $d4
-	ld [H_VBCOPYDOUBLESRC + 1], a
-	xor a
-	ld [H_VBCOPYDOUBLESRC], a
-	
-	ld a, [H_VBCOPYDOUBLEDEST + 1]
-	add $4
-	ld [H_VBCOPYDOUBLEDEST + 1], a
-	
-	ld a, c
-	ld [H_VBCOPYDOUBLESIZE], a ; then copy the difference
-.oneframe
-	call DelayFrame
 	pop af
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ret
