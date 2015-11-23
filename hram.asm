@@ -225,7 +225,9 @@ H_VBCOPYDOUBLESIZE EQU $FFC6
 ; source address for VBlankCopyDouble function
 ;H_VBCOPYDOUBLESRC EQU $FFC7
 
-hDidWRAMBankswitchFlag EQU $FFC7
+;hDidWRAMBankswitchFlag EQU $FFC7
+
+hSkipPaletteTransfer EQU $FFC7
 
 ; destination address for VBlankCopy function
 H_VBCOPYDEST EQU $FFC9

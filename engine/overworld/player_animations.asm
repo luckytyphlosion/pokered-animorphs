@@ -61,6 +61,7 @@ EnterMapAnim: ; 70510 (1c:4510)
 	ld de, FlyAnimationEnterScreenCoords
 	call DoFlyAnimation
 	call LoadPlayerSpriteGraphics
+	call DelayFrame
 	jr .restoreDefaultMusic
 
 FlyAnimationEnterScreenCoords: ; 70592 (1c:4592)

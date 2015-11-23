@@ -2682,14 +2682,6 @@ SetSpriteFacingDirectionAndDelay:: ; 34a6 (0:34a6)
 	ld c, 6
 	jp DelayFrames
 
-SetSpriteFacingDirection:: ; 34ae (0:34ae)
-	ld a, $9
-	ld [H_SPRITEDATAOFFSET], a
-	call GetPointerWithinSpriteStateData1
-	ld a, [hSpriteFacingDirection]
-	ld [hl], a
-	ret
-
 SECTION "bwexp fix isiteminbag", ROM0[$3493]
 IsItemInBag:: ; 3493 (0:3493)
 ; given an item_id in b
@@ -2699,6 +2691,14 @@ IsItemInBag:: ; 3493 (0:3493)
 	predef GetQuantityOfItemInBag
 	ld a,b
 	and a
+	ret
+
+SetSpriteFacingDirection:: ; 34ae (0:34ae)
+	ld a, $9
+	ld [H_SPRITEDATAOFFSET], a
+	call GetPointerWithinSpriteStateData1
+	ld a, [hSpriteFacingDirection]
+	ld [hl], a
 	ret
 
 SetSpriteImageIndexAfterSettingFacingDirection:: ; 34b9 (0:34b9)
@@ -3148,6 +3148,14 @@ LoadScreenTilesFromBuffer1:: ; 3725 (0:3725)
 	ld a, 1
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ret
+
+GBPalWhiteOutWithDelay3::
+	call GBPalWhiteOut
+
+Delay3::
+; The bg map is updated each frame in thirds.
+; Wait three frames to let the bg map fully update.
+	ld c, 3
 
 DelayFrames:: ; 3739 (0:3739)
 ; wait n frames, where n is the value in c
@@ -4409,16 +4417,6 @@ RestoreScreenTilesAndReloadTilePatterns:: ; 3dbe (0:3dbe)
 	call LoadTextBoxTilePatterns
 	call RunDefaultPaletteCommand
 	jp DelayFrame
-
-
-GBPalWhiteOutWithDelay3::
-	call GBPalWhiteOut
-
-Delay3::
-; The bg map is updated each frame in thirds.
-; Wait three frames to let the bg map fully update.
-	ld c, 3
-	jp DelayFrames
 
 GBPalNormal::
 ; Reset BGP and OBP0.

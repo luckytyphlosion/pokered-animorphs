@@ -176,7 +176,7 @@ LoadTownMap_Fly: ; 70f90 (1c:4f90)
 	coord hl, 3, 0
 	ld de, wcd6d
 	call PlaceString
-	ld c, 15
+	ld c, 3
 	call DelayFrames
 	coord hl, 18, 0
 	ld [hl], $ed

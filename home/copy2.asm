@@ -272,16 +272,25 @@ SkipAligningTiles:
 	res LCD_STAT, a
 	ld [rIE], a
 	
+	ld a, [rLY]
+	cp $90 ; are we in VBlank?
+	jr nc, .skipPalTransfer
+	cp $81 ; have palettes been updated already?
+	jr nc, .doPalTransfer ; if so, allow palette transfer in vblank
+.skipPalTransfer
+	ld a, $1
+	ld [hSkipPaletteTransfer], a ; prevent vblank from executing palette transfer
+.doPalTransfer
 	ld a, [hSavedVBCopySize]
 	dec a
 	set 7, a
 	ld hl, rHDMA5
 	lb bc, $ff, (rSTAT & $ff)
 	ld d, a
-.waitForNonHBlankLoop
+.waitForHBlankLoop
 	ld a, [$ff00+c]
 	and %11
-	jr nz, .waitForNonHBlankLoop
+	jr nz, .waitForHBlankLoop
 	
 	ld [hl], d
 	ld a, d
@@ -297,7 +306,14 @@ SkipAligningTiles:
 
 	ld a, [hSavedWRAMBank]
 	ld [rSVBK], a
-
+	
+	ld a, [rLY]
+	cp $89 ; is there enough time to transfer palettes?
+	ld a, $0
+	jr nc, .delayPalTransfer
+	ld a, $1
+.delayPalTransfer
+	ld [hSkipPaletteTransfer], a
 	ld a, [rIE]
 	set LCD_STAT, a
 	ld [rIE], a

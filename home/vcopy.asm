@@ -123,6 +123,12 @@ AutoBgMapTransfer:: ; 1d57 (0:1d57)
 	ret
 
 WriteCGBPalettes::
+	ld a, [hSkipPaletteTransfer]
+	and a
+	ld a, $0
+	ld [hSkipPaletteTransfer], a
+	ret nz
+	
 	ld a, [hLastBGP]
 	ld b, a
 	ld a, [rBGP]
