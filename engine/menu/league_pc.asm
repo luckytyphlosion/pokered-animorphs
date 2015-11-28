@@ -92,8 +92,7 @@ LeaguePCShowMon: ; 76610 (1d:6610)
 	ld de, wcd6d
 	ld bc, NAME_LENGTH
 	call CopyData
-	ld b, SET_PAL_POKEMON_WHOLE_SCREEN
-	ld c, 0
+	lb bc, SET_PAL_POKEMON_WHOLE_SCREEN, 0
 	call RunPaletteCommand
 	coord hl, 12, 5
 	call GetMonHeader

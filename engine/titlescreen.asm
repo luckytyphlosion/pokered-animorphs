@@ -13,8 +13,8 @@ SetDefaultNamesBeforeTitlescreen: ; 42b7 (1:42b7)
 	xor a
 	ld [hWY], a
 	ld [wLetterPrintingDelayFlags], a
-	ld hl, wd732
-	ld [hli], a
+	ld hl, wd732 + 1
+	;ld [hli], a
 	ld [hli], a
 	ld [hl], a
 	ld a, BANK(Music_TitleScreen)

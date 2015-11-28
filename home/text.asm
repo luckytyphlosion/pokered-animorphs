@@ -584,20 +584,6 @@ TextCommand0A:: ; 1c1d (0:1c1d)
 	pop bc
 	pop hl
 	jp NextTextCommand
-	
-SECTION "Randomizer Compatibility", ROM0 [$1c64]
-; format: text command ID, sound ID or cry ID
-TextCommandSounds:: ; 1c64 (0:1c64)
-	db $0B,SFX_GET_ITEM_1
-	db $12,SFX_CAUGHT_MON
-	db $0E,SFX_POKEDEX_RATING
-	db $0F,SFX_GET_ITEM_1
-	db $10,SFX_GET_ITEM_2
-	db $11,SFX_GET_KEY_ITEM
-	db $13,SFX_DEX_PAGE_ADDED
-	db $14,NIDORINA ; used in OakSpeech
-	db $15,PIDGEOT  ; used in SaffronCityText12
-	db $16,DEWGONG  ; unused?
 
 ; plays sounds
 ; this actually handles various command ID's, not just 0B
@@ -638,6 +624,20 @@ TextCommand0B:: ; 1c31 (0:1c31)
 	pop bc
 	jp NextTextCommand
 	
+SECTION "Randomizer Compatibility", ROM0 [$1c64]
+; format: text command ID, sound ID or cry ID
+TextCommandSounds:: ; 1c64 (0:1c64)
+	db $0B,SFX_GET_ITEM_1
+	db $12,SFX_CAUGHT_MON
+	db $0E,SFX_POKEDEX_RATING
+	db $0F,SFX_GET_ITEM_1
+	db $10,SFX_GET_ITEM_2
+	db $11,SFX_GET_KEY_ITEM
+	db $13,SFX_DEX_PAGE_ADDED
+	db $14,NIDORINA ; used in OakSpeech
+	db $15,PIDGEOT  ; used in SaffronCityText12
+	db $16,DEWGONG  ; unused?
+
 ; draw ellipses
 ; 0CAA
 ; AA = number of ellipses to draw

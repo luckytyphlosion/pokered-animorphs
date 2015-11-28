@@ -31,7 +31,11 @@ HallOfFamePC: ; 7405c (1d:405c)
 	xor a
 	ld [wUnusedCD3D], a ; not read
 	ld [wNumCreditsMonsDisplayed], a
-	jp Credits
+	ld e, $2
+	callab CopyOffscreenTilesToWRAMBuffer
+	call Credits
+	ld e, $0
+	jpab CopyOffscreenTilesToWRAMBuffer
 
 FadeInCreditsText: ; 740ba (1d:40ba)
 	ld hl, HoFGBPalettes

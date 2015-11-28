@@ -5528,7 +5528,7 @@ INCLUDE "engine/menu/pokedex.asm"
 INCLUDE "engine/trade.asm"
 INCLUDE "engine/intro.asm"
 INCLUDE "engine/trade2.asm"
-
+INCLUDE "engine/offscreen_tiles.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 
@@ -6678,14 +6678,9 @@ INCLUDE "scripts/agatha.asm"
 INCLUDE "data/mapObjects/agatha.asm"
 AgathaBlocks: INCBIN "maps/agatha.blk"
 
-INCLUDE "engine/menu/league_pc.asm"
-
 INCLUDE "engine/overworld/hidden_items.asm"
 
-WhiteTileBuffer:
-	rept 224
-	db $7f
-	endr
+INCLUDE "engine/menu/league_pc.asm"
 
 SECTION "bank1E",ROMX,BANK[$1E]
 

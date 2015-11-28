@@ -1,3 +1,4 @@
+SECTION "hidden items fix", ROMX[$6688], BANK[$1d]
 HiddenItems: ; 76688 (1d:6688)
 	ld hl, HiddenItemCoords
 	call FindHiddenItemOrCoinsIndex

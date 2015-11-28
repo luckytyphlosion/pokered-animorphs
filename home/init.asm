@@ -153,7 +153,9 @@ rLCDC_DEFAULT EQU %11100011
 	call ClearBgMap
 	ld h, vBGMap1 / $100
 	call ClearBgMap
-
+	
+	ld e, $0
+	callab CopyOffscreenTilesToWRAMBuffer
 	ld a, rLCDC_DEFAULT
 	ld [rLCDC], a
 	ld a, 16

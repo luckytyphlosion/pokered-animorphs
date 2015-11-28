@@ -42,7 +42,8 @@ VBlank::
 	call z, $ff80 ; hOAMDMA
 
 	; VBlank-sensitive operations end.
-
+	ld a, [wUpdateSpritesEnabled]
+	cp $ff ; simulate red/blue dsum
 	call Random
 
 	xor a

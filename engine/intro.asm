@@ -14,10 +14,14 @@ PlayIntro: ; 41682 (10:5682)
 	ld [hSCX], a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	call ClearSprites
+	ld e, $0
+	call CopyOffscreenTilesToWRAMBuffer
 	call DelayFrame
 	ret
 
 PlayIntroScene: ; 4169d (10:569d)
+	ld e, $1
+	call CopyOffscreenTilesToWRAMBuffer
 	ld b, SET_PAL_NIDORINO_INTRO
 	call RunPaletteCommand
 	ld a, %11100100
