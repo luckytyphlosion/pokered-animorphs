@@ -305,10 +305,6 @@ LinkCanceledText: ; 5d4d (1:5d4d)
 	db "@"
 
 StartNewGame: ; 5d52 (1:5d52)
-	ld hl, wd732
-	res 1, [hl]
-	set 0, [hl]
-	call OakSpeech
 	ld a, $1
 	ld [MBC1SRamBank], a
 	ld [wSRAMBank], a
@@ -321,6 +317,10 @@ StartNewGame: ; 5d52 (1:5d52)
 	call FillMemory
 	ld [MBC1SRamEnable], a
 	ld [wSRAMEnabled], a
+	ld hl, wd732
+	res 1, [hl]
+	set 0, [hl]
+	call OakSpeech
 	ld c, 20
 	call DelayFrames
 
