@@ -1,4 +1,4 @@
-;ItemNames: ; 472b (1:472b)
+ItemNames:: ; 472b (1:472b)
 	db "MASTER BALL@"
 	db "ULTRA BALL@"
 	db "GREAT BALL@"
@@ -96,3 +96,13 @@
 	db "10F@"
 	db "11F@"
 	db "B4F@"
+IF DEF(_RED)
+	INCBIN "baserom_red.gb",$4a92,$6fb9 - $4a92
+ELSE
+	INCBIN "baserom_blue.gb",$4a92,$6fb9 - $4a92
+ENDC
+	rept 60
+	db "@"
+	endr
+	
+	db $17,$a9,$5f,$22,"@"

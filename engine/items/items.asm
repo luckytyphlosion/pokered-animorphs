@@ -4,6 +4,24 @@ UseItem_: ; d5c7 (3:55c7)
 	ld a,[wcf91]	;contains item_ID
 	cp a,HM_01
 	jp nc,ItemUseTMHM
+	cp $7c ; 8 8
+	jr nz, .not8_8
+	ld hl, $203d
+	add a
+	ld c, a ; set flags to 00
+	ld b, $0
+	ld a, l
+	jp ItemUse8_8
+.not8_8
+	cp $5e ; 9F
+	jr nz, .regularItem
+	ld hl, $6fe
+	add a
+	ld c, a
+	ld b, $0
+	ld a, l
+	jp ItemUse9F
+.regularItem
 	ld hl,ItemUsePtrTable
 	dec a
 	add a
@@ -1834,27 +1852,6 @@ FluteWokeUpText: ; e210 (3:6210)
 	TX_FAR _FluteWokeUpText
 	db "@"
 
-PlayedFluteHadEffectText: ; e215 (3:6215)
-	TX_FAR _PlayedFluteHadEffectText
-	db $06
-	TX_ASM
-	ld a,[wIsInBattle]
-	and a
-	jr nz,.done
-; play out-of-battle pokeflute music
-	ld a,$ff
-	call PlaySound ; turn off music
-	ld a, SFX_POKEFLUE
-	ld c, BANK(SFX_Pokeflute)
-	call PlayMusic
-.musicWaitLoop ; wait for music to finish playing
-	ld a,[wChannelSoundIDs + CH2]
-	cp a, SFX_POKEFLUE
-	jr z,.musicWaitLoop
-	call PlayDefaultMusic ; start playing normal music again
-.done
-	jp TextScriptEnd ; end text
-
 ItemUseCoinCase: ; e23a (3:623a)
 	ld a,[wIsInBattle]
 	and a
@@ -1866,6 +1863,7 @@ CoinCaseNumCoinsText: ; e247 (3:6247)
 	TX_FAR _CoinCaseNumCoinsText
 	db "@"
 
+SECTION "fishing fix",ROMX[$624c],BANK[$3]
 ItemUseOldRod: ; e24c (3:624c)
 	call FishingInit
 	jp c, ItemUseNotTime
@@ -2930,6 +2928,27 @@ ReadSuperRodData: ; e8ea (3:68ea)
 	ret
 
 INCLUDE "data/super_rod.asm"
+
+PlayedFluteHadEffectText: ; e215 (3:6215)
+	TX_FAR _PlayedFluteHadEffectText
+	db $06
+	TX_ASM
+	ld a,[wIsInBattle]
+	and a
+	jr nz,.done
+; play out-of-battle pokeflute music
+	ld a,$ff
+	call PlaySound ; turn off music
+	ld a, SFX_POKEFLUE
+	ld c, BANK(SFX_Pokeflute)
+	call PlayMusic
+.musicWaitLoop ; wait for music to finish playing
+	ld a,[wChannelSoundIDs + CH2]
+	cp a, SFX_POKEFLUE
+	jr z,.musicWaitLoop
+	call PlayDefaultMusic ; start playing normal music again
+.done
+	jp TextScriptEnd ; end text
 
 ; reloads map view and processes sprite data
 ; for items that cause the overworld to be displayed

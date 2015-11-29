@@ -1144,6 +1144,14 @@ CloseTextDisplay:: ; 29e8 (0:29e8)
 	call SwitchToMapRomBank
 	ld a,$90
 	ld [hWY],a ; move the window off the screen
+	ld a, [wCurMap]
+	cp PEWTER_CITY
+	jr nz, .notPewterCity
+	ld a, [wPewterCityCurScript]
+	cp $4
+	ld c, 30
+	call z, DelayFrames
+.notPewterCity
 	call DelayFrame
 	call LoadGBPal
 	xor a
@@ -3276,7 +3284,7 @@ GetName:: ; 376b (0:376b)
 	ld e,l
 .nextChar
 	ld a,[hli]
-	cp a, "@"
+	cp "@" ; $50
 	jr nz,.nextChar
 	inc c           ;entry counter
 	ld a,b          ;wanted entry

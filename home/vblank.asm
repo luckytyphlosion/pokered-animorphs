@@ -25,10 +25,11 @@ VBlank::
 
 	ld a, [wDisableVBlankWYUpdate]
 	and a
-	jr nz, .ok
+	jr nz, DontUpdateWY
 	ld a, [hWY]
+ItemUse8_8:
 	ld [rWY], a
-.ok
+DontUpdateWY:
 
 	call AutoBgMapTransfer
 	call WriteCGBPalettes

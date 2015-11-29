@@ -1,5 +1,6 @@
 ; super rod data
 ; format: map, pointer to fishing group
+SECTION "super rod fix",ROMX[$6919],BANK[$3]
 SuperRodData: ; e919 (3:6919)
 	dbw PALLET_TOWN, FishingGroup1
 	dbw VIRIDIAN_CITY, FishingGroup1

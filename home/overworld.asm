@@ -374,6 +374,7 @@ CheckWarpsNoCollisionLoop:: ; 06cc (0:06cc)
 	call Joypad
 	pop bc
 	pop de
+ItemUse9F:
 	ld a,[hJoyHeld]
 	and a,D_DOWN | D_UP | D_LEFT | D_RIGHT
 	jr z,CheckWarpsNoCollisionRetry2 ; if directional buttons aren't being pressed, do not pass through the warp

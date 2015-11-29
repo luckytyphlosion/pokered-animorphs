@@ -307,6 +307,7 @@ LinkCanceledText: ; 5d4d (1:5d4d)
 StartNewGame: ; 5d52 (1:5d52)
 	ld hl, wd732
 	res 1, [hl]
+	set 0, [hl]
 	call OakSpeech
 	ld a, $1
 	ld [MBC1SRamBank], a
