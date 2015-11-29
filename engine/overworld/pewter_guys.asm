@@ -52,7 +52,6 @@ PointerTable_37ce6: ; 37ce6 (d:7ce6)
 	dw PewterMuseumGuyCoords
 	dw PewterGymGuyCoords
 
-	ds 3
 ; these are the four coordinates of the spaces below, above, to the left and
 ; to the right of the museum guy, and pointers to different movements for
 ; the player to make to get positioned before the main movement.

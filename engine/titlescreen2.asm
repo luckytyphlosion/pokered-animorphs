@@ -17,6 +17,11 @@ TitleScroll_Out: ; 3724f (d:724f)
 	db $12, $22, $32, $42, $52, $62, $83, $93, 0
 
 TitleScroll: ; 37258 (d:7258)
+	ld a, [rLYC]
+	push af
+	ld a, $70
+	ld [rLYC], a
+	
 	ld a, d
 
 	ld bc, TitleScroll_In
@@ -34,7 +39,7 @@ TitleScroll: ; 37258 (d:7258)
 _TitleScroll: ; 3726a (d:726a)
 	ld a, [bc]
 	and a
-	ret z
+	jr z, .done
 
 	inc bc
 	push bc
@@ -69,7 +74,6 @@ _TitleScroll: ; 3726a (d:726a)
 
 .ScrollBetween ; 37292 (d:7292)
 .wait
-	di
 	ld a, [rLY] ; rLY
 	cp l
 	jr nz, .wait
@@ -81,8 +85,12 @@ _TitleScroll: ; 3726a (d:726a)
 	ld a, [rLY] ; rLY
 	cp h
 	jr z, .wait2
-	reti
+	ret
 
+.done
+	pop af
+	ld [rLYC], a
+	ret
 TitleBallYTable: ; 372a0 (d:72a0)
 ; OBJ y-positions for the Poke Ball held by Red in the title screen.
 ; This is really two 0-terminated lists. Initiated with an index of 1.
@@ -101,6 +109,10 @@ TitleScreenAnimateBallIfStarterOut: ; 372ac (d:72ac)
 	ld e, 1 ; animate titleball
 	ld bc, TitleScroll_WaitBall
 	ld d, 0
+	ld a, [rLYC]
+	push af
+	ld a, $70
+	ld [rLYC], a
 	jp _TitleScroll
 
 GetTitleBallY: ; 372c4 (d:72c4)

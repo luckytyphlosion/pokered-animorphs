@@ -294,7 +294,6 @@ TitleScreenScrollInMon: ; 44c1 (1:44c1)
 
 ScrollTitleScreenGameVersion: ; 44cf (1:44cf)
 .wait
-	di
 	ld a, [rLY]
 	cp l
 	jr nz, .wait
@@ -306,7 +305,7 @@ ScrollTitleScreenGameVersion: ; 44cf (1:44cf)
 	ld a, [rLY]
 	cp h
 	jr z, .wait2
-	reti
+	ret
 
 DrawPlayerCharacter: ; 44dd (1:44dd)
 	ld hl, PlayerCharacterTitleGraphics
@@ -361,7 +360,7 @@ LoadTitleMonSprite: ; 4524 (1:4524)
 TitleScreenCopyTileMapToVRAM: ; 4533 (1:4533)
 	ld [H_AUTOBGTRANSFERDEST + 1], a
 	jp DelayFrame
-
+	
 LoadCopyrightAndTextBoxTiles: ; 4538 (1:4538)
 	xor a
 	ld [hWY], a

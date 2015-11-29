@@ -2334,7 +2334,7 @@ SwitchToMapRomBank:: ; 12bc (0:12bc)
 	ret
 
 IgnoreInputForHalfSecond: ; 12da (0:12da)
-	ld a, 30
+	ld a, 5
 	ld [wIgnoreInputCounter], a
 	ld hl, wd730
 	ld a, [hl]

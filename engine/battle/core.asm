@@ -6482,7 +6482,7 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	ld hl, vBackPic
 	ld de, sSpriteBuffer1
 	pop bc
-	ld c, (2*SPRITEBUFFERSIZE)/16
+	;ld c, (2*SPRITEBUFFERSIZE)/16
 	jp CopyVideoData
 
 ; swaps the level values of the BattleMon and EnemyMon structs
@@ -6553,8 +6553,8 @@ LoadPlayerBackPic:
 	ld [wSRAMEnabled], a
 	xor a
 	ld [MBC1SRamBank], a
-	ld [wDoOAMUpdate], a
 	ld [wSRAMBank], a
+	ld [wDoOAMUpdate], a
 	ld hl, vSprites
 	ld de, sSpriteBuffer1
 	ld a, [H_LOADEDROMBANK]
