@@ -95,10 +95,6 @@ FillMemory:: ; 0x3041
 	jr nz, .PutByte
 	ret
 
-BankswitchCommon:
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
-	ret
 _hl_:
 	jp [hl]
 
@@ -2940,6 +2936,7 @@ Bankswitch:: ; 35d6 (0:35d6)
 	call _hl_
 	pop bc
 	ld a,b
+BankswitchCommon:
 	ld [H_LOADEDROMBANK],a
 	ld [MBC1RomBank],a
 	ret
@@ -3004,8 +3001,8 @@ MoveSprite_:: ; 363d (0:363d)
 	xor a
 	ld [hl],a
 	ld hl,wNPCMovementDirections
-	ld c,0
 
+	ld c, 0
 .loop
 	ld a,[de]
 	ld [hli],a
@@ -3013,7 +3010,7 @@ MoveSprite_:: ; 363d (0:363d)
 	inc c
 	cp a,$FF ; have we reached the end of the movement data?
 	jr nz,.loop
-
+	
 	ld a,c
 	ld [wNPCNumScriptedSteps],a ; number of steps taken
 
@@ -3028,6 +3025,27 @@ MoveSprite_:: ; 363d (0:363d)
 	ld [wJoyIgnore],a
 	ld [wWastedByteCD3A],a
 	ret
+
+BrockThroughWallsCopyOriginalData:
+	ld a, [H_LOADEDROMBANK]
+	push af
+	ld a, BANK(IncbinnedBank0)
+	call BankswitchCommon
+	call CopyUntilFF
+	pop af
+	jp BankswitchCommon
+
+CopyUntilFF:
+.loop
+	ld a, [hli]
+	cp $ff
+	ret z
+	ld [de],a
+	inc de
+	ld a, [wSimulatedJoypadStatesIndex]
+	inc a
+	ld [wSimulatedJoypadStatesIndex], a
+	jr .loop
 
 ; divides [hDividend2] by [hDivisor2] and stores the quotient in [hQuotient2]
 DivideBytes:: ; 366b (0:366b)

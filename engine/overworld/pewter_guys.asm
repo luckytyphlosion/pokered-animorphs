@@ -21,6 +21,9 @@ PewterGuys: ; 37ca1 (d:7ca1)
 	ld b, a
 	ld a, [wXCoord]
 	ld c, a
+	push de
+	ld a, [hli]
+	ld d, a
 .findMatchingCoordsLoop
 	ld a, [hli]
 	cp b
@@ -31,23 +34,42 @@ PewterGuys: ; 37ca1 (d:7ca1)
 	ld a, [hli]
 	ld h, [hl]
 	ld l, a
+	pop de
 .copyMovementDataLoop
-	ld a, [hli]
-	cp $ff
-	ret z
-	ld [de], a
-	inc de
+	ld a, h
+	cp $40
 	ld a, [wSimulatedJoypadStatesIndex]
-	inc a
-	ld [wSimulatedJoypadStatesIndex], a
-	jr .copyMovementDataLoop
+	jp nc, CopyUntilFF
+	ld a, $40
+	add h
+	ld h, a
+	jp BrockThroughWallsCopyOriginalData
 .nextEntry1
 	inc hl
 .nextEntry2
 	inc hl
 	inc hl
+	ld a, d
+	and a
+	jr z, .findMatchingCoordsLoop
+	dec d
+	jr nz, .findMatchingCoordsLoop
+.alignPointerLoop
+	ld a, l
+	and $f
+	inc hl
+	cp $2
+	jr z, .alignedPointer
+	cp $6
+	jr z, .alignedPointer
+	cp $a
+	jr z, .alignedPointer
+	cp $e
+	jr nz, .alignPointerLoop
+.alignedPointer
+	dec hl
 	jr .findMatchingCoordsLoop
-
+	
 PointerTable_37ce6: ; 37ce6 (d:7ce6)
 	dw PewterMuseumGuyCoords
 	dw PewterGymGuyCoords
@@ -56,6 +78,8 @@ PointerTable_37ce6: ; 37ce6 (d:7ce6)
 ; to the right of the museum guy, and pointers to different movements for
 ; the player to make to get positioned before the main movement.
 PewterMuseumGuyCoords: ; 37cea (d:7cea)
+	db (.end - .start) / 4
+.start
 	db 18, 27
 	dw .down
 	db 16, 27
@@ -64,7 +88,8 @@ PewterMuseumGuyCoords: ; 37cea (d:7cea)
 	dw .left
 	db 17, 28
 	dw .right
-
+.end
+	
 .down
 	db D_UP, D_UP, $ff
 .up
@@ -79,6 +104,8 @@ PewterMuseumGuyCoords: ; 37cea (d:7cea)
 ; main movement
 ; $00 is a pause
 PewterGymGuyCoords: ; 37d06 (d:7d06)
+	db (.end - .start) / 4
+.start
 	db 16, 34
 	dw .one
 	db 17, 35
@@ -89,7 +116,8 @@ PewterGymGuyCoords: ; 37d06 (d:7d06)
 	dw .four
 	db 17, 36
 	dw .five
-
+.end
+	
 .one
 	db D_LEFT, D_DOWN, D_DOWN, D_RIGHT, $ff
 .two

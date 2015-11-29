@@ -6703,6 +6703,14 @@ INCLUDE "engine/overworld/elevator.asm"
 
 INCLUDE "engine/items/tm_prices.asm"
 
+SECTION "bank2d",ROMX,BANK[$2d]
+IncbinnedBank0:
+IF DEF(_RED)
+	INCBIN "baserom_red.gb",$0,$4000
+ELSE
+	INCBIN "baserom_blue.gb",$0,$4000
+ENDC
+
 IF DEF(_OPTION_BEACH_HOUSE)
 SECTION "bank3C",ROMX[$4314],BANK[$3C]
 
