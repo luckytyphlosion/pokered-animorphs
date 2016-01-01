@@ -1361,7 +1361,16 @@ AddItemToInventory:: ; 2bcf (0:2bcf)
 	call BankswitchCommon
 	pop bc
 	ret
-
+	
+ConditionalDelayFrame:
+; Delay3 if bits 2 and 3 of wOptions are set
+; else DelayFrame
+	ld a, [wOptions]
+	and %11
+	cp $3 << 2
+	jp nz, DelayFrame
+	jp Delay3
+	
 ; INPUT:
 ; [wListMenuID] = list menu ID
 ; [wListPointer] = address of the list (2 bytes)
@@ -1424,7 +1433,7 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 	call PrintListMenuEntries
 	ld a,1
 	ld [H_AUTOBGTRANSFERENABLED],a ; enable transfer
-	call DelayFrame
+	call ConditionalDelayFrame
 	ld a,[wBattleType]
 	and a ; is it the Old Man battle?
 	jr z,.notOldManBattle
@@ -3379,9 +3388,9 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 	inc a
 	jr z, .printingText
 	ld a, [wOptions]
-	and $f
-	cp $5 ; slow
-	ld a, $9
+	and %1100
+	cp $3 << 2 ; slow
+	ld a, 30
 	jr z, .slowOption
 .printingText
 	ld a, 5
@@ -3416,14 +3425,15 @@ JoypadLowSensitivity:: ; 3831 (0:3831)
 .setShortDelay
 	push bc
 	ld a, [wOptions]
-	and $f
-	cp $1 ; superfast
-	ld b, $0
+	and %1100
+	ld b, $0 ; superfast
 	jr z, .loadFrameCounter
-	cp $3
-	ld b, $5
-	jr z, .loadFrameCounter
+	cp $2 << 2
 	ld b, $8
+	jr z, .loadFrameCounter
+	;cp $1 << 2
+	ld b, $5
+	;jr z, .loadFrameCounter
 .loadFrameCounter
 	ld a, b
 	ld [H_FRAMECOUNTER],a
@@ -3507,8 +3517,51 @@ Divide:: ; 38b9 (0:38b9)
 ; screen unless the player presses the A/B button or the delay is turned off
 ; through the [wd730] or [wLetterPrintingDelayFlags] flags.
 PrintLetterDelay:: ; 38d3 (0:38d3)
-	ret
+	ld a,[wd730]
+	bit 6,a
+	ret nz
+	ld a, [wLetterPrintingDelayFlags]
+	bit 1,a
+	ret z
 	
+	push bc
+	push hl
+	push de
+	
+	ld b, a
+	ld a, [wOptions]
+	and %11
+	jr z, ProtectedJoypad
+	
+	bit 0, b
+	ld c, 1
+	jr z, .foundFrame
+	dec a
+	jr z, .foundFrame
+	dec a
+	ld c, 3
+	jr z, .foundFrame
+	ld c, 5
+.foundFrame
+	call Joypad
+	ld a, [hJoyHeld]
+	and A_BUTTON | B_BUTTON
+	jr z, .dontEndWait
+	ld c, 1
+.dontEndWait
+	call DelayFrame
+	dec c
+	jr nz, .foundFrame
+	jr PrintLetterDelayDone
+
+ProtectedJoypad:
+	call Joypad
+PrintLetterDelayDone:
+	pop de
+	pop hl
+	pop bc
+	ret
+
 ; (unless in link battle) waits for A or B being pressed and outputs the scrolling sound effect
 ManualTextScroll:: ; 3898 (0:3898)
 	ld a, [wLinkState]
@@ -3887,8 +3940,8 @@ HandleMenuInput_:: ; 3ac2 (0:3ac2)
 	xor a
 	ld [wAnimCounter],a ; counter for pokemon shaking animation
 	call PlaceMenuCursor
+	call ConditionalDelayFrame ; Delay3
 .loop2
-	call DelayFrame ; Delay3
 	push hl
 	ld a,[wPartyMenuAnimMonEnabled]
 	and a ; is it a pokemon selection menu?

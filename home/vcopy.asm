@@ -128,14 +128,12 @@ WriteCGBPalettes::
 	ld a, $0
 	ld [hSkipPaletteTransfer], a
 	ret nz
-	
 	ld a, [hLastBGP]
 	ld b, a
 	ld a, [rBGP]
 	cp b ; has the BGP changed since the last check?
 	ld [hLastBGP], a
 	jr z, .checkOBP0 ; if not, check OBP0
-	
 	ld hl, wTempBGP
 	lb bc, 8, rBGPI & $ff
 	ld a, %10000000
@@ -167,7 +165,7 @@ WriteCGBPalettes::
 	dec b
 	jr nz, .obp0Loop1
 ; the oam code writes 02 and 03 to the flags byte for the bottom half of sprites for some reason
-; the hblank function clears these useless writes, but sprite flickering still occurs
+; the hblank function clears these writes, but sprite flickering still occurs
 ; therefore, we write to palettes 2 and 3 to hide the sprite flickering
 	ld a, %10000000 | 16
 	ld [rOBPI], a

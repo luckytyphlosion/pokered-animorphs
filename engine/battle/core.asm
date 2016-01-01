@@ -379,6 +379,7 @@ MainInBattleLoop: ; 3c233 (f:4233)
 	call SaveScreenTilesToBuffer1
 	xor a
 	ld [wFirstMonsNotOutYet], a
+	ld [wUsedMetronomeStruggle], a
 	ld a, [wPlayerBattleStatus2]
 	and (1 << NeedsToRecharge) | (1 << UsingRage) ; check if the player is using Rage or needs to recharge
 	jr nz, .selectEnemyMove
@@ -2589,8 +2590,7 @@ MoveSelectionMenu: ; 3d219 (f:5219)
 	ld hl, wEnemyMonMoves
 	call .loadmoves
 	coord hl, 0, 7
-	ld b, $4
-	ld c, $e
+	lb bc, 4, 14
 	call TextBoxBorder
 	coord hl, 2, 8
 	call .writemoves
@@ -2604,8 +2604,7 @@ MoveSelectionMenu: ; 3d219 (f:5219)
 	call AddNTimes
 	call .loadmoves
 	coord hl, 4, 7
-	ld b, $4
-	ld c, $e
+	lb bc, 4, 14
 	call TextBoxBorder
 	coord hl, 6, 8
 	call .writemoves
@@ -2788,7 +2787,12 @@ CursorDown: ; 3d3dd (f:53dd)
 
 AnyMoveToSelect: ; 3d3f5 (f:53f5)
 ; return z and Struggle as the selected move if all moves have 0 PP and/or are disabled
+	ld a, [wOptions]
+	bit 5, a
+	ld a, METRONOME
+	jr nz, .metronomeMode
 	ld a, STRUGGLE
+.metronomeMode
 	ld [wPlayerSelectedMove], a
 	ld a, [wPlayerDisabledMove]
 	and a
@@ -2826,6 +2830,8 @@ AnyMoveToSelect: ; 3d3f5 (f:53f5)
 	call PrintText
 	ld c, 60
 	call DelayFrames
+	ld a, $1
+	ld [wUsedMetronomeStruggle], a
 	xor a
 	ret
 
@@ -2913,8 +2919,7 @@ PrintMenuItem: ; 3d4b6 (f:54b6)
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	coord hl, 0, 8
-	ld b, $3
-	ld c, $9
+	lb bc, 3, 9
 	call TextBoxBorder
 	ld a, [wPlayerDisabledMove]
 	and a
@@ -5255,14 +5260,17 @@ IncrementMovePP: ; 3e373 (f:6373)
 	ld a,[H_WHOSETURN]
 	and a
 ; values for player turn
-	ld hl,wBattleMonPP
-	ld de,wPartyMon1PP
-	ld a,[wPlayerMoveListIndex]
-	jr z,.next
-; values for enemy turn
 	ld hl,wEnemyMonPP
 	ld de,wEnemyMon1PP
 	ld a,[wEnemyMoveListIndex]
+	jr nz,.next
+; values for enemy turn
+	ld a, [wUsedMetronomeStruggle]
+	and a
+	ret nz
+	ld hl,wBattleMonPP
+	ld de,wPartyMon1PP
+	ld a,[wPlayerMoveListIndex]
 .next
 	ld b,$00
 	ld c,a
@@ -5396,6 +5404,9 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 .done
 	ret
 
+SECTION "updated types", ROMX[$6474],BANK[$f]
+INCLUDE "data/type_effects.asm"
+
 ; function to tell how effective the type of an enemy attack is on the player's current pokemon
 ; this doesn't take into account the effects that dual types can have
 ; (e.g. 4x weakness / resistance, weaknesses and resistances canceling)
@@ -5433,10 +5444,7 @@ AIGetTypeEffectiveness: ; 3e449 (f:6449)
 	ld a,[hl]
 	ld [wTypeEffectiveness],a ; store damage multiplier
 	ret
-
-SECTION "updated types", ROMX[$6474],BANK[$f]
-INCLUDE "data/type_effects.asm"
-
+	
 ; some tests that need to pass for a move to hit
 MoveHitTest: ; 3e56b (f:656b)
 ; player's turn

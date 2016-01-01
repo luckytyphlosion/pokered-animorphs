@@ -4,6 +4,9 @@ DecrementPP: ; 68000 (1a:4000)
 	cp a, STRUGGLE
 	ret z                ; if the pokemon is using "struggle", there's nothing to do
 	                     ; we don't decrement PP for "struggle"
+	ld a, [wUsedMetronomeStruggle]
+	and a
+	ret nz
 	ld hl, wPlayerBattleStatus1
 	ld a, [hli]          ; load the wPlayerBattleStatus1 pokemon status flags and increment hl to load the
 	                     ; wPlayerBattleStatus2 status flags later

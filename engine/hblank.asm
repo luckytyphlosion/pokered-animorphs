@@ -42,10 +42,10 @@ TransferBgRows:
 ConvertDMGPaletteIndexesToCGB:
 	ld hl, wOAMBuffer + 3
 	ld bc, 4
-	ld e, 40
+	lb de, %11111000, 40
 .palIndexConversionLoop
 	ld a, [hl]
-	and %11111000
+	and d
 	bit 4, a
 	ld [hl], a
 	jr z, .continue
@@ -54,22 +54,68 @@ ConvertDMGPaletteIndexesToCGB:
 	add hl, bc
 	dec e
 	jr nz, .palIndexConversionLoop
-
+	
+	ld a, [wCurPalette]	
+	ld e, a
+	ld hl, CGBPalettes
+	and a
+	jr z, .regularPalette
+	ld bc, $8 * 3
+.addNTimesLoop
+	add hl, bc
+	dec e
+	jr nz, .addNTimesLoop
+.regularPalette
+	ld a, [wLastPalette]
+	ld b, a
+	ld a, e
+	cp b
+	ld [wLastPalette], a
+	jr nz, .paletteHasNotChanged
+	
+	ld de, wTempBGP
+	ld a, [rBGP]
+	call HandleDMGPalettes
+	ld bc, $8
+	add hl, bc
+	ld de, wTempOBP0
+	ld a, [rOBP0]
+	call HandleDMGPalettes
+	ld bc, $8
+	add hl, bc
+	ld de, wTempOBP1
+	ld a, [rOBP1]
+	call HandleDMGPalettes
+	ld hl, hLastBGP
+; trick the game into transferring palettes by faking a palette change
+	ld a, [rBGP]
+	inc a
+	ld [hli], a
+	ld a, [rOBP0]
+	inc a
+	ld [hli], a
+	ld a, [rOBP1]
+	inc a
+	ld [hl], a
+	ret
+	
+.paletteHasNotChanged
 	ld a, [hLastBGP]
 	ld b, a
 	ld a, [rBGP]
 	cp b ; has the BGP changed since the last check?
 	jr z, .checkOBP0 ; if not, check OBP0
-	ld hl, CGBPalettes_BGP ; store hl and de with palettes and buffer respectively
+	; store de with buffer
 	ld de, wTempBGP
 	call HandleDMGPalettes
 .checkOBP0
+	ld bc, $8
+	add hl, bc
 	ld a, [hLastOBP0]
 	ld b, a
 	ld a, [rOBP0]
 	cp b ; has the OBP0 changed?
 	jr z, .checkOBP1 ; if not, check OBP1
-	ld hl, CGBPalettes_OBP0
 	ld de, wTempOBP0
 	call HandleDMGPalettes
 .checkOBP1
@@ -78,8 +124,9 @@ ConvertDMGPaletteIndexesToCGB:
 	ld a, [rOBP1]
 	cp b ; has the OBP1 changed?
 	ret z ; if not, we're done here
-	ld hl, CGBPalettes_OBP1
 	ld de, wTempOBP1
+	ld bc, $8
+	add hl, bc
 
 ; fallthrough
 HandleDMGPalettes:
@@ -110,6 +157,8 @@ HandleDMGPalettes:
 	jr nz, .loop
 	ret
 	
+CGBPalettes:
+
 CGBPalettes_BGP:
 IF DEF(_RED)
 	RGB 31, 31, 31
@@ -154,3 +203,21 @@ IF DEF(_BLUE)
 	RGB 15, 7, 9
 	RGB 0, 0, 0
 ENDC
+
+InvertedPalettes_BGP:
+	dw $0000, $4200, $037f, $7fff
+	
+InvertedPalettes_OBP0:
+	dw $0000, $4200, $037f, $7fff
+	
+InvertedPalettes_OBP1:
+	dw $0000, $4200, $037f, $7fff
+	
+CheaterPalettes_BGP:
+	dw $639f, $4279, $15b0, $04cb
+	
+CheaterPalettes_OBP0:
+	dw $7fff, $32bf, $00d0, $0000
+
+CheaterPalettes_OBP1:
+	dw $7fff, $32bf, $00d0, $0000

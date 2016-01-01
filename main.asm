@@ -5529,6 +5529,8 @@ INCLUDE "engine/trade.asm"
 INCLUDE "engine/intro.asm"
 INCLUDE "engine/trade2.asm"
 INCLUDE "engine/offscreen_tiles.asm"
+INCLUDE "engine/menu/options.asm"
+INCLUDE "engine/battle/decrement_pp.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 
@@ -6485,8 +6487,6 @@ Plateau_Block:     INCBIN "gfx/blocksets/plateau.bst"
 
 
 SECTION "bank1A",ROMX,BANK[$1A]
-
-INCLUDE "engine/battle/decrement_pp.asm"
 
 Version_GFX:
 IF DEF(_RED)

@@ -847,6 +847,8 @@ wCoordIndex:: ; cd3d
 
 wOptionsTextSpeedCursorX:: ; cd3d
 
+wOptionsCursorLocation:: ; cd3d
+
 wBoxNumString:: ; cd3d
 
 wTrainerInfoTextBoxWidthPlus1:: ; cd3d
@@ -2038,7 +2040,10 @@ wSRAMEnabled::
 wDamage:: ; d0d7
 	ds 2
 
-	ds 2
+wUsedMetronomeStruggle::
+	ds 1
+	
+	ds 1
 
 wRepelRemainingSteps:: ; d0db
 	ds 1
@@ -2313,10 +2318,22 @@ wOptions:: ; d355
 ; bit 6 = battle style
 ; 0: Shift
 ; 1: Set
-; bits 0-3 = text speed (number of frames to delay after printing a letter)
-; 1: Fast
-; 3: Medium
-; 5: Slow
+; bit 5 = metronome only
+; 0 : normal
+; 1 : struggle is replaced with metronome
+; bit 4 = all moves are shake moves?
+; 0: Yes
+; 1: No
+; bits 2-3 = menu speed
+; 0: as fast as possible
+; 1: moderate
+; 2: slow
+; 3: regular red menus
+; bits 0-1 = text speed (number of frames to delay after printing a letter)
+; 0: Instant (no delay)
+; 1: Fast (one frame)
+; 2: Medium (3 frames)
+; 3: Slow (5 frames)
 	ds 1
 
 wObtainedBadges:: ; d356
@@ -2535,7 +2552,12 @@ wBattleTransitionSP::
 wBattleTransitionSPPointer::
 	ds 2
 	
-	ds 48
+wCurPalette::
+	ds 1
+wLastPalette::
+	ds 1
+	
+	ds 46
 
 wNumSigns:: ; d4b0
 ; number of signs in the current map (up to 16)

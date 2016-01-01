@@ -140,11 +140,10 @@ CopyVideoData::
 	cp $a0
 	jr nc, .notCopyingFromVRAM
 ; custom function incase we're copying from vram
-	inc b
-	inc c
-	dec c
-	jr nz, .waitForNonHBlank
-	dec b
+	ld a, [hSavedVBCopySize]
+	ld c, a
+.bigLoop
+	ld b, $4
 .waitForNonHBlank
 	ld a, [rSTAT]
 	bit 0, a ; in hblank/oam period?
@@ -166,10 +165,10 @@ CopyVideoData::
 	ld [de], a
 	inc de
 	
-	dec c
-	jr nz, .waitForNonHBlank
 	dec b
 	jr nz, .waitForNonHBlank
+	dec c
+	jr nz, .bigLoop
 	jr CopyVideoDataCommon
 
 ; input is now:
