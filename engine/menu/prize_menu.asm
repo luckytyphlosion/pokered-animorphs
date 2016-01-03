@@ -1,3 +1,4 @@
+SECTION "game corner prize menu fix",ROMX[$671b],BANK[$14]
 CeladonPrizeMenu: ; 5271b (14:671b)
 	ld b,COIN_CASE
 	call IsItemInBag

@@ -44,6 +44,8 @@ EndOfBattle: ; 137aa (4:77aa)
 	ld [wForceEvolution], a
 	predef EvolutionAfterBattle
 .resetVariables
+	ld a, [wSavedAnimationOptions]
+	ld [wOptions], a
 	xor a
 	ld [wLowHealthAlarm], a ;disable low health alarm
 	ld [wChannelSoundIDs + CH4], a

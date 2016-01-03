@@ -1,4 +1,9 @@
-SECTION "hidden items fix", ROMX[$6688], BANK[$1d]
+IF DEF(_RED)
+SECTION "hidden items fix red", ROMX[$6688], BANK[$1d]
+ELSE
+SECTION "hidden items fix blue", ROMX[$6689], BANK[$1d]
+ENDC
+
 HiddenItems: ; 76688 (1d:6688)
 	ld hl, HiddenItemCoords
 	call FindHiddenItemOrCoinsIndex

@@ -164,4 +164,5 @@ MoveNames:: ; b0000 (2c:4000)
 	db "SLASH@"
 	db "SUBSTITUTE@"
 	db "STRUGGLE@"
-
+	db "NEXT@"
+	db "BACK@"

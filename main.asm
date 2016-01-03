@@ -2041,6 +2041,7 @@ _DisplayPokedex: ; 7c18 (1:7c18)
 	ld [wDoNotWaitForButtonPressAfterDisplayingText], a
 	ret
 
+INCLUDE "engine/menu/display_moves_used.asm"
 
 SECTION "bank3",ROMX,BANK[$3]
 
@@ -5989,7 +5990,6 @@ INCLUDE "scripts/mansion4.asm"
 INCLUDE "data/mapObjects/mansion4.asm"
 Mansion4Blocks: INCBIN "maps/mansion4.blk"
 
-INCLUDE "engine/battle/init_battle_variables.asm"
 INCLUDE "engine/battle/moveEffects/paralyze_effect.asm"
 
 INCLUDE "engine/overworld/card_key.asm"
@@ -5997,6 +5997,7 @@ INCLUDE "engine/overworld/card_key.asm"
 INCLUDE "engine/menu/prize_menu.asm"
 
 INCLUDE "engine/hidden_object_functions14.asm"
+INCLUDE "engine/battle/init_battle_variables.asm"
 
 
 SECTION "bank15",ROMX,BANK[$15]

@@ -313,7 +313,7 @@ StartNewGame: ; 5d52 (1:5d52)
 	ld [wSRAMEnabled], a
 	xor a
 	ld hl, sPlayTimeHours
-	ld bc, (sPlayTimeFrames + 1) - sPlayTimeHours
+	ld bc, sMoveUseRecordEnd - sPlayTimeHours
 	call FillMemory
 	ld [MBC1SRamEnable], a
 	ld [wSRAMEnabled], a

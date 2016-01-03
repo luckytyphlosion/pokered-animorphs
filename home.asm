@@ -1513,7 +1513,12 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 .skipGettingQuantity
 	ld a,[wcf91]
 	ld [wd0b5],a
+	ld a, [wListMenuID]
+	cp MOVESLISTMENU
+	ld a, BANK(MoveNames)
+	jr z, .moveNames
 	ld a,BANK(ItemNames)
+.moveNames
 	ld [wPredefBank],a
 	call GetName
 	jr .storeChosenEntry
@@ -1707,8 +1712,7 @@ ExitListMenu:: ; 2e3b (0:2e3b)
 
 PrintListMenuEntries:: ; 2e5a (0:2e5a)
 	coord hl, 5, 3
-	ld b,9
-	ld c,14
+	lb bc, 9, 14
 	call ClearScreenArea
 	ld a,[wListPointer]
 	ld e,a
@@ -1750,6 +1754,8 @@ PrintListMenuEntries:: ; 2e5a (0:2e5a)
 	jr z,.pokemonPCMenu
 	cp a,$01
 	jr z,.movesMenu
+	;cp MOVESUSEDLISTMENU
+	;jr z, .movesUsedMenu
 .itemMenu
 	call GetItemName
 	jr .placeNameString

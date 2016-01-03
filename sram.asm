@@ -25,6 +25,9 @@ sPlayTimeMinutes:: ds 2
 sPlayTimeSeconds:: ds 1
 sPlayTimeFrames:: ds 1
 
+sMoveUseRecord:: ds NUM_ATTACKS * 2
+sMoveUseRecordEnd::
+
 SECTION "Saved Boxes 1", SRAM, BANK[2]
 
 sBox1:: ds wBoxDataEnd - wBoxDataStart ; a000

@@ -10,23 +10,18 @@ DisplayPCMainMenu:: ; 213c8 (8:53c8)
 	ld a, [wNumHoFTeams]
 	and a
 	jr nz, .leaguePCAvailable
-	coord hl, 0, 0
-	ld b, 8
-	ld c, 14
+	lb bc, 10, 14
 	jr .next
 .noOaksPC
-	coord hl, 0, 0
-	ld b, 6
-	ld c, 14
+	lb bc, 8, 14
 	jr .next
 .leaguePCAvailable
-	coord hl, 0, 0
-	ld b, 10
-	ld c, 14
+	lb bc, 12, 14
 .next
+	coord hl, 0, 0
 	call TextBoxBorder
 	call UpdateSprites
-	ld a, 3
+	ld a, 4
 	ld [wMaxMenuItem], a
 	CheckEvent EVENT_MET_BILL
 	jr nz, .metBill
@@ -53,24 +48,22 @@ DisplayPCMainMenu:: ; 213c8 (8:53c8)
 	ld a, [wNumHoFTeams]
 	and a
 	jr z, .noLeaguePC
-	ld a, 4
+	ld a, 5
 	ld [wMaxMenuItem], a
 	coord hl, 2, 8
 	ld de, PKMNLeaguePCText
 	call PlaceString
 	coord hl, 2, 10
-	ld de, LogOffPCText
 	jr .next3
 .noLeaguePC
 	coord hl, 2, 8
-	ld de, LogOffPCText
 	jr .next3
 .noOaksPC2
-	ld a, $2
+	ld a, 3
 	ld [wMaxMenuItem], a
 	coord hl, 2, 6
-	ld de, LogOffPCText
 .next3
+	ld de, MoveStatsText
 	call PlaceString
 	ld a, A_BUTTON | B_BUTTON
 	ld [wMenuWatchedKeys], a
@@ -90,7 +83,8 @@ BillsPCText:      db "BILL's PC@"
 PlayersPCText:    db "'s PC@"
 OaksPCText:       db "PROF.OAK's PC@"
 PKMNLeaguePCText: db $4a, "LEAGUE@"
-LogOffPCText:     db "LOG OFF@"
+MoveStatsText:    db "MOVES USED"
+LogOffPCText:     next "LOG OFF@"
 
 BillsPC_:: ; 0x214c2
 	ld hl, wd730

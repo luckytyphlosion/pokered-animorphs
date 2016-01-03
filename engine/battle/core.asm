@@ -379,7 +379,6 @@ MainInBattleLoop: ; 3c233 (f:4233)
 	call SaveScreenTilesToBuffer1
 	xor a
 	ld [wFirstMonsNotOutYet], a
-	ld [wUsedMetronomeStruggle], a
 	ld a, [wPlayerBattleStatus2]
 	and (1 << NeedsToRecharge) | (1 << UsingRage) ; check if the player is using Rage or needs to recharge
 	jr nz, .selectEnemyMove
@@ -2569,6 +2568,9 @@ MoveSelectionMenu: ; 3d219 (f:5219)
 .regularmenu
 	call AnyMoveToSelect
 	ret z
+	ld a, [wOptions]
+	bit 5, a
+	jp nz, MoveSelectionMenu_MetronomeMode
 	ld hl, wBattleMonMoves
 	call .loadmoves
 	coord hl, 4, 12
@@ -2738,6 +2740,7 @@ SelectMenuItem: ; 3d2fe (f:52fe)
 	ld b, $0
 	add hl, bc
 	ld a, [hl]
+.useMetronome
 	ld [wPlayerSelectedMove], a
 	xor a
 	ret
@@ -2785,9 +2788,49 @@ CursorDown: ; 3d3dd (f:53dd)
 	ld [wCurrentMenuItem], a
 	jp SelectMenuItem
 
+MoveSelectionMenu_MetronomeMode:
+	ld hl, wBattleMonMoves
+	lb bc, 4, 0
+.checkMovesLoop
+	ld a, [hli]
+	and a
+	jr z, .foundEndOfMoves
+	inc c
+	dec b
+	jr nz, .checkMovesLoop
+.foundEndOfMoves
+	ld a, c
+	dec a
+	ld [wNumMovesMinusOne], a ; just in case
+	ld hl, wBattleMonPP
+	ld b, 0
+.checkPPLoop
+	ld a, [hli]
+	and a
+	jr nz, .foundUsableMove
+	inc b
+	dec c
+	jr nz, .checkPPLoop
+; error trap: use struggle if we're out of PP for some reason
+	ld b, 0
+	ld a, STRUGGLE
+	jr .writeCurrentMenuItemAndSelectedMove
+.foundUsableMove
+	ld a, METRONOME
+.writeCurrentMenuItemAndSelectedMove
+	ld [wPlayerSelectedMove], a
+	ld a, b
+	ld [wCurrentMenuItem], a
+	ld [wPlayerMoveListIndex], a
+	xor a
+	ret
+
 AnyMoveToSelect: ; 3d3f5 (f:53f5)
 ; return z and Struggle as the selected move if all moves have 0 PP and/or are disabled
-	ld a, [wOptions]
+	xor a
+	ld [wUsedMetronomeStruggle], a
+	ld a, [wSavedAnimationOptions]
+	ld [wOptions], a
 	bit 5, a
 	ld a, METRONOME
 	jr nz, .metronomeMode
@@ -2830,8 +2873,14 @@ AnyMoveToSelect: ; 3d3f5 (f:53f5)
 	call PrintText
 	ld c, 60
 	call DelayFrames
+	ld a, [wOptions]
+	bit 5, a
+	jr z, .xor_a_ret
+	res 7, a
+	ld [wOptions], a
 	ld a, $1
 	ld [wUsedMetronomeStruggle], a
+.xor_a_ret
 	xor a
 	ret
 
@@ -3038,6 +3087,10 @@ SelectEnemyMove: ; 3d564 (f:5564)
 	ld a, $ff
 	jr .done
 .canSelectMove
+	ld a, [wOptions]
+	bit 5, a
+	ld a, METRONOME
+	jr nz, .done ; metronome mode
 	ld hl, wEnemyMonMoves+1 ; 2nd enemy move
 	ld a, [hld]
 	and a
@@ -3279,7 +3332,10 @@ MirrorMoveCheck
 	ld hl,ResidualEffects2
 	ld de,1
 	call IsInArray
-	jp c,JumpMoveEffect ; done here after executing effects of ResidualEffects2
+	jr nc, .noSpecialEffectInResidualEffects2 
+	call JumpMoveEffect
+	jp KeepTrackOfMovesUsed ; done here after executing effects of ResidualEffects2
+.noSpecialEffectInResidualEffects2
 	ld a,[wMoveMissed]
 	and a
 	jr z,.moveDidNotMiss
@@ -3304,7 +3360,7 @@ MirrorMoveCheck
 	ld a,[hli]
 	ld b,[hl]
 	or b
-	ret z ; don't do anything else if the enemy fainted
+	jp z, KeepTrackOfMovesUsed ; don't do anything else if the enemy fainted
 	call HandleBuildingRage
 
 	ld hl,wPlayerBattleStatus1
@@ -3340,7 +3396,39 @@ MultiHitText: ; 3d805 (f:5805)
 ExecutePlayerMoveDone: ; 3d80a (f:580a)
 	xor a
 	ld [wActionResultOrTookBattleTurn],a
+	call KeepTrackOfMovesUsed
 	ld b,1
+	ret
+
+KeepTrackOfMovesUsed:
+	ld a, [wPlayerSelectedMove]
+	inc a
+	ret z
+; keep track of all moves used (good for metronome)
+	ld a, $1
+	ld [wSRAMBank], a
+	ld [MBC1SRamBank], a
+	ld a, SRAM_ENABLE
+	ld [wSRAMEnabled], a
+	ld [MBC1SRamEnable], a
+	ld a, [wPlayerSelectedMove]
+	ld hl, sMoveUseRecord
+	dec a
+	ld e, a
+	ld d, 0
+	add hl, de
+	add hl, de
+	inc hl
+	inc [hl]
+	jr nz, .noOverflow
+	dec hl
+	inc [hl]
+.noOverflow
+	xor a
+	ld [wSRAMBank], a
+	ld [MBC1SRamBank], a
+	ld [wSRAMEnabled], a
+	ld [MBC1SRamEnable], a
 	ret
 
 PrintGhostText: ; 3d811 (f:5811)
@@ -5290,6 +5378,47 @@ IncrementMovePP: ; 3e373 (f:6373)
 	inc [hl] ; increment PP in the party memory location
 	ret
 
+SECTION "updated types", ROMX[$6474],BANK[$f]
+INCLUDE "data/type_effects.asm"
+
+; function to tell how effective the type of an enemy attack is on the player's current pokemon
+; this doesn't take into account the effects that dual types can have
+; (e.g. 4x weakness / resistance, weaknesses and resistances canceling)
+; the result is stored in [wTypeEffectiveness]
+; ($05 is not very effective, $10 is neutral, $14 is super effective)
+; as far is can tell, this is only used once in some AI code to help decide which move to use
+AIGetTypeEffectiveness: ; 3e449 (f:6449)
+	ld a,[wEnemyMoveType]
+	ld d,a                    ; d = type of enemy move
+	ld hl,wBattleMonType
+	ld b,[hl]                 ; b = type 1 of player's pokemon
+	inc hl
+	ld c,[hl]                 ; c = type 2 of player's pokemon
+	ld a,$10
+	ld [wTypeEffectiveness],a ; initialize to neutral effectiveness
+	ld hl,TypeEffects
+.loop
+	ld a,[hli]
+	cp a,$ff
+	ret z
+	cp d                      ; match the type of the move
+	jr nz,.nextTypePair1
+	ld a,[hli]
+	cp b                      ; match with type 1 of pokemon
+	jr z,.done
+	cp c                      ; or match with type 2 of pokemon
+	jr z,.done
+	jr .nextTypePair2
+.nextTypePair1
+	inc hl
+.nextTypePair2
+	inc hl
+	jr .loop
+.done
+	ld a,[hl]
+	ld [wTypeEffectiveness],a ; store damage multiplier
+	ret
+
 ; function to adjust the base damage of an attack to account for type effectiveness
 AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 ; values for player turn
@@ -5402,47 +5531,6 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	inc hl
 	jp .loop
 .done
-	ret
-
-SECTION "updated types", ROMX[$6474],BANK[$f]
-INCLUDE "data/type_effects.asm"
-
-; function to tell how effective the type of an enemy attack is on the player's current pokemon
-; this doesn't take into account the effects that dual types can have
-; (e.g. 4x weakness / resistance, weaknesses and resistances canceling)
-; the result is stored in [wTypeEffectiveness]
-; ($05 is not very effective, $10 is neutral, $14 is super effective)
-; as far is can tell, this is only used once in some AI code to help decide which move to use
-AIGetTypeEffectiveness: ; 3e449 (f:6449)
-	ld a,[wEnemyMoveType]
-	ld d,a                    ; d = type of enemy move
-	ld hl,wBattleMonType
-	ld b,[hl]                 ; b = type 1 of player's pokemon
-	inc hl
-	ld c,[hl]                 ; c = type 2 of player's pokemon
-	ld a,$10
-	ld [wTypeEffectiveness],a ; initialize to neutral effectiveness
-	ld hl,TypeEffects
-.loop
-	ld a,[hli]
-	cp a,$ff
-	ret z
-	cp d                      ; match the type of the move
-	jr nz,.nextTypePair1
-	ld a,[hli]
-	cp b                      ; match with type 1 of pokemon
-	jr z,.done
-	cp c                      ; or match with type 2 of pokemon
-	jr z,.done
-	jr .nextTypePair2
-.nextTypePair1
-	inc hl
-.nextTypePair2
-	inc hl
-	jr .loop
-.done
-	ld a,[hl]
-	ld [wTypeEffectiveness],a ; store damage multiplier
 	ret
 	
 ; some tests that need to pass for a move to hit
