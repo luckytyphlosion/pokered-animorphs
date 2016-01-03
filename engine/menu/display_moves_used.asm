@@ -9,80 +9,55 @@ _DisplayMovesUsed:
 	ld [wParentMenuItem], a
 	ld a, [wFlags_0xcd60]
 	bit 3, a ; accessing player's PC through another PC?
-	jr nz, _DisplayMovesUsedMenu
+	jr nz, DisplayMovesUsedMenu
 ; accessing it directly
 	ld a, SFX_TURN_ON_PC
 	call PlaySound
 	ld hl, TurnedOnPC3Text
 	call PrintText
 
-_DisplayMovesUsedMenu: ; 790c (1:790c)
-	call UpdateSprites
-	xor a
-	ld [wMovesUsedWhichPointer], a
-.bigloop
-	xor a
+DisplayMovesUsedMenu:
+	ld a, [wParentMenuItem]
 	ld [wCurrentMenuItem], a
-	ld [wListScrollOffset], a
-	;inc a
-	;ld [wMenuWrappingEnabled], a
-.loop
-	ld hl, DisplayMovesUsedMenu_WhichMoveText
-	call PrintText
-	ld a, [wMovesUsedWhichPointer]
-	and a
-	ld hl, MovesAsIndexesListOne
-	jr z, .foundPointer
-	ld hl, MovesAsIndexesListTwo
-.foundPointer
-	ld a, l
-	ld [wListPointer], a
-	ld a, h
-	ld [wListPointer + 1], a
-	xor a
-	ld [wPrintItemPrices], a
-	ld a, MOVESLISTMENU
-	ld [wListMenuID], a
-	call DisplayListMenuID
-	jp c, ExitDisplayMovesUsedMenu
-	ld a, [wcf91]
-	cp NUM_ATTACKS + 2
-	jr nz, .notNext
-	ld a, $1
-	ld [wMovesUsedWhichPointer], a
-	jr .bigloop
-.notNext
-	cp NUM_ATTACKS + 3
-	jr nz, .notBack
-	xor a
-	ld [wMovesUsedWhichPointer], a
-	jr .bigloop
-.notBack
+	ld hl, wFlags_0xcd60
+	set 5, [hl]
+	call LoadScreenTilesFromBuffer2
+	coord hl, 0, 0
+	lb bc, 6, 14
+	call TextBoxBorder
+	call UpdateSprites
+	coord hl, 2, 2
+	ld de, MovesUsedMenuEntries
+	call PlaceString
+	ld hl, wTopMenuItemY
+	ld a, 2
+	ld [hli], a ; wTopMenuItemY
 	dec a
-	ld e, a
-	ld d, 0
-	ld hl, sMoveUseRecord
-	add hl, de
-	add hl, de
-	ld a, SRAM_ENABLE
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
-	ld a, $1
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
-	ld a, [hli]
-	ld [wBuffer], a
-	ld a, [hl]
-	ld [wBuffer + 1], a
+	ld [hli], a ; wTopMenuItemX
+	inc hl
+	inc hl
+	ld a, 2
+	ld [hli], a ; wMaxMenuItem
+	ld a, A_BUTTON | B_BUTTON
+	ld [hli], a ; wMenuWatchedKeys
 	xor a
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
-	
-	ld hl, UsedXTimesText
+	ld [hl], a
+	ld hl, wListScrollOffset
+	ld [hli], a ; wListScrollOffset
+	ld [hl], a ; wMenuWatchMovingOutOfBounds
+	ld [wPlayerMonNumber], a
+	ld hl, MovesUsed_WhatDoYouWantText
 	call PrintText
-	jr .loop
+	call HandleMenuInput
+	bit 1, a
+	jp nz, ExitDisplayMovesUsedMenu
+	call PlaceUnfilledArrowMenuCursor
+	ld a, [wCurrentMenuItem]
+	ld [wParentMenuItem], a
+	and a
+	jp z, DisplayAllMovesUsed
+	dec a
+	jp z, DisplayIndivMovesUsedMenu
 
 ExitDisplayMovesUsedMenu: ; 796d (1:796d)
 	ld a, [wFlags_0xcd60]
@@ -104,6 +79,96 @@ ExitDisplayMovesUsedMenu: ; 796d (1:796d)
 	ld [wMenuWrappingEnabled], a
 	ret
 
+DisplayIndivMovesUsedMenu: ; 790c (1:790c)
+	call UpdateSprites
+	xor a
+	ld [wMovesUsedWhichPointer], a
+.bigloop
+	xor a
+	ld [wCurrentMenuItem], a
+	ld [wListScrollOffset], a
+.loop
+	ld hl, DisplayMovesUsedMenu_WhichMoveText
+	call PrintText
+	ld a, [wMovesUsedWhichPointer]
+	and a
+	ld hl, MovesAsIndexesListOne
+	jr z, .foundPointer
+	ld hl, MovesAsIndexesListTwo
+.foundPointer
+	ld a, l
+	ld [wListPointer], a
+	ld a, h
+	ld [wListPointer + 1], a
+	xor a
+	ld [wPrintItemPrices], a
+	ld a, MOVESLISTMENU
+	ld [wListMenuID], a
+	call DisplayListMenuID
+	jp c, DisplayMovesUsedMenu
+	ld a, [wcf91]
+	cp NUM_ATTACKS + 2
+	jr nz, .notNext
+	ld a, $1
+	ld [wMovesUsedWhichPointer], a
+	jr .bigloop
+.notNext
+	cp NUM_ATTACKS + 3
+	jr nz, .notBack
+	xor a
+	ld [wMovesUsedWhichPointer], a
+	jr .bigloop
+.notBack
+	call GetNumTimesMoveWasUsed
+	ld hl, UsedXTimesText
+	call PrintText
+	jr .loop
+
+GetNumTimesMoveWasUsed:
+; get the number of times the move in a was used
+; and return it in wBuffer
+	dec a
+	ld e, a
+	ld d, 0
+	ld hl, sMoveUseRecord
+	add hl, de
+	add hl, de
+	ld a, SRAM_ENABLE
+	ld [wSRAMEnabled], a
+	ld [MBC1SRamEnable], a
+	ld a, $1
+	ld [wSRAMBank], a
+	ld [MBC1SRamBank], a
+	ld a, [hli]
+	ld [wBuffer], a
+	ld a, [hl]
+	ld [wBuffer + 1], a
+	xor a
+	ld [wSRAMEnabled], a
+	ld [MBC1SRamEnable], a
+	ld [wSRAMBank], a
+	ld [MBC1SRamBank], a
+	ret
+
+DisplayAllMovesUsed:
+	ld a, $1
+.loop
+	ld [wd11e], a
+	call GetMoveName
+	call CopyStringToCF4B
+	ld a, [wd11e]
+	call GetNumTimesMoveWasUsed
+	ld hl, UsedXTimesText
+	call PrintText
+	ld a, [wd11e]
+	inc a
+	cp NUM_ATTACKS + 1
+	jr c, .loop
+	ld a, SFX_POKEDEX_RATING
+	call PlaySound
+	call WaitForSoundToFinish
+	jp DisplayMovesUsedMenu
+	
 UsedXTimesText:
 	TX_RAM wcf4b
 	text ":"
@@ -141,4 +206,13 @@ CUR_MOVE = CUR_MOVE + 1
 	
 TurnedOnPC3Text:
 	TX_FAR _TurnedOnPC1Text
+	db "@"
+	
+MovesUsedMenuEntries:
+	db "ALL MOVES"
+	next "INDIV. MOVES"
+	next "LOG OFF@"
+	
+MovesUsed_WhatDoYouWantText:
+	TX_FAR _WhatDoYouWantText
 	db "@"

@@ -894,6 +894,8 @@ wWhichTrade:: ; cd3d
 
 wTrainerSpriteOffset:: ; cd3d
 
+wMultiplyBy60Power:: ; cd3d
+
 wUnusedCD3D:: ; cd3d
 	ds 1
 
@@ -938,6 +940,8 @@ wPlayerSpinInPlaceAnimFrameDelayDelta:: ; cd3e
 wPlayerSpinWhileMovingUpOrDownAnimMaxY:: ; cd3e
 
 wHiddenObjectFunctionRomBank:: ; cd3e
+
+wMultiplyBy60Multiplicand:: ; cd3e
 
 wTrainerEngageDistance:: ; cd3e
 	ds 1

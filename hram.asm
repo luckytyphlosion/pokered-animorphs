@@ -22,6 +22,10 @@ hSlideAmount EQU $FF8B
 
 hRLEByteValue EQU $FF8B
 
+hHighByteValue EQU $FF8B
+
+hOldQuotient EQU $FF8B
+
 H_SPRITEWIDTH            EQU $FF8B ; in tiles
 H_SPRITEINTERLACECOUNTER EQU $FF8B
 H_SPRITEHEIGHT           EQU $FF8C ; in tiles
