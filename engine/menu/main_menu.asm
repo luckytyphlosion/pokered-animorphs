@@ -127,7 +127,8 @@ MainMenu: ; 5af2 (1:5af2)
 InitOptions: ; 5bff (1:5bff)
 	xor a ; animations on, battle style shift, metronome off, shake moves on, menu speed fast, text speed instant
 	ld [wOptions], a
-	ld [wOptions2], a ; spinner hell off
+	ld a, $f0
+	ld [wOptions2], a ; spinner hell off, spin speed 32 frames
 	inc a ; no delay
 	ld [wLetterPrintingDelayFlags], a
 	ret

@@ -682,13 +682,16 @@ CanWalkOntoTile: ; 516e (1:516e)
 	call Random
 	push bc
 	ld a, [wOptions2]
-	bit 0, a ; spinner hell mode?
-	ld b, $1
+	ld b, a
+	and $f0
+	swap a
+	ld c, a
+	bit 0, b ; spinner hell mode?
 	jr nz, .spinnerHell
-	ld b, $7f
+	ld c, $7f
 .spinnerHell
 	ld a, [hRandomAdd]
-	and b
+	and c
 	inc a
 	ld [hl], a         ; c2x8: set next movement delay to a random value in [0,$7f] (again with delay $100 if value is 0)
 	scf                ; set carry (marking failure to walk)

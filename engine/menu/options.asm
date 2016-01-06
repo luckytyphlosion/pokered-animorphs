@@ -53,7 +53,7 @@ OptionMenu1JumpTable: ; 41ca4 (10:5ca4)
 OptionMenu2JumpTable:
 	dw OptionsMenu_Palette
 	dw OptionsMenu_SpinnerHell
-	dw OptionsMenu_Dummy
+	dw OptionsMenu_SpinSpeed
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
@@ -476,6 +476,103 @@ SpinnerHellEwText:
 SpinnerHellGLText:
 	db "GL@"
 
+OptionsMenu_SpinSpeed:
+	ld a, [wOptions2]
+	swap a
+	and $f
+	ld c, a
+	ld a, [hJoy5]
+	bit 4, a ; right
+	jr nz, .pressedRight
+	bit 5, a
+	jr nz, .pressedLeft
+	jr .leftOrRightNotPressed
+.pressedRight
+	ld a, c
+	cp 15
+	jr c, .noWrapAround
+	ld c, -1
+.noWrapAround
+	inc c
+	jr .continue
+.pressedLeft
+	ld a, c
+	and a
+	jr nz, .noWrapAround2
+	ld c, 15 + 1
+.noWrapAround2
+	dec c
+.continue
+	ld b, c
+	swap b
+	ld a, [wOptions2]
+	and %1111
+	or b
+	ld [wOptions2], a
+.leftOrRightNotPressed
+	ld b, $0
+	ld hl, OptionsSpinSpeedStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 14, 6
+	call PlaceString
+	and a
+	ret
+
+OptionsSpinSpeedStringsPointerTable:
+	dw OptionsSpinSpeed1
+	dw OptionsSpinSpeed2
+	dw OptionsSpinSpeed3
+	dw OptionsSpinSpeed4
+	dw OptionsSpinSpeed5
+	dw OptionsSpinSpeed6
+	dw OptionsSpinSpeed7
+	dw OptionsSpinSpeed8
+	dw OptionsSpinSpeed9
+	dw OptionsSpinSpeed10
+	dw OptionsSpinSpeed11
+	dw OptionsSpinSpeed12
+	dw OptionsSpinSpeed13
+	dw OptionsSpinSpeed14
+	dw OptionsSpinSpeed15
+	dw OptionsSpinSpeed16
+
+OptionsSpinSpeed1:
+	db " 1@"
+OptionsSpinSpeed2:
+	db " 2@"
+OptionsSpinSpeed3:
+	db " 3@"
+OptionsSpinSpeed4:
+	db " 4@"
+OptionsSpinSpeed5:
+	db " 5@"
+OptionsSpinSpeed6:
+	db " 6@"
+OptionsSpinSpeed7:
+	db " 7@"
+OptionsSpinSpeed8:
+	db " 8@"
+OptionsSpinSpeed9:
+	db " 9@"
+OptionsSpinSpeed10:
+	db "10@"
+OptionsSpinSpeed11:
+	db "11@"
+OptionsSpinSpeed12:
+	db "12@"
+OptionsSpinSpeed13:
+	db "13@"
+OptionsSpinSpeed14:
+	db "14@"
+OptionsSpinSpeed15:
+	db "15@"
+OptionsSpinSpeed16:
+	db "16@"
+
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
 	ret
@@ -616,7 +713,7 @@ OptionsOptionsPointerTable:
 OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
-	db 1
+	db 2
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -628,7 +725,8 @@ Options1OptionsText: ; 41f3e (10:5f3e)
 	
 Options2OptionsText:
 	db "PAL:"
-	next "SPINNERHELL:@"
+	next "SPINNERHELL:"
+	next "SPIN SPEED :@"
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)
 	db "PAGE:"
