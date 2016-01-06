@@ -453,6 +453,7 @@ OptionsMenu_SpinnerHell:
 	xor $1
 	ld [wOptions2], a
 .asm_41d3b
+	and $1
 	ld c, a
 	ld b, 0
 	ld hl, SpinnerHellOptionsStringPointerTable
