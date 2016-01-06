@@ -914,6 +914,8 @@ wDayCareNumLevelsGrown:: ; cd3e
 
 wOptionsBattleAnimCursorX:: ; cd3e
 
+wOptionsNumOptions:: ; cd3e
+
 wTrainerInfoTextBoxWidth:: ; cd3e
 
 wHoFPartyMonIndex:: ; cd3e
@@ -955,6 +957,8 @@ wDayCareTotalCost:: ; cd3f
 wJigglypuffFacingDirections:: ; cd3f
 
 wOptionsBattleStyleCursorX:: ; cd3f
+
+wOptionsCurPage:: ; cd3f
 
 wTrainerInfoTextBoxNextRowOffset:: ; cd3f
 
@@ -2562,8 +2566,10 @@ wCurPalette::
 	ds 1
 wLastPalette::
 	ds 1
+wOptions2::
+	ds 1
 	
-	ds 46
+	ds 45
 
 wNumSigns:: ; d4b0
 ; number of signs in the current map (up to 16)

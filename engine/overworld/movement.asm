@@ -680,10 +680,19 @@ CanWalkOntoTile: ; 516e (1:516e)
 	add $8
 	ld l, a
 	call Random
+	push bc
+	ld a, [wOptions2]
+	bit 0, a ; spinner hell mode?
+	ld b, $1
+	jr nz, .spinnerHell
+	ld b, $7f
+.spinnerHell
 	ld a, [hRandomAdd]
-	and $7f
+	and b
+	inc a
 	ld [hl], a         ; c2x8: set next movement delay to a random value in [0,$7f] (again with delay $100 if value is 0)
 	scf                ; set carry (marking failure to walk)
+	pop bc
 	ret
 
 ; calculates the tile pointer pointing to the tile the current sprite stancs on
