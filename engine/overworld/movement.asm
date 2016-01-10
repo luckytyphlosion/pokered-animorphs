@@ -64,11 +64,16 @@ UpdatePlayerSprite: ; 4e31 (1:4e31)
 	ld a, [H_CURRENTSPRITEOFFSET]
 	add $7
 	ld l, a
+	ld a, [wSlipRunningFlags]
+	bit 3, a
 	ld a, [hl]
+	jr z, .noDouble
+	inc a
+.noDouble
 	inc a
 	ld [hl], a
 	cp 4
-	jr nz, .calcImageIndex
+	jr c, .calcImageIndex
 	xor a
 	ld [hl], a
 	inc hl
@@ -595,11 +600,8 @@ CanWalkOntoTile: ; 516e (1:516e)
 	ld a, [wTileSetCollisionPtr+1]
 	ld h, a
 .tilePassableLoop
-	ld a, [hli]
-	cp $ff
-	jr z, .impassable
-	cp c
-	jr nz, .tilePassableLoop
+	call _IsTilePassable
+	jr c, .impassable
 	ld h, $c2
 	ld a, [H_CURRENTSPRITEOFFSET]
 	add $6

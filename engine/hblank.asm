@@ -68,11 +68,10 @@ ConvertDMGPaletteIndexesToCGB:
 .regularPalette
 	ld a, [wLastPalette]
 	ld b, a
-	ld a, e
+	ld a, [wCurPalette]
 	cp b
 	ld [wLastPalette], a
-	jr nz, .paletteHasNotChanged
-	
+	jr z, .paletteHasNotChanged
 	ld de, wTempBGP
 	ld a, [rBGP]
 	call HandleDMGPalettes

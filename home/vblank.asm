@@ -116,9 +116,15 @@ DelayFrame::
 ; As a bonus, this saves battery.
 
 NOT_VBLANKED EQU 1
-	push bc
-	push de
-	push hl
+	ld a, [rLY]
+	cp $81
+	jr c, .regularDelayFrame
+	cp $90
+	jr nc, .regularDelayFrame
+	call .delayFrame
+; if we're too close to vblank, do the OAM update after
+; to prevent sprite flickering
+.prepareOAMData
 	ld a, [H_LOADEDROMBANK]
 	push af
 	ld a, Bank(PrepareOAMData)
@@ -128,9 +134,11 @@ NOT_VBLANKED EQU 1
 	pop af
 	ld [H_LOADEDROMBANK], a
 	ld [MBC1RomBank], a
-	pop hl
-	pop de
-	pop bc
+	ret
+
+.regularDelayFrame
+	call .prepareOAMData
+.delayFrame
 	ld a, NOT_VBLANKED
 	ld [H_VBLANKOCCURRED], a
 .halt
@@ -139,3 +147,4 @@ NOT_VBLANKED EQU 1
 	and a
 	jr nz, .halt
 	ret
+

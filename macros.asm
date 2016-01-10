@@ -41,6 +41,17 @@ homecall: MACRO
 	ld [MBC1RomBank], a
 	ENDM
 
+homecall_jump_sf: MACRO
+	ld a, [H_LOADEDROMBANK]
+	push af
+	ld a, BANK(\1)
+	call BankswitchCommon
+	call \1
+	pop bc
+	ld a,b
+	jp BankswitchCommon
+	ENDM
+	
 callba: MACRO
 	ld b, BANK(\1)
 	ld hl, \1

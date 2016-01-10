@@ -6554,6 +6554,8 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	dec b
 	jr nz, .clearNonHeadSpritesLoop
 	
+	call DelayFrame
+	
 	call ClearScreen
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
@@ -6567,6 +6569,7 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	ld [hli], a
 	ld [hl], a
 	ld [wPlayerDisabledMove], a
+	
 	
 	ld hl, vFrontPic
 	ld de, sSpriteBuffer3

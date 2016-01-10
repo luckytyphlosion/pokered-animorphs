@@ -337,6 +337,46 @@ GetCryData:: ; 13d9 (0:13d9)
 	add c
 	ret
 
+SaveScreenTilesToBuffer2:: ; 36f4 (0:36f4)
+	coord hl, 0, 0
+	ld de, wTileMapBackup2
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ret
+
+LoadScreenTilesFromBuffer2:: ; 3701 (0:3701)
+	call LoadScreenTilesFromBuffer2DisableBGTransfer
+	ld a, 1
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
+; loads screen tiles stored in wTileMapBackup2 but leaves H_AUTOBGTRANSFERENABLED disabled
+LoadScreenTilesFromBuffer2DisableBGTransfer:: ; 3709 (0:3709)
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ld hl, wTileMapBackup2
+	coord de, 0, 0
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ret
+
+SaveScreenTilesToBuffer1:: ; 3719 (0:3719)
+	coord hl, 0, 0
+	ld de, wTileMapBackup
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	jp CopyData
+
+LoadScreenTilesFromBuffer1:: ; 3725 (0:3725)
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ld hl, wTileMapBackup
+	coord de, 0, 0
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ld a, 1
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
 
 DisplayPartyMenu:: ; 13fc (0:13fc)
 	ld a,[hTilesetType]
@@ -896,7 +936,36 @@ InterlaceMergeSpriteBuffers:: ; 16ea (0:16ea)
 	ld b, a
 	jp CopyVideoData
 
-INCLUDE "data/collision.asm"
+IsTilePassable:
+	homecall_jump_sf _IsTilePassable
+	
+; reloads text box tile patterns, current map view, and tileset tile patterns
+ReloadMapData:: ; 3071 (0:3071)
+	ld a,[H_LOADEDROMBANK]
+	push af
+	ld a,[wCurMap]
+	call SwitchToMapRomBank
+	call DisableLCD
+	call LoadTextBoxTilePatterns
+	call LoadCurrentMapView
+	call LoadTilesetTilePatternData
+	call EnableLCD
+	pop af
+	jp BankswitchCommon
+
+; reloads tileset tile patterns
+ReloadTilesetTilePatterns:: ; 3090 (0:3090)
+	ld a,[H_LOADEDROMBANK]
+	push af
+	ld a,[wCurMap]
+	call SwitchToMapRomBank
+	call DisableLCD
+	call LoadTilesetTilePatternData
+	call EnableLCD
+	pop af
+	jp BankswitchCommon
+
+;INCLUDE "data/collision.asm"
 INCLUDE "home/copy2.asm"
 INCLUDE "home/text.asm"
 INCLUDE "home/vcopy.asm"
@@ -1033,6 +1102,8 @@ FadeOutAudio:: ; 28cb (0:28cb)
 DisplayTextID:: ; 2920 (0:2920)
 	ld a,[H_LOADEDROMBANK]
 	push af
+	xor a
+	ld [wSlipRunningFlags], a ; stop sliprunning (for stuff that bring up text boxes upon walking)
 	callba DisplayTextIDInit ; initialization
 	ld hl,wTextPredefFlag
 	bit 0,[hl]
@@ -1216,7 +1287,7 @@ DisplayPokemartDialogue:: ; 2a2e (0:2a2e)
 PokemartGreetingText:: ; 2a55 (0:2a55)
 	TX_FAR _PokemartGreetingText
 	db "@"
-
+	
 LoadItemList:: ; 2a5a (0:2a5a)
 	ld a,1
 	ld [wUpdateSpritesEnabled],a
@@ -2045,32 +2116,6 @@ GetMoveName:: ; 3058 (0:3058)
 	pop hl
 	ret
 
-; reloads text box tile patterns, current map view, and tileset tile patterns
-ReloadMapData:: ; 3071 (0:3071)
-	ld a,[H_LOADEDROMBANK]
-	push af
-	ld a,[wCurMap]
-	call SwitchToMapRomBank
-	call DisableLCD
-	call LoadTextBoxTilePatterns
-	call LoadCurrentMapView
-	call LoadTilesetTilePatternData
-	call EnableLCD
-	pop af
-	jp BankswitchCommon
-
-; reloads tileset tile patterns
-ReloadTilesetTilePatterns:: ; 3090 (0:3090)
-	ld a,[H_LOADEDROMBANK]
-	push af
-	ld a,[wCurMap]
-	call SwitchToMapRomBank
-	call DisableLCD
-	call LoadTilesetTilePatternData
-	call EnableLCD
-	pop af
-	jp BankswitchCommon
-
 ; shows the town map and lets the player choose a destination to fly to
 ChooseFlyDestination:: ; 30a9 (0:30a9)
 	ld hl,wd72e
@@ -2416,6 +2461,8 @@ ResetButtonPressedAndMapScript:: ; 32c1 (0:32c1)
 
 ; calls TrainerWalkUpToPlayer
 TrainerWalkUpToPlayer_Bank0:: ; 32cf (0:32cf)
+	xor a
+	ld [wSlipRunningFlags], a
 	jpba TrainerWalkUpToPlayer
 
 ; sets opponent type and mon set/lvl based on the engaging trainer data
@@ -2477,7 +2524,12 @@ CheckForEngagingTrainers:: ; 3306 (0:3306)
 	xor a
 	call ReadTrainerHeaderInfo       ; get trainer header pointer
 	inc hl
+	ld a, [wOptions2]
+	bit 2, a ; max trainer range?
+	ld a, $50
+	jr nz, .maxRangeTrainer
 	ld a, [hl]                       ; read trainer engage distance
+.maxRangeTrainer
 	pop hl
 	ld [wTrainerEngageDistance], a
 	ld a, [wSpriteIndex]
@@ -2692,15 +2744,6 @@ StartSimulatingJoypadStates:: ; 3486 (0:3486)
 	set 7, [hl]
 	ret
 
-DisplayPokedex:: ; 349b (0:349b)
-	ld [wd11e], a
-	jpba _DisplayPokedex
-
-SetSpriteFacingDirectionAndDelay:: ; 34a6 (0:34a6)
-	call SetSpriteFacingDirection
-	ld c, 6
-	jp DelayFrames
-
 SECTION "bwexp fix isiteminbag", ROM0[$3493]
 IsItemInBag:: ; 3493 (0:3493)
 ; given an item_id in b
@@ -2711,6 +2754,15 @@ IsItemInBag:: ; 3493 (0:3493)
 	ld a,b
 	and a
 	ret
+
+DisplayPokedex:: ; 349b (0:349b)
+	ld [wd11e], a
+	jpba _DisplayPokedex
+
+SetSpriteFacingDirectionAndDelay:: ; 34a6 (0:34a6)
+	call SetSpriteFacingDirection
+	ld c, 6
+	jp DelayFrames
 
 SetSpriteFacingDirection:: ; 34ae (0:34ae)
 	ld a, $9
@@ -3148,47 +3200,6 @@ UncompressSpriteFromDE:: ; 36eb (0:36eb)
 	inc hl
 	ld [hl], d
 	jp UncompressSpriteData
-
-
-SaveScreenTilesToBuffer2:: ; 36f4 (0:36f4)
-	coord hl, 0, 0
-	ld de, wTileMapBackup2
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ret
-
-LoadScreenTilesFromBuffer2:: ; 3701 (0:3701)
-	call LoadScreenTilesFromBuffer2DisableBGTransfer
-	ld a, 1
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
-
-; loads screen tiles stored in wTileMapBackup2 but leaves H_AUTOBGTRANSFERENABLED disabled
-LoadScreenTilesFromBuffer2DisableBGTransfer:: ; 3709 (0:3709)
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ld hl, wTileMapBackup2
-	coord de, 0, 0
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ret
-
-SaveScreenTilesToBuffer1:: ; 3719 (0:3719)
-	coord hl, 0, 0
-	ld de, wTileMapBackup
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	jp CopyData
-
-LoadScreenTilesFromBuffer1:: ; 3725 (0:3725)
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ld hl, wTileMapBackup
-	coord de, 0, 0
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ld a, 1
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
 
 GBPalWhiteOutWithDelay3::
 	call GBPalWhiteOut

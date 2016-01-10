@@ -56,6 +56,7 @@ EndOfBattle: ; 137aa (4:77aa)
 	ld [wForcePlayerToChooseMon], a
 	ld [wNumRunAttempts], a
 	ld [wEscapedFromBattle], a
+	ld [wSlipRunningFlags], a
 	ld hl, wPartyAndBillsPCSavedMenuItem
 	ld [hli], a
 	ld [hli], a

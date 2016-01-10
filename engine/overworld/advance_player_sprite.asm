@@ -75,10 +75,6 @@ _AdvancePlayerSprite:: ; f010c (3c:410c)
 	or $98
 	ld [wMapViewVRAMPointer + 1],a
 .adjustXCoordWithinBlock
-	ld a,c
-	and a
-	jr z,.pointlessJump ; mistake?
-.pointlessJump
 	ld hl,wXBlockCoord
 	ld a,[hl]
 	add c
@@ -188,6 +184,16 @@ _AdvancePlayerSprite:: ; f010c (3c:410c)
 	ld a,[hSCX]
 	add c
 	ld [hSCX],a ; update background scroll X
+	ld a, [wSlipRunningFlags]
+	bit 3, a ; double speed?
+	ret z
+	ld a, [wWalkCounter]
+	and a
+	ld a, $0
+	jr nz, .walkCounterDidNotHitZero
+	inc a
+.walkCounterDidNotHitZero
+	ld [wWalkCounterHitZero], a
 	ret
 
 MoveTileBlockMapPointerEast:: ; f0248 (3c:4248)

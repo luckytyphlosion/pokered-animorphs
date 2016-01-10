@@ -54,8 +54,8 @@ OptionMenu2JumpTable:
 	dw OptionsMenu_Palette
 	dw OptionsMenu_SpinnerHell
 	dw OptionsMenu_SpinSpeed
-	dw OptionsMenu_Dummy
-	dw OptionsMenu_Dummy
+	dw OptionsMenu_SlipRun
+	dw OptionsMenu_TrainerRange
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Page
 	dw OptionsMenu_Cancel
@@ -574,6 +574,68 @@ OptionsSpinSpeed15:
 OptionsSpinSpeed16:
 	db "16@"
 
+OptionsMenu_SlipRun:
+	ld a, [hJoy5]
+	and D_RIGHT | D_LEFT
+	jr nz, .asm_41d33
+	ld a, [wOptions2]
+	and %10 ; mask other bits
+	jr .asm_41d3b
+.asm_41d33
+	ld a, [wOptions2]
+	xor %10
+	ld [wOptions2], a
+.asm_41d3b
+	srl a
+	and $1
+	ld c, a
+	ld b, 0
+	ld hl, MetronomeOptionStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 14, 8
+	call PlaceString
+	and a
+	ret
+
+OptionsMenu_TrainerRange:
+	ld a, [hJoy5]
+	and D_RIGHT | D_LEFT
+	jr nz, .asm_41d33
+	ld a, [wOptions2]
+	and %100 ; mask other bits
+	jr .asm_41d3b
+.asm_41d33
+	ld a, [wOptions2]
+	xor %100
+	ld [wOptions2], a
+.asm_41d3b
+	srl a
+	srl a
+	and $1
+	ld c, a
+	ld b, 0
+	ld hl, TrainerRangeOptionStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 14, 10
+	call PlaceString
+	and a
+	ret
+
+TrainerRangeOptionStringsPointerTable:
+	dw RegularShakeMovesText
+	dw TrainerRangeMaxText
+	
+TrainerRangeMaxText:
+	db "MAX@"
+	
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
 	ret
@@ -714,7 +776,7 @@ OptionsOptionsPointerTable:
 OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
-	db 2
+	db 4
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -727,7 +789,9 @@ Options1OptionsText: ; 41f3e (10:5f3e)
 Options2OptionsText:
 	db "PAL:"
 	next "SPINNERHELL:"
-	next "SPIN SPEED :@"
+	next "SPIN SPEED :"
+	next "BIKESLIPRUN:"
+	next "TRAINERANGE:@"
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)
 	db "PAGE:"

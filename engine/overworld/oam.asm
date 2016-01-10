@@ -1,4 +1,14 @@
 PrepareOAMData:
+	push hl
+	push bc
+	push de
+	call _PrepareOAMData
+	pop de
+	pop bc
+	pop hl
+	ret
+
+_PrepareOAMData:
 ; Determine OAM data for currently visible
 ; sprites and write it to wOAMBuffer.
 
@@ -187,3 +197,22 @@ GetSpriteScreenXY: ; 4bd1 (1:4bd1)
 	and $f0
 	ld [de], a  ; c1xb (x)
 	ret
+
+_IsTilePassable:: ; 4aaa (1:4aaa)
+	ld hl,wTileSetCollisionPtr ; pointer to list of passable tiles
+	ld a,[hli]
+	ld h,[hl]
+	ld l,a ; hl now points to passable tiles
+.loop
+	ld a,[hli]
+	cp a,$ff
+	jr z,.tileNotPassable
+	cp c
+	jr nz,.loop
+	xor a
+	ret
+.tileNotPassable
+	scf
+	ret
+	
+INCLUDE "data/collision.asm" ; probably

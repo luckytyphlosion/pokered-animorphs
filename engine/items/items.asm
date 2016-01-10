@@ -713,18 +713,10 @@ ItemUseSurfboard: ; d9b4 (3:59b4)
 	ld hl,TilePairCollisionsWater
 	call CheckForTilePairCollisions
 	jr c,.cannotStopSurfing
-	ld hl,wTileSetCollisionPtr ; pointer to list of passable tiles
-	ld a,[hli]
-	ld h,[hl]
-	ld l,a ; hl now points to passable tiles
 	ld a,[wTileInFrontOfPlayer] ; tile in front of the player
-	ld b,a
-.passableTileLoop
-	ld a,[hli]
-	cp b
-	jr z,.stopSurfing
-	cp a,$ff
-	jr nz,.passableTileLoop
+	ld c,a
+	call IsTilePassable
+	jr nc, .stopSurfing
 .cannotStopSurfing
 	ld hl,SurfingNoPlaceToGetOffText
 	jp PrintText

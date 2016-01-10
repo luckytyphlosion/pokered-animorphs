@@ -2435,16 +2435,7 @@ GetTileTwoStepsInFrontOfPlayer: ; c5be (3:45be)
 
 CheckForCollisionWhenPushingBoulder: ; c60b (3:460b)
 	call GetTileTwoStepsInFrontOfPlayer
-	ld hl, wTileSetCollisionPtr
-	ld a, [hli]
-	ld h, [hl]
-	ld l, a
-.loop
-	ld a, [hli]
-	cp $ff
-	jr z, .done ; if the tile two steps ahead is not passable
-	cp c
-	jr nz, .loop
+	call IsTilePassable
 	ld hl, TilePairCollisionsLand
 	call CheckForTilePairCollisions2
 	ld a, $ff
@@ -4735,7 +4726,6 @@ NPCMovementDirectionsToJoypadMasksTable: ; f9d2 (3:79d2)
 INCLUDE "engine/hp_bar.asm"
 
 INCLUDE "engine/hidden_object_functions3.asm"
-
 
 SECTION "NPC Sprites 1", ROMX, BANK[NPC_SPRITES_1]
 

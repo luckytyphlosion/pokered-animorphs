@@ -37,11 +37,21 @@ EnterMap::
 	set 6, [hl]
 	xor a
 	ld [wJoyIgnore], a
+	ld [wSlipRunningFlags], a
 
 OverworldLoop::
+	ld a, [wWalkCounterHitZero]
+	and a
+	ld a, $0
+	ld [wWalkCounterHitZero], a
+	jr nz, OverworldLoopNoDelay
 	call DelayFrame
+	ld a, [wSlipRunningFlags]
+	bit 3, a ; double sprite update?
+	call nz, UpdatePlayerSpriteMidDelay
 OverworldLoopLessDelay::
 	call DelayFrame
+OverworldLoopNoDelay::
 	call LoadGBPal
 	ld a,[wd736]
 	bit 6,a ; jumping down a ledge?
@@ -49,6 +59,23 @@ OverworldLoopLessDelay::
 	ld a,[wWalkCounter]
 	and a
 	jp nz,.moveAhead ; if the player sprite has not yet completed the walking animation
+	ld a, [wWalkCounterHitZero]
+	and a
+	jp nz, .walkingAnimationFinished
+.continueFromWalkingAnimationCleanup
+	ld hl, wSlipRunningFlags
+	bit 2, [hl] ; have we completed an iteration of sliprun?
+	res 2, [hl]
+	jr z, .noIterationOfSlipRun
+	set 3, [hl]
+	ld a, [hJoyHeld]
+	and D_UP | D_DOWN | D_LEFT | D_RIGHT
+	ld b, a
+	ld a, [wSlipRunningFlags]
+	and $f
+	or b
+	ld [wSlipRunningFlags], a
+.noIterationOfSlipRun
 	call JoypadOverworld ; get joypad state (which is possibly simulated)
 	callba SafariZoneCheck
 	ld a,[wSafariZoneGameOver]
@@ -72,6 +99,32 @@ OverworldLoopLessDelay::
 .notSimulating
 	ld a,[hJoyPressed]
 .checkIfStartIsPressed
+	ld a, [wSlipRunningFlags]
+	bit 0, a ; are we sliprunning?
+	jr z, .notSlipRunning
+	and $f0
+	ld b, a ; save old button pressess
+	ld a, [hJoyHeld]
+	and $f0 ; mask non dpad buttons
+	jr z, .copyOldButtonPresses ; if no buttons are pressed, continue
+	cp b ; are these the same button presses as before?
+	jr z, .copyOldButtonPresses
+	ld a, SFX_TELEPORT_ENTER_2
+	call PlaySound
+	jp .checkIfDownButtonIsPressed
+.copyOldButtonPresses
+	ld a, b
+	ld [hJoyHeld], a ; copy previous button presses from before
+	jp .checkIfDownButtonIsPressed
+.notSlipRunning
+	ld a, [hJoyHeld]
+	bit 1, a
+	jr nz, .doNotResetBFlag
+.resetBFlag
+	ld hl, wSlipRunningFlags
+	res 1, [hl]
+.doNotResetBFlag
+	ld a, [hJoyPressed]
 	bit 3,a ; start button
 	jr z,.startButtonNotPressed
 ; if START is pressed
@@ -130,6 +183,8 @@ OverworldLoopLessDelay::
 	ld [wPlayerLastStopDirection],a ; save the last direction
 	xor a
 	ld [wPlayerMovingDirection],a ; zero the direction
+	ld hl, wSlipRunningFlags
+	res 3, [hl] ; stop double sprite update
 	jp OverworldLoop
 .checkIfDownButtonIsPressed
 	ld a,[hJoyHeld] ; current joypad state
@@ -173,6 +228,8 @@ OverworldLoopLessDelay::
 	jr z,.noDirectionChange
 	ld hl,wFlags_0xcd60
 	set 2,[hl]
+	ld hl, wSlipRunningFlags
+	res 3, [hl]
 	xor a
 	ld [wCheckFor180DegreeTurn],a
 	ld a,[wPlayerDirection]
@@ -191,6 +248,10 @@ OverworldLoopLessDelay::
 	call CollisionCheckOnLand
 	jr nc,.noCollision
 ; collision occurred
+	ld a, [wSlipRunningFlags] ; reset flag for sliprunning
+	res 0, a
+	res 3, a ; disable double sprite update
+	ld [wSlipRunningFlags], a
 	push hl
 	ld hl,wd736
 	bit 2,[hl] ; standing on warp flag
@@ -206,8 +267,23 @@ OverworldLoopLessDelay::
 	call CollisionCheckOnWater
 	jp c,OverworldLoop
 .noCollision
+	call InitSlipRun
 	ld a,$08
 	ld [wWalkCounter],a
+	ld a, [wOptions2]
+	bit 1, a ; is sliprun enabled?
+	jr z, .moveAhead2
+	ld a, [wSlipRunningFlags]
+	bit 0, a ; are we sliprunning?
+	jr nz, .moveAhead2
+	ld a, [hJoyHeld]
+	bit 1, a ; holding B button?
+	jr z, .moveAhead2
+	ld a, [wWalkBikeSurfState]
+	dec a ; biking?
+	jr z, .moveAhead2
+	ld hl, wSlipRunningFlags
+	set 3, [hl] ; advance player sprite twice
 	jr .moveAhead2
 .moveAhead
 	ld a,[wd736]
@@ -232,9 +308,10 @@ OverworldLoopLessDelay::
 	and a
 	jp nz,CheckMapConnections ; it seems like this check will never succeed (the other place where CheckMapConnections is run works)
 ; walking animation finished
+.walkingAnimationFinished
 	ld a,[wd730]
 	bit 7,a
-	jr nz,.doneStepCounting ; if button presses are being simulated, don't count steps
+	jr nz,.doneStepCountingNoSlipRunCheck ; if button presses are being simulated, don't count steps
 ; step counting
 	ld hl,wStepCounter
 	dec [hl]
@@ -247,6 +324,16 @@ OverworldLoopLessDelay::
 	ld hl,wd72c
 	res 0,[hl] ; indicate that the player has stepped thrice since the last battle
 .doneStepCounting
+	ld hl, wSlipRunningFlags
+	ld a, [wOptions2]
+	bit 1, a
+	jr z, .doneStepCountingNoSlipRunCheck
+	bit 0, [hl]
+	jr z, .dontSetSlipRunIterationFlag
+	set 2, [hl]
+.dontSetSlipRunIterationFlag
+	res 3, [hl]
+.doneStepCountingNoSlipRunCheck
 	CheckEvent EVENT_IN_SAFARI_ZONE
 	jr z,.notSafariZone
 	callba SafariZoneCheckSteps
@@ -299,7 +386,7 @@ OverworldLoopLessDelay::
 	ld [wIsInBattle],a
 	call RunMapScript
 	jp HandleBlackOut
-
+	
 ; function to determine if there will be a battle and execute it (either a trainer battle or wild battle)
 ; sets carry if a battle occurred and unsets carry if not
 NewBattle:: ; 0683 (0:0683)
@@ -330,6 +417,29 @@ BikeSpeedup:: ; 06a0 (0:06a0)
 .goFaster
 	jp AdvancePlayerSprite
 
+InitSlipRun:
+	ld a, [wOptions2]
+	bit 1, a ; sliprun?
+	ret z
+	ld a, [wWalkBikeSurfState]
+	dec a ; biking?
+	ret nz
+	ld a, [hJoyHeld]
+	bit 1, a ; are we holding the B button?
+	ret z
+	ld hl, wSlipRunningFlags
+	bit 1, [hl]
+	set 1, [hl] ; have we slipran already and are still holding the B button?
+	ret nz
+	bit 0, [hl] ; are we already sliprunning?
+	jr nz, .doNotPlaySlipRunSound
+	set 0, [hl] ; indicate sliprunning
+	ld a, SFX_TELEPORT_ENTER_2
+	call PlaySound
+.doNotPlaySlipRunSound
+	set 3, [hl] ; advance player sprite during OverworldLoop's 2nd delayframe
+	ret
+	
 ; check if the player has stepped onto a warp after having not collided
 CheckWarpsNoCollision:: ; 06b4 (0:06b4)
 	ld a,[wNumberOfWarps]
@@ -1195,20 +1305,7 @@ CheckTilePassable:: ; 0c10 (0:0c10)
 	predef GetTileAndCoordsInFrontOfPlayer ; get tile in front of player
 	ld a,[wTileInFrontOfPlayer] ; tile in front of player
 	ld c,a
-	ld hl,wTileSetCollisionPtr ; pointer to list of passable tiles
-	ld a,[hli]
-	ld h,[hl]
-	ld l,a ; hl now points to passable tiles
-.loop
-	ld a,[hli]
-	cp a,$ff
-	jr z,.tileNotPassable
-	cp c
-	ret z
-	jr .loop
-.tileNotPassable
-	scf
-	ret
+	jp IsTilePassable
 
 ; check if the player is going to jump down a small ledge
 ; and check for collisions that only occur between certain pairs of tiles
@@ -1610,31 +1707,17 @@ CollisionCheckOnWater:: ; 0fb7 (0:0fb7)
 	ld d,a
 	ld a,[wSpriteStateData1 + 12] ; the player sprite's collision data (bit field) (set in the sprite movement code)
 	and d ; check if a sprite is in the direction the player is trying to go
-	jr nz,.checkIfNextTileIsPassable ; bug?
+	jr nz, .collision
 	ld hl,TilePairCollisionsWater
 	call CheckForJumpingAndTilePairCollisions
 	jr c,.collision
 	predef GetTileAndCoordsInFrontOfPlayer ; get tile in front of player (puts it in c and [wTileInFrontOfPlayer])
+	callab IsNextTileShoreOrWater
+	jr nc, .noCollision
 	ld a,[wTileInFrontOfPlayer] ; tile in front of player
-	cp a,$14 ; water tile
-	jr z,.noCollision ; keep surfing if it's a water tile
-	cp a,$32 ; either the left tile of the S.S. Anne boarding platform or the tile on eastern coastlines (depending on the current tileset)
-	jr z,.checkIfVermilionDockTileset
-	cp a,$48 ; tile on right on coast lines in Safari Zone
-	jr z,.noCollision ; keep surfing
-; check if the [land] tile in front of the player is passable
-.checkIfNextTileIsPassable
-	ld hl,wTileSetCollisionPtr ; pointer to list of passable tiles
-	ld a,[hli]
-	ld h,[hl]
-	ld l,a
-.loop
-	ld a,[hli]
-	cp a,$ff
-	jr z,.collision
-	cp c
-	jr z,.stopSurfing ; stop surfing if the tile is passable
-	jr .loop
+	ld c, a
+	call IsTilePassable
+	jr nc, .stopSurfing
 .collision
 	ld a,[wChannelSoundIDs + CH4]
 	cp a,SFX_COLLISION ; check if collision sound is already playing
@@ -2119,3 +2202,16 @@ ForceBikeOrSurf:: ; 12ed (0:12ed)
 	ld hl, LoadPlayerSpriteGraphics
 	call Bankswitch
 	jp PlayDefaultMusic ; update map/player state?
+
+UpdatePlayerSpriteMidDelay::
+	push hl
+	push bc
+	push de
+	call AdvancePlayerSprite
+	ld a, $10
+	ld [H_CURRENTSPRITEOFFSET], a
+	callab UpdatePlayerSprite
+	pop de
+	pop bc
+	pop hl
+	ret

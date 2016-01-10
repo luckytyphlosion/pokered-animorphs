@@ -2232,6 +2232,12 @@ wPrize2:: ; d13e
 wPrize3:: ; d13f
 	ds 1
 
+wSlipRunningFlags::
+; bit 0 = sliprunning
+; bit 1 = done slip running
+; bit 2 = done one iteration of sliprun
+; bit 3 = advance player sprite during the 2nd delay frame of OverworldLoop
+; bits 4-7 = saved joypad state
 	ds 1
 
 wSerialRandomNumberListBlock:: ; d141
@@ -2246,6 +2252,7 @@ wPrize2Price:: ; d143
 wPrize3Price:: ; d145
 	ds 2
 
+wWalkCounterHitZero::
 	ds 1
 
 wLinkBattleRandomNumberList:: ; d148
