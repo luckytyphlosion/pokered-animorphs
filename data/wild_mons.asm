@@ -1,3 +1,4 @@
+SECTION "wild mons randomizer fix",ROMX[$4eeb],BANK[$3]
 WildDataPointers: ; ceeb (3:4eeb)
 	dw NoMons      ; PALLET_TOWN
 	dw NoMons      ; VIRIDIAN_CITY
