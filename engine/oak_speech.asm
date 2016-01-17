@@ -212,6 +212,8 @@ SetDefaultNames: ; 60ca (1:60ca)
 	push af
 	ld a, [wOptions2]
 	push af
+	ld a, [wOptions3]
+	push af
 	ld hl, wPlayerName
 	ld bc, $d8a
 	xor a
@@ -220,6 +222,8 @@ SetDefaultNames: ; 60ca (1:60ca)
 	ld bc, $200
 	xor a
 	call FillMemory
+	pop af
+	ld [wOptions3], a
 	pop af
 	ld [wOptions2], a
 	pop af

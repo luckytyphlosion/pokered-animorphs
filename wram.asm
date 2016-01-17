@@ -2562,6 +2562,7 @@ wTempOBP0::
 wTempOBP1::
 	ds 8
 
+; scratch space for other SP
 	ds 52
 wBattleTransitionReturnPointer::
 wBattleTransitionSP::
@@ -2574,9 +2575,16 @@ wCurPalette::
 wLastPalette::
 	ds 1
 wOptions2::
+; bit 0 = spinner hell
+; bit 1 = slip run
+; bit 2 = trainer range
+; bit 4-7 = spin speed for spinner hell
 	ds 1
-	
-	ds 45
+wOptions3::
+; bit 0-3 = start in
+	ds 1
+
+	ds 44
 
 wNumSigns:: ; d4b0
 ; number of signs in the current map (up to 16)

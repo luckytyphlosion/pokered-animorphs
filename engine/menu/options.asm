@@ -56,7 +56,7 @@ OptionMenu2JumpTable:
 	dw OptionsMenu_SpinSpeed
 	dw OptionsMenu_SlipRun
 	dw OptionsMenu_TrainerRange
-	dw OptionsMenu_Dummy
+	dw OptionsMenu_StartIn
 	dw OptionsMenu_Page
 	dw OptionsMenu_Cancel
 	
@@ -636,6 +636,68 @@ TrainerRangeOptionStringsPointerTable:
 TrainerRangeMaxText:
 	db "MAX@"
 	
+OptionsMenu_StartIn:
+	ld a, [wOptions3]
+	and $f
+	ld c, a
+	ld a, [hJoy5]
+	bit 4, a ; right
+	jr nz, .pressedRight
+	bit 5, a
+	jr nz, .pressedLeft
+	jr .leftOrRightNotPressed
+.pressedRight
+	ld a, c
+	cp 3
+	jr c, .noWrapAround
+	ld c, -1
+.noWrapAround
+	inc c
+	jr .continue
+.pressedLeft
+	ld a, c
+	and a
+	jr nz, .noWrapAround2
+	ld c, 3 + 1
+.noWrapAround2
+	dec c
+.continue
+	ld b, c
+	ld a, [wOptions3]
+	and $f0
+	or b
+	ld [wOptions3], a
+.leftOrRightNotPressed
+	ld b, $0
+	ld hl, OptionsStartInStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 10, 12
+	call PlaceString
+	and a
+	ret
+
+OptionsStartInStringsPointerTable:
+	dw StartInNormalText
+	dw StartInEeveeHouseText
+	dw StartInSilphLaprasText
+	dw StartInSafariZoneText
+	
+StartInNormalText:
+	db "NORMAL@"
+	
+StartInEeveeHouseText:
+	db "EEVEE @"
+	
+StartInSilphLaprasText:
+	db "LAPRAS@"
+
+StartInSafariZoneText:
+	db "SAFARI@"
+	
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
 	ret
@@ -776,7 +838,7 @@ OptionsOptionsPointerTable:
 OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
-	db 4
+	db 5
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -791,7 +853,8 @@ Options2OptionsText:
 	next "SPINNERHELL:"
 	next "SPIN SPEED :"
 	next "BIKESLIPRUN:"
-	next "TRAINERANGE:@"
+	next "TRAINERANGE:"
+	next "STARTIN:@"
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)
 	db "PAGE:"

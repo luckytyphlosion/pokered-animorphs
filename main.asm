@@ -652,7 +652,25 @@ LoadSpecialWarpData: ; 62ff (1:62ff)
 	jr nz, .notFirstMap
 	bit 2, a
 	jr nz, .notFirstMap
+	ld a, [wOptions3]
+	and $f
 	ld hl, FirstMapSpec
+	jr z, .copyWarpData
+	ld hl, MapSpecPointers
+	add a
+	ld e, a
+	ld d, 0
+	add hl, de
+	ld a, [hli]
+	ld h, [hl]
+	ld l, a
+	ld a, MAGIKARP
+	ld [wcf91], a
+	ld a, 2
+	ld [wCurEnemyLVL], a
+	ld a, $10 ; do not ask for nickname
+	ld [wMonDataLocation], a
+	call AddPartyMon
 .copyWarpData
 	ld de, wCurMap
 	ld c, $7
@@ -664,6 +682,8 @@ LoadSpecialWarpData: ; 62ff (1:62ff)
 	jr nz, .copyWarpDataLoop
 	ld a, [hli]
 	ld [wCurMapTileset], a
+	ld a, [hl]
+	ld [wLastBlackoutMap], a
 	xor a
 	jr .done
 .notFirstMap

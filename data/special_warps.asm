@@ -30,15 +30,45 @@ DungeonWarpData: ; 63d8 (1:63d8)
 	FLYWARP_DATA MANSION_1_WIDTH,14,16
 	FLYWARP_DATA MANSION_2_WIDTH,14,18
 
+MapSpecPointers:
+	dw FirstMapSpec
+	dw EeveeHouseSpec
+	dw LaprasRoomSpec
+	dw SafariZoneSpec
+
 ;Format:
 ;	db Map_id
 ;	FLYWARP_DATA [Map Width][Y-pos][X-pos]
 ;	db Tileset_id
+;	db wLastBlackoutMap
 FirstMapSpec: ; 6420 (1:6420)
 	db REDS_HOUSE_2F
 	FLYWARP_DATA REDS_HOUSE_2F_WIDTH,6,3
 	db REDS_HOUSE_2
+	db PALLET_TOWN
 
+EeveeHouseSpec:
+	db CELADON_MANSION_5
+	FLYWARP_DATA CELADON_MANSION_5_WIDTH,3,5
+	db HOUSE
+	db CELADON_CITY
+	
+LaprasRoomSpec:
+	db SILPH_CO_7F
+	FLYWARP_DATA SILPH_CO_7F_WIDTH,5,2
+	db FACILITY
+	db SAFFRON_CITY
+	
+SafariZoneSpec:
+	db FUCHSIA_CITY
+	FLYWARP_DATA FUCHSIA_CITY_WIDTH,4,18
+	db OVERWORLD
+	db FUCHSIA_CITY
+	
+;Format:
+;	db Map_id
+;	FLYWARP_DATA [Map Width][Y-pos][X-pos]
+;	db Tileset_id
 TradeCenterSpec1: ; 6428 (1:6428)
 	db TRADE_CENTER
 	FLYWARP_DATA TRADE_CENTER_WIDTH,4,3
