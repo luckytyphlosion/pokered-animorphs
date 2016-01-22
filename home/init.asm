@@ -1,7 +1,21 @@
 SoftReset::
 	call StopAllSounds
 	call GBPalWhiteOut
+	ld a, [wOptions3]
+	bit 6, a
+	jr z, .noConsideringSaveScumMode
+	callab CheckForPlayerNameInSRAM
+	jr nc, .noConsideringSaveScumMode
+	ld a, $1
+	call EnableSRAMAndSwitchSRAMBank
+	ld a, [sMainData + (wOptions3 - wMainDataStart)]
+	bit 6, a ; is save scum mode set in player save as well?
+	ld c, 1
+	call DisableSRAMAndSwitchSRAMBank0 ; flags preserved
+	jr nz, .saveScumMode	
+.noConsideringSaveScumMode
 	ld c, 32
+.saveScumMode
 	call DelayFrames
 	; fallthrough
 
@@ -71,12 +85,12 @@ rLCDC_DEFAULT EQU %11100011
 	ld sp, wStack
 	ld hl, $c000 ; start of WRAM
 	ld bc, $2000 ; size of WRAM
+	xor a
 .clearwram1
-	ld [hl], 0
-	inc hl
-	dec bc
-	ld a, b
-	or c
+	ld [hli], a
+	dec c
+	jr nz, .clearwram1
+	dec b
 	jr nz, .clearwram1
 	
 	ld hl, $d000
@@ -85,13 +99,12 @@ rLCDC_DEFAULT EQU %11100011
 	
 	ld a, 2
 	ld [rSVBK], a
-	
+	xor a
 .clearwram2
-	ld [hl], 0
-	inc hl
-	dec bc
-	ld a, b
-	or c
+	ld [hli], a
+	dec c
+	jr nz, .clearwram2
+	dec b
 	jr nz, .clearwram2
 	
 	ld h, d
@@ -99,15 +112,14 @@ rLCDC_DEFAULT EQU %11100011
 	
 	ld a, 3
 	ld [rSVBK], a
+	xor a
 .clearwram3
-	ld [hl], 0
-	inc hl
-	dec bc
-	ld a, b
-	or c
+	ld [hli], a
+	dec c
+	jr nz, .clearwram3
+	dec b
 	jr nz, .clearwram3
 	
-	xor a
 	ld [rSVBK], a
 	
 	call ClearVram
@@ -163,15 +175,7 @@ rLCDC_DEFAULT EQU %11100011
 	call StopAllSounds
 
 	ei
-
-	call CheckForPlayerNameInSRAM
-	jr nc, .doNotCountIGT
-	ld hl, wd732
-	set 0, [hl]
-.doNotCountIGT
-
-	predef LoadSGB
-
+	
 	ld a, BANK(SFX_Shooting_Star)
 	ld [wAudioROMBank], a
 	ld [wAudioSavedROMBank], a
@@ -181,7 +185,13 @@ rLCDC_DEFAULT EQU %11100011
 	ld [H_AUTOBGTRANSFERDEST], a
 	dec a
 	ld [wUpdateSpritesEnabled], a
-
+	
+	call AfterInitSRAMChecks
+	
+	jr c, .skipIntroAndMainMenu
+	
+	;predef LoadSGB
+	
 	predef PlayIntro
 
 	call DisableLCD
@@ -192,13 +202,14 @@ rLCDC_DEFAULT EQU %11100011
 	ld [rLCDC], a
 
 	jp SetDefaultNamesBeforeTitlescreen
-
+.skipIntroAndMainMenu
+	jp MainMenu
+	
 ClearVram:
 	ld hl, $8000
 	ld bc, $2000
 	xor a
 	jp FillMemory
-
 
 StopAllSounds::
 	ld a, BANK(Audio1_UpdateMusic)
@@ -210,3 +221,20 @@ StopAllSounds::
 	ld [wLastMusicSoundID], a
 	dec a
 	jp PlaySound
+
+AfterInitSRAMChecks:
+	call CheckForPlayerNameInSRAM
+	ret nc
+	ld hl, wd732
+	set 0, [hl]
+	ld a, $1
+	call EnableSRAMAndSwitchSRAMBank
+	and a ; clear carry
+	ld a, [sMainData + (wOptions3 - wMainDataStart)]
+	bit 6, a
+	call DisableSRAMAndSwitchSRAMBank0
+	ret z
+	ld a, $1
+	ld [wIsSaveScumMode], a
+	scf
+	ret

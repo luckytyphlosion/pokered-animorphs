@@ -1,3 +1,11 @@
+UncompressSpriteFromDE:: ; 36eb (0:36eb)
+; Decompress pic at a:de.
+	ld hl, wSpriteInputPtr
+	ld [hl], e
+	inc hl
+	ld [hl], d
+; fallthrough
+
 ; bankswitches and runs _UncompressSpriteData
 ; bank is given in a, sprite input stream is pointed to in wSpriteInputPtr
 UncompressSpriteData:: ; 24fd (0:24fd)

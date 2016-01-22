@@ -249,7 +249,6 @@ DrawHPBar:: ; 1336 (0:1336)
 	pop hl
 	ret
 
-
 ; loads pokemon data from one of multiple sources to wLoadedMon
 ; loads base stats to wMonHeader
 ; INPUT:
@@ -966,6 +965,7 @@ ReloadTilesetTilePatterns:: ; 3090 (0:3090)
 	jp BankswitchCommon
 
 ;INCLUDE "data/collision.asm"
+
 INCLUDE "home/copy2.asm"
 INCLUDE "home/text.asm"
 INCLUDE "home/vcopy.asm"
@@ -1643,15 +1643,13 @@ DisplayListMenuIDLoop:: ; 2c53 (0:2c53)
 DisplayChooseQuantityMenu:: ; 2d57 (0:2d57)
 ; text box dimensions/coordinates for just quantity
 	coord hl, 15, 9
-	ld b,1 ; height
-	ld c,3 ; width
+	lb bc, 1, 3
 	ld a,[wListMenuID]
 	cp a,PRICEDITEMLISTMENU
 	jr nz,.drawTextBox
 ; text box dimensions/coordinates for quantity and price
 	coord hl, 7, 9
-	ld b,1  ; height
-	ld c,11 ; width
+	lb bc, 1, 11
 .drawTextBox
 	call TextBoxBorder
 	coord hl, 16, 10
@@ -1983,8 +1981,7 @@ GetMonName:: ; 2f9e (0:2f9e)
 	ld a,[wd11e]
 	dec a
 	ld hl,MonsterNames
-	ld c,10
-	ld b,0
+	ld bc, 10
 	call AddNTimes
 	ld de,wcd6d
 	push de
@@ -2566,18 +2563,7 @@ SaveEndBattleTextPointers:: ; 3354 (0:3354)
 ; loads data of some trainer on the current map and plays pre-battle music
 ; [wSpriteIndex]: sprite ID of trainer who is engaged
 EngageMapTrainer:: ; 336a (0:336a)
-	ld hl, wMapSpriteExtraData
-	ld d, $0
-	ld a, [wSpriteIndex]
-	dec a
-	add a
-	ld e, a
-	add hl, de     ; seek to engaged trainer data
-	ld a, [hli]    ; load trainer class
-	ld [wEngagedTrainerClass], a
-	ld a, [hl]     ; load trainer mon set
-	ld [wEnemyMonAttackMod], a
-	jp PlayTrainerMusic
+	jpab _EngageMapTrainer
 
 PrintEndBattleText:: ; 3381 (0:3381)
 	push hl
@@ -2623,64 +2609,6 @@ TrainerEndBattleText:: ; 33cf (0:33cf)
 	call GetSavedEndBattleTextPointer
 	call TextCommandProcessor
 	jp TextScriptEnd
-
-; only engage withe trainer if the player is not already
-; engaged with another trainer
-; XXX unused?
-CheckIfAlreadyEngaged:: ; 33dd (0:33dd)
-	ld a, [wFlags_0xcd60]
-	bit 0, a
-	ret nz
-	call EngageMapTrainer
-	xor a
-	ret
-
-PlayTrainerMusic:: ; 33e8 (0:33e8)
-	ld a, [wEngagedTrainerClass]
-	cp OPP_SONY1
-	ret z
-	cp OPP_SONY2
-	ret z
-	cp OPP_SONY3
-	ret z
-	ld a, [wGymLeaderNo]
-	and a
-	ret nz
-	xor a
-	ld [wAudioFadeOutControl], a
-	ld a, $ff
-	call PlaySound
-	ld a, BANK(Music_MeetEvilTrainer)
-	ld [wAudioROMBank], a
-	ld [wAudioSavedROMBank], a
-	ld a, [wEngagedTrainerClass]
-	ld b, a
-	ld hl, EvilTrainerList
-.evilTrainerListLoop
-	ld a, [hli]
-	cp $ff
-	jr z, .noEvilTrainer
-	cp b
-	jr nz, .evilTrainerListLoop
-	ld a, MUSIC_MEET_EVIL_TRAINER
-	jr .PlaySound
-.noEvilTrainer
-	ld hl, FemaleTrainerList
-.femaleTrainerListLoop
-	ld a, [hli]
-	cp $ff
-	jr z, .maleTrainer
-	cp b
-	jr nz, .femaleTrainerListLoop
-	ld a, MUSIC_MEET_FEMALE_TRAINER
-	jr .PlaySound
-.maleTrainer
-	ld a, MUSIC_MEET_MALE_TRAINER
-.PlaySound
-	ld [wNewSoundID], a
-	jp PlaySound
-
-INCLUDE "data/trainer_types.asm"
 
 ; checks if the player's coordinates match an arrow movement tile's coordinates
 ; and if so, decodes the RLE movement data
@@ -2735,14 +2663,6 @@ FuncTX_PokemonCenterPC:: ; 347f (0:347f)
 	ld b, BANK(ActivatePC)
 	ld hl, ActivatePC
 	jr bankswitchAndContinue
-
-StartSimulatingJoypadStates:: ; 3486 (0:3486)
-	xor a
-	ld [wOverrideSimulatedJoypadStatesMask], a
-	ld [wSpriteStateData2 + $06], a ; player's sprite movement byte 1
-	ld hl, wd730
-	set 7, [hl]
-	ret
 
 SECTION "bwexp fix isiteminbag", ROM0[$3493]
 IsItemInBag:: ; 3493 (0:3493)
@@ -3016,6 +2936,26 @@ BankswitchCommon:
 	ld [MBC1RomBank],a
 	ret
 
+EnableSRAMAndSwitchSRAMBank:
+	push af
+	ld a, SRAM_ENABLE
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
+	pop af
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
+	ret
+
+DisableSRAMAndSwitchSRAMBank0:
+	push af
+	xor a
+	ld [MBC1SRamEnable], a
+	ld [wSRAMEnabled], a
+	ld [MBC1SRamBank], a
+	ld [wSRAMBank], a
+	pop af
+	ret
+
 ; displays yes/no choice
 ; yes -> set carry
 YesNoChoice:: ; 35ec (0:35ec)
@@ -3033,7 +2973,7 @@ InitYesNoTextBoxParameters:: ; 35ff (0:35ff)
 	xor a ; YES_NO_MENU
 	ld [wTwoOptionMenuID], a
 	coord hl, 14, 7
-	ld bc, $80f
+	lb bc, 8, 15
 	ret
 
 YesNoChoicePokeCenter:: ; 360a (0:360a)
@@ -3191,15 +3131,6 @@ LoadHpBarAndStatusTilePatterns::
 	ld hl, vChars2 + $620
 	lb bc, BANK(HpBarAndStatusGraphics), (HpBarAndStatusGraphicsEnd - HpBarAndStatusGraphics) / $10
 	jp CopyVideoData ; if LCD is on, transfer during V-blank
-
-
-UncompressSpriteFromDE:: ; 36eb (0:36eb)
-; Decompress pic at a:de.
-	ld hl, wSpriteInputPtr
-	ld [hl], e
-	inc hl
-	ld [hl], d
-	jp UncompressSpriteData
 
 GBPalWhiteOutWithDelay3::
 	call GBPalWhiteOut
@@ -3485,6 +3416,14 @@ WaitForTextScrollButtonPress:: ; 3865 (0:3865)
 	ld [H_DOWNARROWBLINKCNT2], a
 	pop af
 	ld [H_DOWNARROWBLINKCNT1], a
+	ret
+
+StartSimulatingJoypadStates:: ; 3486 (0:3486)
+	xor a
+	ld [wOverrideSimulatedJoypadStatesMask], a
+	ld [wSpriteStateData2 + $06], a ; player's sprite movement byte 1
+	ld hl, wd730
+	set 7, [hl]
 	ret
 
 SECTION "bwexpfix", ROM0 [$38ac]
@@ -4607,12 +4546,10 @@ Random::
 ; Return a random number in a.
 ; For battles, use BattleRandom.
 	push hl
-	push de
 	push bc
 	callba Random_
 	ld a, [hRandomAdd]
 	pop bc
-	pop de
 	pop hl
 	ret
 

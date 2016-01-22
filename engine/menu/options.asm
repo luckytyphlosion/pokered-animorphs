@@ -63,7 +63,7 @@ OptionMenu2JumpTable:
 	
 OptionMenu3JumpTable:
 	dw OptionsMenu_SelectTo
-	dw OptionsMenu_Dummy
+	dw OptionsMenu_SaveScum
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
@@ -772,6 +772,42 @@ SelectToJack:
 	db "JACK@"
 SelectToCrit:
 	db "CRIT@"
+	
+OptionsMenu_SaveScum:
+	ld a, [hJoy5]
+	and D_RIGHT | D_LEFT
+	jr nz, .leftOrRightPressed
+	ld a, [wOptions3]
+	and %1000000 ; mask other bits
+	jr .noButtonsPressed
+.leftOrRightPressed
+	ld a, [wOptions3]
+	xor %1000000
+	ld [wOptions3], a
+.noButtonsPressed
+	ld bc, $0
+	sla a
+	sla a
+	rl c
+	ld hl, OptionsSaveScumStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 13, 4
+	call PlaceString
+	and a
+	ret
+
+OptionsSaveScumStringsPointerTable:
+	dw SaveScumRegularText
+	dw SaveScumBNModeText
+	
+SaveScumRegularText:
+	db "REG   @"
+SaveScumBNModeText:
+	db "BNMODE@"
 
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
@@ -915,7 +951,7 @@ OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
 	db 5
-	db 0
+	db 1
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -934,7 +970,8 @@ Options2OptionsText:
 	next "STARTIN:@"
 	
 Options3OptionsText:
-	db   "SELECTTO:@"
+	db   "SELECTTO:"
+	next "SAVESCUM:@"
 	
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)

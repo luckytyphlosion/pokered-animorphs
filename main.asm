@@ -5543,6 +5543,7 @@ INCLUDE "engine/offscreen_tiles.asm"
 INCLUDE "engine/menu/options.asm"
 INCLUDE "engine/battle/decrement_pp.asm"
 INCLUDE "engine/overworld/advance_player_sprite.asm"
+INCLUDE "engine/overworld/engage_map_trainer.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 

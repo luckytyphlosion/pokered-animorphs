@@ -133,22 +133,13 @@ GetNumTimesMoveWasUsed:
 	ld hl, sMoveUseRecord
 	add hl, de
 	add hl, de
-	ld a, SRAM_ENABLE
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
 	ld a, $1
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
+	call EnableSRAMAndSwitchSRAMBank
 	ld a, [hli]
 	ld [wBuffer], a
 	ld a, [hl]
 	ld [wBuffer + 1], a
-	xor a
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
-	ret
+	jp DisableSRAMAndSwitchSRAMBank0
 
 DisplayAllMovesUsed:
 	ld a, $1

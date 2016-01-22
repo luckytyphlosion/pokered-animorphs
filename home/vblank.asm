@@ -87,8 +87,29 @@ DontUpdateWY:
 	call BattleTransitionPreparation
 	
 .noBattleTransition
-
-
+	ld a, [wOptions3]
+	bit 6, a
+	jr z, .noSoftReset
+	ld hl, wSRAMBank
+	ld a, [hli] ; go to enable status
+	cp $1
+	jr c, .allowSoftReset ; bank 0 is scratch, HoF doesn't really matter that much
+	ld a, [hl]
+	cp SRAM_ENABLE
+	jr z, .noSoftReset ; if sram is enabled and we're in a save-data bank, prevent soft reset
+.allowSoftReset
+	ld a, [hJoyInput]
+	and $f
+	cp $f
+	jr nz, .noSoftReset
+	ld hl, hSoftReset
+	dec [hl]
+	jr nz, .noSoftReset
+	ld hl, [sp+$8] ; swag pinball strats
+	ld [hl], SoftReset & $ff
+	inc hl
+	ld [hl], SoftReset / $100
+.noSoftReset
 	callba TrackPlayTime ; keep track of time played
 
 	ld a, [hDisableJoypadPolling]

@@ -1780,7 +1780,10 @@ wSavedListScrollOffset:: ; d07e
 ; so that it can be restored when the player is done with the pokemart NPC
 	ds 1
 
-	ds 2
+wIsSaveScumMode::
+	ds 1
+	
+	ds 1
 
 ; base coordinates of frame block
 wBaseCoordX:: ; d081
@@ -2587,6 +2590,8 @@ wOptions2::
 	ds 1
 wOptions3::
 ; bit 0-3 = start in
+; bits 4-5 = select to
+; bit 6 = savescum mode
 	ds 1
 
 	ds 44

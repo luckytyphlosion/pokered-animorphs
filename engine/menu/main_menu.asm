@@ -7,9 +7,14 @@ MainMenu: ; 5af2 (1:5af2)
 	ld [wSaveFileStatus],a
 	call CheckForPlayerNameInSRAM
 	jr nc,.mainMenuLoop
-
+	
 	predef LoadSAV
-
+	ld a, [wSaveFileStatus]
+	dec a
+	jr z, .mainMenuLoop ; no save file
+	ld a, [wIsSaveScumMode]
+	dec a
+	jp z, .pressedA
 .mainMenuLoop
 	ld c,20
 	call DelayFrames
@@ -127,6 +132,7 @@ MainMenu: ; 5af2 (1:5af2)
 InitOptions: ; 5bff (1:5bff)
 	xor a ; animations on, battle style shift, metronome off, shake moves on, menu speed fast, text speed instant
 	ld [wOptions], a
+	ld [wOptions3], a
 	ld a, $f0
 	ld [wOptions2], a ; spinner hell off, spin speed 32 frames
 	inc a ; no delay
@@ -456,13 +462,8 @@ CheckForPlayerNameInSRAM: ; 609e (1:609e)
 ; Check if the player name data in SRAM has a string terminator character
 ; (indicating that a name may have been saved there) and return whether it does
 ; in carry.
-	ld a, SRAM_ENABLE
-	ld [MBC1SRamEnable], a
-	ld [wSRAMEnabled], a
 	ld a, $1
-	ld [MBC1SRamBankingMode], a
-	ld [MBC1SRamBank], a
-	ld [wSRAMBank], a
+	call EnableSRAMAndSwitchSRAMBank
 	ld b, NAME_LENGTH
 	ld hl, sPlayerName
 .loop
@@ -472,16 +473,10 @@ CheckForPlayerNameInSRAM: ; 609e (1:609e)
 	dec b
 	jr nz, .loop
 ; not found
-	xor a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamBankingMode], a
+	call DisableSRAMAndSwitchSRAMBank0
 	and a
 	ret
 .found
-	xor a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamBankingMode], a
+	call DisableSRAMAndSwitchSRAMBank0
 	scf
 	ret
