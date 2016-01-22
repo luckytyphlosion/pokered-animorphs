@@ -29,7 +29,7 @@ UpdatePlayerSprite: ; 4e31 (1:4e31)
 ; check if down
 	bit PLAYER_DIR_BIT_DOWN, a
 	jr z, .checkIfUp
-	xor a ; [MBC1SRamEnable], a, SPRITE_FACING_DOWN
+	xor a ; ld a, SPRITE_FACING_DOWN
 	jr .next
 .checkIfUp
 	bit PLAYER_DIR_BIT_UP, a
@@ -690,16 +690,53 @@ CanWalkOntoTile: ; 516e (1:516e)
 	ld c, a
 	bit 0, b ; spinner hell mode?
 	jr nz, .spinnerHell
-	ld c, $7f
-.spinnerHell
 	ld a, [hRandomAdd]
-	and c
-	inc a
+	and $7f
 	ld [hl], a         ; c2x8: set next movement delay to a random value in [0,$7f] (again with delay $100 if value is 0)
-	scf                ; set carry (marking failure to walk)
+	scf               ; set carry (marking failure to walk)
 	pop bc
 	ret
-
+.spinnerHell
+; check for speeds which can be used as a bitmask
+	ld a, c
+	cp $f
+	jr z, .spinSpeed_bitmask
+	cp $7
+	jr z, .spinSpeed_bitmask
+	jr nc, .rejectionSample_4bits
+	cp $3
+	jr z, .spinSpeed_bitmask
+	jr nc, .rejectionSample_3bits
+	cp $1
+	jr z, .spinSpeed_bitmask
+	jr c, .spinSpeed_bitmask
+; 2bits
+	ld b, $3
+	jr .rejectionSample_continue
+.rejectionSample_4bits
+	ld b, $f
+	jr .rejectionSample_continue
+.rejectionSample_3bits
+	ld b, $7
+	jr .rejectionSample_continue
+.spinSpeed_bitmask
+	ld a, [hRandomAdd]
+	and c
+	jr .spinSpeed_done
+.rejectionSample_loop
+	call Random
+.rejectionSample_continue
+	ld a, [hRandomAdd]
+	and b
+	cp c ; is random value > max value?
+	jr nc, .rejectionSample_loop
+.spinSpeed_done
+	inc a
+	ld [hl], a
+	scf
+	pop bc
+	ret
+	
 ; calculates the tile pointer pointing to the tile the current sprite stancs on
 ; this is always the lower left tile of the 2x2 tile blocks all sprites are snapped to
 ; hl: output pointer

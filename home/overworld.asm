@@ -133,7 +133,7 @@ OverworldLoopNoDelay::
 	jp .displayDialogue
 .startButtonNotPressed
 	bit 0,a ; A button
-	jp z,.checkIfDownButtonIsPressed
+	jp z,.checkIfSelectButtonIsPressed
 ; if A is pressed
 	ld a,[wd730]
 	bit 2,a
@@ -186,6 +186,47 @@ OverworldLoopNoDelay::
 	ld hl, wSlipRunningFlags
 	res 3, [hl] ; stop double sprite update
 	jp OverworldLoop
+.checkIfSelectButtonIsPressed
+	ld a, [hJoyPressed]
+	bit 2, a
+	jr z, .checkIfDownButtonIsPressed
+	ld a, [wOptions3]
+	and %110000 ; any special functions?
+	jr z, .checkIfDownButtonIsPressed
+	ld hl, wOverworldSelectFlags
+	swap a
+	dec a ; select to bike
+	jr nz, .notSelectToBike
+	push hl
+	ld b, BICYCLE
+	call IsItemInBag
+	pop hl
+	jr z, .checkIfDownButtonIsPressed
+	set 1, [hl]
+	callab ItemUseBicycle ; toggle bike
+	call LoadPlayerSpriteGraphics
+.afterUsingJack
+	jp OverworldLoop
+.notSelectToBike
+	dec a
+	jr nz, .checkIfDownButtonIsPressed ; not jack mode
+	ld a, POTION
+	ld [wcf91], a
+	call LoadFontTilePatterns
+	ld hl, wFontLoaded
+	set 0, [hl]
+	push hl
+	ld a, [hWY]
+	push af
+	xor a
+	ld [hWY], a
+	call UseItem
+	pop af
+	ld [hWY], a
+	callab InitMapSprites
+	pop hl
+	res 0, [hl]
+	jr .afterUsingJack
 .checkIfDownButtonIsPressed
 	ld a,[hJoyHeld] ; current joypad state
 	bit 7,a ; down button
@@ -210,7 +251,7 @@ OverworldLoopNoDelay::
 	jr .handleDirectionButtonPress
 .checkIfRightButtonIsPressed
 	bit 4,a ; right button
-	jr z,.noDirectionButtonsPressed
+	jp z,.noDirectionButtonsPressed
 	ld a,1 ; PLAYER_DIR_RIGHT
 	ld [wSpriteStateData1 + 5],a ; delta X
 .handleDirectionButtonPress
@@ -219,7 +260,7 @@ OverworldLoopNoDelay::
 	bit 7,a ; are we simulating button presses?
 	jr nz,.noDirectionChange ; ignore direction changes if we are
 	ld a,[wCheckFor180DegreeTurn]
-	and a
+	and a	
 	jr z,.noDirectionChange
 	ld a,[wPlayerDirection] ; new direction
 	ld b,a

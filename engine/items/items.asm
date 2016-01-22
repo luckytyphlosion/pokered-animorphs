@@ -678,6 +678,11 @@ ItemUseBicycle: ; d977 (3:5977)
 	ld hl,GotOnBicycleText
 	call PlayDefaultMusic ; play bike riding music
 .printText
+	ld a, [wOverworldSelectFlags]
+	bit 1, a
+	res 1, a
+	ld [wOverworldSelectFlags], a
+	ret nz ; no text printing if accessed through select
 	jp PrintText
 
 ; used for Surf out-of-battle effect
@@ -2336,6 +2341,10 @@ ThrowBallAtTrainerMon: ; e58b (3:658b)
 	jr RemoveUsedItem
 
 NoCyclingAllowedHere: ; e5ac (3:65ac)
+	ld hl, wOverworldSelectFlags
+	bit 1, [hl]
+	res 1, [hl]
+	ret nz
 	ld hl,NoCyclingAllowedHereText
 	jr ItemUseFailed
 
@@ -2842,6 +2851,8 @@ SendNewMonToBox: ; e7a4 (3:67a4)
 	jr nz, .asm_e8b1
 	ret
 
+INCLUDE "data/super_rod.asm"
+
 ; checks if the tile in front of the player is a shore or water tile
 ; used for surfing and fishing
 ; unsets carry if it is, sets carry if not
@@ -2918,8 +2929,6 @@ ReadSuperRodData: ; e8ea (3:68ea)
 	ld c, [hl] ; species
 	ld e, $1 ; $1 if there's a bite
 	ret
-
-INCLUDE "data/super_rod.asm"
 
 PlayedFluteHadEffectText: ; e215 (3:6215)
 	TX_FAR _PlayedFluteHadEffectText

@@ -500,6 +500,7 @@ StartMenu_TrainerInfo: ; 13460 (4:7460)
 	call GBPalWhiteOut
 	call ClearScreen
 	call UpdateSprites
+	call DelayFrame
 	ld a,[hTilesetType]
 	push af
 	xor a

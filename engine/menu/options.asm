@@ -39,6 +39,7 @@ HandleCurrentOption: ; 41c95 (10:5c95)
 OptionMenuJumpTablePointerTable:
 	dw OptionMenu1JumpTable
 	dw OptionMenu2JumpTable
+	dw OptionMenu3JumpTable
 	
 OptionMenu1JumpTable: ; 41ca4 (10:5ca4)
 	dw OptionsMenu_TextSpeed
@@ -57,6 +58,16 @@ OptionMenu2JumpTable:
 	dw OptionsMenu_SlipRun
 	dw OptionsMenu_TrainerRange
 	dw OptionsMenu_StartIn
+	dw OptionsMenu_Page
+	dw OptionsMenu_Cancel
+	
+OptionMenu3JumpTable:
+	dw OptionsMenu_SelectTo
+	dw OptionsMenu_Dummy
+	dw OptionsMenu_Dummy
+	dw OptionsMenu_Dummy
+	dw OptionsMenu_Dummy
+	dw OptionsMenu_Dummy
 	dw OptionsMenu_Page
 	dw OptionsMenu_Cancel
 	
@@ -381,7 +392,7 @@ Op_CheaterPalText:
 	db "CHEATER @"
 	
 OptionsMenu_Page:
-NUM_OPTION_PAGES EQU 2
+NUM_OPTION_PAGES EQU 3
 	ld a, [wOptionsCurPage]
 	ld c, a
 	ld a, [hJoy5]
@@ -435,11 +446,14 @@ NUM_OPTION_PAGES EQU 2
 OptionsPageNumberPointerTable:
 	dw OptionsPage1
 	dw OptionsPage2
+	dw OptionsPage3
 	
 OptionsPage1:
 	db "1@"
 OptionsPage2:
 	db "2@"
+OptionsPage3:
+	db "3@"
 
 OptionsMenu_SpinnerHell:
 	ld a, [hJoy5]
@@ -698,6 +712,67 @@ StartInSilphLaprasText:
 StartInSafariZoneText:
 	db "SAFARI@"
 	
+OptionsMenu_SelectTo:
+	ld a, [wOptions3]
+	and %110000
+	swap a
+	ld c, a
+	ld a, [hJoy5]
+	bit 4, a ; right
+	jr nz, .pressedRight
+	bit 5, a
+	jr nz, .pressedLeft
+	jr .asm_41ce0
+.pressedRight
+	ld a, c
+	cp 3
+	jr c, .noWrapAround
+	ld c, -1
+.noWrapAround
+	inc c
+	jr .continue
+.pressedLeft
+	ld a, c
+	and a
+	jr nz, .noWrapAround2
+	ld c, 3 + 1
+.noWrapAround2
+	dec c
+.continue
+	ld b, c
+	swap b
+	ld a, [wOptions3]
+	and %11001111
+	or b
+	ld [wOptions3], a
+.asm_41ce0
+	ld b, $0
+	ld hl, OptionsSelectToStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 13, 2
+	call PlaceString
+	and a
+	ret
+
+OptionsSelectToStringsPointerTable:
+	dw SelectToNone
+	dw SelectToBike
+	dw SelectToJack
+	dw SelectToCrit
+	
+SelectToNone:
+	db "NONE@"
+SelectToBike:
+	db "BIKE@"
+SelectToJack:
+	db "JACK@"
+SelectToCrit:
+	db "CRIT@"
+
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
 	ret
@@ -834,11 +909,13 @@ GetOptionsPageLength:
 OptionsOptionsPointerTable:
 	dw Options1OptionsText
 	dw Options2OptionsText
+	dw Options3OptionsText
 
 OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
 	db 5
+	db 0
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -855,6 +932,10 @@ Options2OptionsText:
 	next "BIKESLIPRUN:"
 	next "TRAINERANGE:"
 	next "STARTIN:@"
+	
+Options3OptionsText:
+	db   "SELECTTO:@"
+	
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)
 	db "PAGE:"

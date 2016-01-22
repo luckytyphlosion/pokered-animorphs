@@ -4776,6 +4776,16 @@ UnusedHighCriticalMoves: ; 3e01e (f:601e)
 CriticalHitTest: ; 3e023 (f:6023)
 	xor a
 	ld [wCriticalHitOrOHKO], a
+	ld a, [wOptions3]
+	and %110000
+	cp %11 << 4
+	jr nz, .notSelectToCrit
+; select to crit mode
+	ld a, [hJoyInput]
+	bit 2, a
+	jr nz, .alwaysCrit
+	ret ; don't try crit calculation if select wasn't pressed
+.notSelectToCrit
 	ld a, [H_WHOSETURN]
 	and a
 	ld a, [wEnemyMonSpecies]
@@ -4835,6 +4845,7 @@ CriticalHitTest: ; 3e023 (f:6023)
 	rlc a
 	cp b                         ; check a against calculated crit rate
 	ret nc                       ; no critical hit if no borrow
+.alwaysCrit
 	ld a, $1
 	ld [wCriticalHitOrOHKO], a   ; set critical hit flag
 	ret

@@ -1437,7 +1437,7 @@ ConditionalDelayFrame:
 ; Delay3 if bits 2 and 3 of wOptions are set
 ; else DelayFrame
 	ld a, [wOptions]
-	and %11
+	and %11 << 2
 	cp $3 << 2
 	jp nz, DelayFrame
 	jp Delay3

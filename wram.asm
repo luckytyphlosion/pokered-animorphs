@@ -2272,7 +2272,12 @@ wPseudoItemID:: ; d152
 wUnusedD153:: ; d153
 	ds 1
 
-	ds 2
+wOverworldSelectFlags::
+; bit 0 = jack mode
+; bit 1 = access bike through select
+	ds 1
+	
+	ds 1
 
 wEvoStoneItemID:: ; d156
 	ds 1
