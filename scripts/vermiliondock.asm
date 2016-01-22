@@ -78,7 +78,7 @@ VermilionDock_1db9b: ; 1db9b (7:5b9b)
 	ld d, $0
 	ld e, $8
 .asm_1dbfa
-	ld hl, $0002
+	ld hl, -$0002
 	add hl, bc
 	ld a, l
 	ld [wMapViewVRAMPointer], a
@@ -86,7 +86,7 @@ VermilionDock_1db9b: ; 1db9b (7:5b9b)
 	ld [wMapViewVRAMPointer + 1], a
 	push hl
 	push de
-	call ScheduleEastColumnRedraw
+	call ScheduleWestColumnRedraw
 	call VermilionDock_EmitSmokePuff
 	pop de
 	ld b, $10
@@ -97,7 +97,7 @@ VermilionDock_1db9b: ; 1db9b (7:5b9b)
 	call VermilionDock_1dc7c
 	dec c
 	jr nz, .asm_1dc16
-	inc d
+	dec d
 	dec b
 	jr nz, .asm_1dc11
 	pop bc
@@ -142,7 +142,7 @@ VermilionDock_AnimSmokePuffDriftRight: ; 1dc42 (7:5c42)
 VermilionDock_EmitSmokePuff: ; 1dc59 (7:5c59)
 ; new smoke puff above the S.S. Anne's front smokestack
 	ld a, [wSSAnneSmokeX]
-	sub 16
+	add 16
 	ld [wSSAnneSmokeX], a
 	ld c, a
 	ld b, 100 ; Y
