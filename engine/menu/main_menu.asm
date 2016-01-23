@@ -14,7 +14,7 @@ MainMenu: ; 5af2 (1:5af2)
 	jr z, .mainMenuLoop ; no save file
 	ld a, [wIsSaveScumMode]
 	dec a
-	jp z, .pressedA
+	jp z, .skipMainMenu
 .mainMenuLoop
 	ld c,20
 	call DelayFrames
@@ -111,11 +111,12 @@ MainMenu: ; 5af2 (1:5af2)
 	jr .inputLoop
 .pressedA
 	call GBPalWhiteOutWithDelay3
+	ld c, 10
+	call DelayFrames
 	call ClearScreen
+.skipMainMenu
 	ld a,PLAYER_DIR_DOWN
 	ld [wPlayerDirection],a
-	ld c,10
-	call DelayFrames
 	ld a,[wNumHoFTeams]
 	and a
 	jp z,SpecialEnterMap
@@ -342,7 +343,12 @@ SpecialEnterMap: ; 5d5f (1:5d5f)
 	ld hl, wd732
 	set 0, [hl] ; count play time
 	call ResetPlayerSpriteData
+	ld a, [wIsSaveScumMode]
+	dec a
+	ld c, 1
+	jr z, .saveScumMode
 	ld c, 20
+.saveScumMode
 	call DelayFrames
 	ld a, [wEnteringCableClub]
 	and a

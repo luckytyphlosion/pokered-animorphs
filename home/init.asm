@@ -236,5 +236,7 @@ AfterInitSRAMChecks:
 	ret z
 	ld a, $1
 	ld [wIsSaveScumMode], a
+	ld a, 5
+	ld [hSoftReset], a
 	scf
 	ret
