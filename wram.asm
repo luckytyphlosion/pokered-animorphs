@@ -2592,6 +2592,7 @@ wOptions3::
 ; bit 0-3 = start in
 ; bits 4-5 = select to
 ; bit 6 = savescum mode
+; bit 7 = instant HP bars
 	ds 1
 
 	ds 44

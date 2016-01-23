@@ -64,7 +64,7 @@ OptionMenu2JumpTable:
 OptionMenu3JumpTable:
 	dw OptionsMenu_SelectTo
 	dw OptionsMenu_SaveScum
-	dw OptionsMenu_Dummy
+	dw OptionsMenu_InstHPBars
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
 	dw OptionsMenu_Dummy
@@ -753,7 +753,7 @@ OptionsMenu_SelectTo:
 	ld e, [hl]
 	inc hl
 	ld d, [hl]
-	coord hl, 13, 2
+	coord hl, 12, 2
 	call PlaceString
 	and a
 	ret
@@ -795,7 +795,7 @@ OptionsMenu_SaveScum:
 	ld e, [hl]
 	inc hl
 	ld d, [hl]
-	coord hl, 13, 4
+	coord hl, 12, 4
 	call PlaceString
 	and a
 	ret
@@ -808,6 +808,32 @@ SaveScumRegularText:
 	db "REG   @"
 SaveScumBNModeText:
 	db "BNMODE@"
+
+OptionsMenu_InstHPBars:
+	ld a, [hJoy5]
+	and D_RIGHT | D_LEFT
+	jr nz, .leftOrRightPressed
+	ld a, [wOptions3]
+	and %10000000 ; mask other bits
+	jr .noButtonsPressed
+.leftOrRightPressed
+	ld a, [wOptions3]
+	xor %10000000
+	ld [wOptions3], a
+.noButtonsPressed
+	ld bc, $0
+	sla a
+	rl c
+	ld hl, MetronomeOptionStringsPointerTable
+	add hl, bc
+	add hl, bc
+	ld e, [hl]
+	inc hl
+	ld d, [hl]
+	coord hl, 14, 6
+	call PlaceString
+	and a
+	ret
 
 OptionsMenu_Dummy: ; 41eab (10:5eab)
 	and a
@@ -951,7 +977,7 @@ OptionsPageLength:
 ; number of options minus page, cancel and 1
 	db 5
 	db 5
-	db 1
+	db 2
 
 Options1OptionsText: ; 41f3e (10:5f3e)
 	db   "TEXT SPEED :"
@@ -971,7 +997,8 @@ Options2OptionsText:
 	
 Options3OptionsText:
 	db   "SELECTTO:"
-	next "SAVESCUM:@"
+	next "SAVESCUM:"
+	next "INST.HPBARS:@"
 	
 
 OptionMenuPageAndCancelText: ; 41f73 (10:5f73)

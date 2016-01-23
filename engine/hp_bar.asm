@@ -78,6 +78,9 @@ UpdateHPBar2:
 	ld e, a
 	ld a, [wHPBarNewHP+1]
 	ld d, a
+	ld a, [wOptions3]
+	bit 7, a
+	jp nz, .updateHPBar_NoAnimation
 .animateHPBarLoop
 	push de
 	ld a, [wHPBarOldHP]
@@ -132,7 +135,23 @@ UpdateHPBar2:
 	ld a, $1
 	call UpdateHPBar_AnimateHPBar
 	jp Delay3
-
+.updateHPBar_NoAnimation
+	push de
+	ld c, e
+	ld b, d ; store new HP in bc
+	
+	ld a, [wHPBarMaxHP]
+	ld e, a
+	ld a, [wHPBarMaxHP+1]
+	ld d, a ; get max HP
+	
+	call GetHPBarLength ; get HP Bar length
+; e = number of pixels in hp bar
+	ld d, $6 ; number of tiles
+	call DrawHPBar
+	jr .animateHPBarDone
+	
+	
 ; animates the HP bar going up or down for (a) ticks (two waiting frames each)
 ; stops prematurely if bar is filled up
 ; e: current health (in pixels) to start with
@@ -144,8 +163,6 @@ UpdateHPBar_AnimateHPBar: ; fab1 (3:7ab1)
 	ld d, $6
 	call DrawHPBar
 	call DelayFrame
-	;[MBC1SRamEnable], c, 2
-	;call DelayFrames
 	pop de
 	ld a, [wHPBarDelta] ; +1 or -1
 	add e
@@ -243,6 +260,7 @@ UpdateHPBar_PrintHPNumber: ; faf5 (3:7af5)
 ; e: old pixels
 UpdateHPBar_CalcOldNewHPBarPixels: ; fb30 (3:7b30)
 	push hl
+	
 	ld hl, wHPBarMaxHP
 	ld a, [hli]  ; max HP into de
 	ld e, a
@@ -255,16 +273,19 @@ UpdateHPBar_CalcOldNewHPBarPixels: ; fb30 (3:7b30)
 	ld a, [hli]  ; new HP into hl
 	ld h, [hl]
 	ld l, a
+	
 	push hl
 	push de
 	call GetHPBarLength ; calc num pixels for old HP
 	ld a, e
 	pop de
 	pop bc
+	
 	push af
 	call GetHPBarLength ; calc num pixels for new HP
 	pop af
 	ld d, e
 	ld e, a
+	
 	pop hl
 	ret
