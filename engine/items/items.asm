@@ -2421,7 +2421,7 @@ RestoreBonusPP: ; e606 (3:6606)
 	ld a,[wWhichPokemon]
 	call AddNTimes
 	push hl
-	ld de,wNormalMaxPPList - 1
+	ld de,wNormalMaxPPList
 	predef LoadMovePPs ; loads the normal max PP of each of the pokemon's moves to wNormalMaxPPList
 	pop hl
 	ld c, wPartyMon1PP - wPartyMon1Moves

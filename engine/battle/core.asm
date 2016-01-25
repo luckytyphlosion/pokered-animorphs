@@ -4580,7 +4580,7 @@ GetEnemyMonStat: ; 3df1c (f:5f1c)
 	ld [wd0b5], a
 	call GetMonHeader
 	ld hl, wEnemyMonDVs
-	ld de, wLoadedMonSpeedExp
+	ld de, wLoadedMonDVs
 	ld a, [hli]
 	ld [de], a
 	inc de
@@ -4588,7 +4588,7 @@ GetEnemyMonStat: ; 3df1c (f:5f1c)
 	ld [de], a
 	pop bc
 	ld b, $0
-	ld hl, wLoadedMonSpeedExp - $b ; this base address makes CalcStat look in [wLoadedMonSpeedExp] for DVs
+	ld de, wLoadedMon ; set base address as de
 	call CalcStat
 	pop de
 	ret
@@ -6320,25 +6320,14 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	ld a, [hli]
 	ld b, [hl]
 	jr nz, .storeDVs
-	ld a, [wIsInBattle]
-	cp $2 ; is it a trainer battle?
-; fixed DVs for trainer mon
-	ld a, $98
-	ld b, $88
-	jr z, .storeDVs
-; random DVs for wild mon
-	call BattleRandom
-	ld b, a
-	call BattleRandom
-.storeDVs
+	xor a
 	ld hl, wEnemyMonDVs
 	ld [hli], a
-	ld [hl], b
+	ld [hl], a
 	ld de, wEnemyMonLevel
 	ld a, [wCurEnemyLVL]
 	ld [de], a
 	inc de
-	ld b, $0
 	ld hl, wEnemyMonHP
 	push hl
 	call CalcStats
@@ -6373,7 +6362,6 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	inc hl
 	ld a, [hl]
 	ld [wEnemyMonStatus], a
-	jr .copyTypes
 .copyTypes
 	ld hl, wMonHTypes
 	ld de, wEnemyMonType
@@ -6419,7 +6407,7 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	predef WriteMonMoves ; get moves based on current level
 .loadMovePPs
 	ld hl, wEnemyMonMoves
-	ld de, wEnemyMonPP - 1
+	ld de, wEnemyMonPP
 	predef LoadMovePPs
 	ld hl, wMonHBaseStats
 	ld de, wEnemyMonBaseStats

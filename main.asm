@@ -3624,32 +3624,25 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	dec a
 	ld bc, wPartyMon2 - wPartyMon1
 	call AddNTimes
-	ld e, l
-	ld d, h
-	push hl
+	ld c, l
+	ld b, h ; bc = base address
 	ld a, [wcf91]
 	ld [wd0b5], a
 	call GetMonHeader
-	ld hl, wMonHeader
-	ld a, [hli]
-	ld [de], a ; species
-	inc de
-	pop hl
-	push hl
+	ld a, [wMonHeader]
+	ld [bc], a ; species
 	ld a, [wMonDataLocation]
 	and $f
-	ld a, $98     ; set enemy trainer mon IVs to fixed average values
-	ld b, $88
-	jr nz, .next4
+	jr nz, .trainerMon
 
 ; If the mon is being added to the player's party, update the pokedex.
 	ld a, [wcf91]
 	ld [wd11e], a
-	push de
 	predef IndexToPokedex
-	pop de
 	ld a, [wd11e]
 	dec a
+	push bc ; save base mon struct
+	
 	ld c, a
 	ld b, FLAG_TEST
 	ld hl, wPokedexOwned
@@ -3666,143 +3659,140 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	ld hl, wPokedexSeen
 	call FlagAction
 
-	pop hl
-	push hl
+	pop bc ; restore base mon struct
 
 	ld a, [wIsInBattle]
 	and a ; is this a wild mon caught in battle?
 	jr nz, .copyEnemyMonData
 
-; Not wild.
-	call Random ; generate random IVs
-	ld b, a
-	call Random
-
-.next4
-	push bc
-	ld bc, wPartyMon1DVs - wPartyMon1
+.trainerMon
+	ld hl, wPartyMon1DVs - wPartyMon1
 	add hl, bc
-	pop bc
+	xor a ; no DVs
 	ld [hli], a
-	ld [hl], b         ; write IVs
-	ld bc, (wPartyMon1HPExp - 1) - (wPartyMon1DVs + 1)
-	add hl, bc
-	ld a, 1
-	ld c, a
-	xor a
-	ld b, a
+	ld [hl], a         ; write IVs
+	ld hl, (wPartyMon1HPExp + 1) - wPartyMon1
+	add hl, bc ; get stat exp
+	
+	ld e, c
+	ld d, b ; stash base mon struct in de
+	
+	ld c, $1 ; calc HP
 	call CalcStat      ; calc HP stat (set cur Hp to max HP)
+	
+	ld c, e
+	ld b, d ; store base mon struct back into bc
+	ld hl, wPartyMon1HP - wPartyMon1
+	add hl, bc
+	
 	ld a, [H_MULTIPLICAND+1]
-	ld [de], a
-	inc de
+	ld [hli], a
 	ld a, [H_MULTIPLICAND+2]
-	ld [de], a
-	inc de
+	ld [hli], a
 	xor a
-	ld [de], a         ; box level
-	inc de
-	ld [de], a         ; status ailments
-	inc de
+	ld [hli], a         ; box level
+	ld [hli], a         ; status ailments
 	jr .copyMonTypesAndMoves
 .copyEnemyMonData
-	ld bc, wEnemyMon1DVs - wEnemyMon1
+	ld hl, wEnemyMon1DVs - wEnemyMon1
 	add hl, bc
 	ld a, [wEnemyMonDVs] ; copy IVs from cur enemy mon
 	ld [hli], a
 	ld a, [wEnemyMonDVs + 1]
 	ld [hl], a
+	ld hl, wEnemyMon1HP - wEnemyMon1
+	add hl, bc
 	ld a, [wEnemyMonHP]    ; copy HP from cur enemy mon
-	ld [de], a
-	inc de
+	ld [hli], a
 	ld a, [wEnemyMonHP+1]
-	ld [de], a
-	inc de
+	ld [hli], a
 	xor a
-	ld [de], a                ; box level
-	inc de
+	ld [hli], a                ; box level
 	ld a, [wEnemyMonStatus]   ; copy status ailments from cur enemy mon
-	ld [de], a
-	inc de
+	ld [hli], a
 .copyMonTypesAndMoves
-	ld hl, wMonHTypes
-	ld a, [hli]       ; type 1
-	ld [de], a
+	ld de, wMonHTypes
+	ld a, [de]        ; type 1
+	ld [hli], a
 	inc de
-	ld a, [hli]       ; type 2
-	ld [de], a
+	ld a, [de]        ; type 2
+	ld [hli], a
 	inc de
-	ld a, [hli]       ; catch rate (held item in gen 2)
-	ld [de], a
-	ld hl, wMonHMoves
-	ld a, [hli]
+	
+	ld a, [de]        ; catch rate (held item in gen 2)
+	ld [hli], a
+	
+	push hl ; save address of moves for AddPartyMon_WriteMovePPs
+	push hl ; save address of moves for WriteMonMoves
+	
+	
+	ld de, wMonHMoves ; header moves
+	ld a, [de]
+	ld [hli], a
 	inc de
-	push de
-	ld [de], a
-	ld a, [hli]
+	ld a, [de]
+	ld [hli], a
 	inc de
-	ld [de], a
-	ld a, [hli]
+	ld a, [de]
+	ld [hli], a
 	inc de
-	ld [de], a
-	ld a, [hli]
-	inc de
-	ld [de], a
-	push de
-	dec de
-	dec de
-	dec de
+	ld a, [de]
+	ld [hl], a
+	
 	xor a
 	ld [wLearningMovesFromDayCare], a
-	predef WriteMonMoves
 	pop de
+	
+	predef WriteMonMoves
+	
+	ld hl, wPartyMon1OTID - wPartyMon1
+	add hl, bc ; trainer ID
+	
 	ld a, [wPlayerID]  ; set trainer ID to player ID
-	inc de
-	ld [de], a
+	ld [hli],a
 	ld a, [wPlayerID + 1]
-	inc de
-	ld [de], a
-	push de
+	ld [hli], a
+	
+	push hl ; save EXP address
+	push bc ; save base mon struct
 	ld a, [wCurEnemyLVL]
 	ld d, a
 	callab CalcExperience
-	pop de
-	inc de
-	ld a, [hExperience] ; write experience
-	ld [de], a
-	inc de
-	ld a, [hExperience + 1]
-	ld [de], a
-	inc de
-	ld a, [hExperience + 2]
-	ld [de], a
-	xor a
-	ld b, NUM_STATS * 2
-.writeEVsLoop              ; set all EVs to 0
-	inc de
-	ld [de], a
-	dec b
-	jr nz, .writeEVsLoop
-	inc de
-	inc de
+	pop bc ; restore regs
 	pop hl
+	
+	ld a, [hExperience] ; write experience
+	ld [hli], a
+	ld a, [hExperience + 1]
+	ld [hli], a
+	ld a, [hExperience + 2]
+	ld [hli], a
+
+	xor a
+	ld d, NUM_STATS * 2
+.writeEVsLoop              ; set all EVs to 0
+	ld [hli], a
+	dec d
+	jr nz, .writeEVsLoop
+	
+	ld d, h
+	ld e, l
+	pop hl ; restore address of moves from way back
 	call AddPartyMon_WriteMovePP
-	inc de
 	ld a, [wCurEnemyLVL]
-	ld [de], a
-	inc de
+	ld [hli], a
 	ld a, [wIsInBattle]
 	dec a
 	jr nz, .calcFreshStats
+	ld d, h ; output to de
+	ld e, l
 	ld hl, wEnemyMonMaxHP
-	ld bc, $a
+	ld bc, (wEnemyMonSpecial + 1) - wEnemyMonMaxHP
 	call CopyData          ; copy stats of cur enemy mon
-	pop hl
 	jr .done
 .calcFreshStats
-	pop hl
-	ld bc, wPartyMon1HPExp - 1 - wPartyMon1
+	ld hl, wPartyMon1MaxHP - wPartyMon1
 	add hl, bc
-	ld b, $0
 	call CalcStats         ; calculate fresh set of stats
 .done
 	scf
@@ -3812,6 +3802,9 @@ LoadMovePPs: ; f473 (3:7473)
 	call GetPredefRegisters
 	; fallthrough
 AddPartyMon_WriteMovePP: ; f476 (3:7476)
+; input:
+; de = address of mon's moves
+; hl = output
 	ld b, NUM_MOVES
 .pploop
 	ld a, [hli]     ; read move ID
@@ -3832,8 +3825,8 @@ AddPartyMon_WriteMovePP: ; f476 (3:7476)
 	pop hl
 	ld a, [wcd6d + 5] ; PP is byte 5 of move data
 .empty
-	inc de
 	ld [de], a
+	inc de
 	dec b
 	jr nz, .pploop ; there are still moves to read
 	ret

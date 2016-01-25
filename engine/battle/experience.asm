@@ -1,7 +1,8 @@
 GainExperience: ; 5524f (15:524f)
+	ret
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
-	ret z ; return if link battle
+	;ret z ; return if link battle
 	call DivideExpDataByNumMonsGainingExp
 	ld hl, wPartyMon1
 	xor a

@@ -3595,7 +3595,7 @@ AddPartyMon:: ; 3927 (0:3927)
 	pop hl
 	ret
 
-; calculates all 5 stats of current mon and writes them to [de]
+; calculates all 5 stats of current mon and writes them to [hl]
 CalcStats:: ; 3936 (0:3936)
 	ld c, $0
 .statsLoop
@@ -3614,184 +3614,140 @@ CalcStats:: ; 3936 (0:3936)
 
 ; calculates stat c of current mon
 ; c: stat to calc (HP=1,Atk=2,Def=3,Spd=4,Spc=5)
-; b: consider stat exp?
-; hl: base ptr to stat exp values ([hl + 2*c - 1] and [hl + 2*c])
+; de: base struct of mon (no offset pointing to beginning of stats)
+; assumes wMonHeader is loaded
 CalcStat:: ; 394a (0:394a)
 	push hl
 	push de
 	push bc
-	ld a, b
-	ld d, a
-	push hl
-	ld hl, wMonHeader
-	ld b, $0
+	
+	ld hl, wMonHBaseStats
+	dec c
+	jr nz, .notHP
+; if HP
+; calculate: sqrt(4 * DV * HP) + 2HP + 100
+	ld a, [hl]
+	ld [H_MULTIPLICAND+2], a ; save for later
+	ld l, a
+	ld h, 0
+	add hl, hl ; double it
+	ld bc, 100
 	add hl, bc
-	ld a, [hl]          ; read base value of stat
-	ld e, a
-	pop hl
-	push hl
-	sla c
-	ld a, d
-	and a
-	jr z, .statExpDone  ; consider stat exp?
-	add hl, bc          ; skip to corresponding stat exp value
-.statExpLoop            ; calculates ceil(Sqrt(stat exp)) in b
-	xor a
-	ld [H_MULTIPLICAND], a
-	ld [H_MULTIPLICAND+1], a
-	inc b               ; increment current stat exp bonus
-	ld a, b
-	cp $ff
-	jr z, .statExpDone
-	ld [H_MULTIPLICAND+2], a
-	ld [H_MULTIPLIER], a
-	call Multiply
-	ld a, [hld]
-	ld d, a
-	ld a, [$ff98]
-	sub d
+; 2HP + 100
+; now get HP DV
+	push bc
+	ld hl, (wPartyMon1DVs - wPartyMon1)
+	add hl, de
 	ld a, [hli]
-	ld d, a
-	ld a, [$ff97]
-	sbc d               ; test if (current stat exp bonus)^2 < stat exp
-	jr c, .statExpLoop
-.statExpDone
-	srl c
-	pop hl
-	push bc
-	ld bc, wPartyMon1DVs - (wPartyMon1HPExp - 1) ; also wEnemyMonDVs - wEnemyMonHP
-	add hl, bc
-	pop bc
-	ld a, c
-	cp $2
-	jr z, .getAttackIV
-	cp $3
-	jr z, .getDefenseIV
-	cp $4
-	jr z, .getSpeedIV
-	cp $5
-	jr z, .getSpecialIV
-.getHpIV
-	push bc
-	ld a, [hl]  ; Atk IV
-	swap a
-	and $1
-	sla a
-	sla a
-	sla a
 	ld b, a
-	ld a, [hli] ; Def IV
-	and $1
-	sla a
-	sla a
-	add b
-	ld b, a
-	ld a, [hl] ; Spd IV
-	swap a
-	and $1
-	sla a
-	add b
-	ld b, a
-	ld a, [hl] ; Spc IV
-	and $1
-	add b      ; HP IV: LSB of the other 4 IVs
-	pop bc
-	jr .calcStatFromIV
-.getAttackIV
-	ld a, [hl]
-	swap a
-	and $f
-	jr .calcStatFromIV
-.getDefenseIV
-	ld a, [hl]
-	and $f
-	jr .calcStatFromIV
-.getSpeedIV
-	inc hl
-	ld a, [hl]
-	swap a
-	and $f
-	jr .calcStatFromIV
-.getSpecialIV
-	inc hl
-	ld a, [hl]
-	and $f
-.calcStatFromIV
-	ld d, $0
-	add e
-	ld e, a
-	jr nc, .noCarry
-	inc d                     ; de = Base + IV
-.noCarry
-	sla e
-	rl d                      ; de = (Base + IV) * 2
-	srl b
-	srl b                     ; b = ceil(Sqrt(stat exp)) / 4
-	ld a, b
-	add e
-	jr nc, .noCarry2
-	inc d                     ; da = (Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4
-.noCarry2
-	ld [H_MULTIPLICAND+2], a
-	ld a, d
-	ld [H_MULTIPLICAND+1], a
+	ld c, [hl] ; bc = dvs
 	xor a
-	ld [H_MULTIPLICAND], a
-	ld a, [wCurEnemyLVL]
-	ld [H_MULTIPLIER], a
-	call Multiply            ; ((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level
-	ld a, [H_MULTIPLICAND]
-	ld [H_DIVIDEND], a
-	ld a, [H_MULTIPLICAND+1]
-	ld [H_DIVIDEND+1], a
-	ld a, [H_MULTIPLICAND+2]
-	ld [H_DIVIDEND+2], a
-	ld a, $64
-	ld [H_DIVISOR], a
-	ld a, $3
-	ld b, a
-	call Divide             ; (((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level) / 100
+; take all bits
+	bit 4, b
+	jr z, .atkZero
+	set 3, a
+.atkZero
+	bit 0, b
+	jr z, .defZero
+	set 2, a
+.defZero
+	bit 4, c
+	jr z, .spdZero
+	set 1, a
+.spdZero
+	srl c ; shift bit 0 into carry
+	adc $0 ; add to result
+	jr z, .hpDVZero
+	ld b, a ; save a
+	ld a, [H_MULTIPLICAND+2] ; restore base HP from earlier
+	ld c, a
+	ld a, b ; restore a
+	ld b, $1 ; multiply by 4
+	call CalcStat_GetDVModificationValue
+	jr .writeStat
+.notHP
+	ld b, $0
+	add hl, bc ; get base stat
+	ld b, [hl] ; save base stat for later
+; now get DV
+; first, get the address of the mon's dvs
+	ld hl, (wPartyMon1DVs - wPartyMon1) - 1
+	add hl, de
 	ld a, c
-	cp $1
-	ld a, 5 ; + 5 for non-HP stat
-	jr nz, .notHPStat
-	ld a, [wCurEnemyLVL]
-	ld b, a
-	ld a, [H_MULTIPLICAND+2]
-	add b
-	ld [H_MULTIPLICAND+2], a
-	jr nc, .noCarry3
-	ld a, [H_MULTIPLICAND+1]
-	inc a
-	ld [H_MULTIPLICAND+1], a ; HP: (((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level) / 100 + Level
-.noCarry3
-	ld a, 10 ; +10 for HP stat
-.notHPStat
-	ld b, a
-	ld a, [H_MULTIPLICAND+2]
-	add b
-	ld [H_MULTIPLICAND+2], a
-	jr nc, .noCarry4
-	ld a, [H_MULTIPLICAND+1]
-	inc a                    ; non-HP: (((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level) / 100 + 5
-	ld [H_MULTIPLICAND+1], a ; HP: (((Base + IV) * 2 + ceil(Sqrt(stat exp)) / 4) * Level) / 100 + Level + 10
-.noCarry4
-	ld a, [H_MULTIPLICAND+1] ; check for overflow (>999)
-	cp 999 / $100 + 1
-	jr nc, .overflow
-	cp 999 / $100
-	jr c, .noOverflow
-	ld a, [H_MULTIPLICAND+2]
-	cp 999 % $100 + 1
-	jr c, .noOverflow
-.overflow
-	ld a, 999 / $100               ; overflow: cap at 999
+	cp $4 ; error checking
+	jr c, .getNonHPDVloop
+	ld c, $1
+.getNonHPDVloop
+	inc hl
+	dec c
+	jr nz, .notAtkOrSpd
+	ld a, [hl]
+	and $f0
+	swap a
+	jr .gotDV
+.notAtkOrSpd
+	dec c
+	jr nz, .getNonHPDVloop
+	ld a, [hl]
+	and $f
+.gotDV
+	ld c, b ; input for upcoming function
+	ld b, $0 ; multiply by 2
+	push bc ; bc as args doubles as partial output value
+	call CalcStat_GetDVModificationValue
+.writeStat
+	pop bc
+	add c
+	ld c, a
+	jr nc, .noCarry
+	inc b
+.noCarry
+	ld a, b
 	ld [H_MULTIPLICAND+1], a
-	ld a, 999 % $100
+	ld a, c
 	ld [H_MULTIPLICAND+2], a
-.noOverflow
 	pop bc
 	pop de
+	pop hl
+	ret
+
+CalcStat_GetDVModificationValue:
+; calculate floor(sqrt(m * stat * dv))
+; INPUT:
+; b: if zero, m = 2. Else, m = 4
+; c: stat
+; a: dv
+; returns result in a
+	and a
+	ret z
+	
+	add a
+	swap b ; get flags
+	jr z, .timesTwo
+	add a
+.timesTwo
+; m * dv
+	ld [H_MULTIPLIER], a
+	ld a, c
+	ld [H_MULTIPLICAND+2], a
+	xor a
+	ld [H_MULTIPLICAND], a
+	ld [H_MULTIPLICAND+1], a
+	call Multiply
+; calc floor(sqrt(m * stat * dv))
+	push hl
+	ld a, [H_PRODUCT+2]
+	ld h, a
+	ld a, [H_PRODUCT+3]
+	ld l, a
+	ld a, -1
+	ld bc, $1
+.sqrtHLLoop
+	inc a
+	dec c
+	dec bc
+	add hl, bc
+	jr c, .sqrtHLLoop
 	pop hl
 	ret
 
