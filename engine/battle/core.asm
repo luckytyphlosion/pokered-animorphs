@@ -6214,11 +6214,6 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	ld [wd0b5], a
 	call GetMonHeader
 	ld a, [wEnemyBattleStatus3]
-	bit Transformed, a ; is enemy mon transformed?
-	ld hl, wTransformedEnemyMonOriginalDVs ; original DVs before transforming
-	ld a, [hli]
-	ld b, [hl]
-	jr nz, .storeDVs
 	xor a
 	ld hl, wEnemyMonDVs
 	ld [hli], a
@@ -8774,4 +8769,4 @@ PlayBattleAnimationGotID: ; 3fbbc (f:7bbc)
 	pop hl
 	ret
 
-INCLUDE "engine/gain_morph.asm"
+INCLUDE "engine/menu/gain_morph.asm"

@@ -3633,7 +3633,7 @@ CalcStat:: ; 394a (0:394a)
 .spdZero
 	srl c ; shift bit 0 into carry
 	adc $0 ; add to result
-	jr z, .hpDVZero
+	jr z, .writeStat
 	ld b, a ; save a
 	ld a, [H_MULTIPLICAND+2] ; restore base HP from earlier
 	ld c, a
