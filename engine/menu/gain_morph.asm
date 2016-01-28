@@ -5,14 +5,39 @@ DisplayGainMorphMenu:
 	call UpdateSprites
 	callba LoadMonPartySpriteGfxWithLCDDisabled ; load pokemon icon graphics
 
-	call ErasePartyMenuCursors
+	callab ErasePartyMenuCursors
 	callab HealEnemyParty
+	
+	ld hl, wEnemyMonNicks
+	ld de, wEnemyPartyMons
+	push de
+.writeNicknameLoop
+	ld a, [de]
+	cp $ff
+	jr z, .writeNicknameLoopDone
+	inc de
+	ld [wd11e], a
+	push de
+	call GetMonName
+	ld de, wcd6d
+	ld c, NAME_LENGTH
+.copyIndivNickLoop
+	ld a, [de]
+	inc de
+	ld [hli], a
+	dec c
+	jr nz, .copyIndivNickLoop
+	pop de
+	jr .writeNicknameLoop
+.writeNicknameLoopDone
+	pop de
 	coord hl, 3, 0
-	ld de,wEnemyPartyMons
 	xor a
 	ld c,a
 	ld [hPartyMonIndex],a
 	ld [wWhichPartyMenuHPBar],a
+	inc a
+	ld [wMonDataLocation], a
 .loop
 	ld a,[de]
 	cp a,$FF ; reached the terminator?
@@ -22,7 +47,7 @@ DisplayGainMorphMenu:
 	push hl
 	ld a,c
 	push hl
-	ld hl,wPartyMonNicks
+	ld hl,wEnemyMonNicks
 	call GetPartyMonName
 	pop hl
 	call PlaceString ; print the pokemon's name
@@ -81,8 +106,17 @@ DisplayGainMorphMenu:
 	inc c
 	jp .loop
 .printMessage
-	ld hl,wd730
-	set 6,[hl] ; turn off letter printing delay
+	ld a, $1
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ld hl, wd730
+	set 6, [hl] ; turn off letter printing delay
+	push hl
+	call .handleMorphMenu
+	pop hl
+	res 6, [hl]
+	ret
+
+.handleMorphMenu
 	ld hl, ChooseMorphText
 	call PrintText
 	xor a
@@ -109,17 +143,22 @@ DisplayGainMorphMenu:
 	ld a,$40
 	ld [wPartyMenuAnimMonEnabled],a
 	call HandleMenuInput_
+	xor a
+	ld [wPartyMenuAnimMonEnabled], a
 	ld a, [wCurrentMenuItem]
 	ld [wWhichPokemon], a
-	ld bc, wEnemyMon2 - wEnemyMon1
+	
 	ld hl, wEnemyMon1
+	ld bc, wEnemyMon2 - wEnemyMon1
 	call AddNTimes
 	ld a, [hl]
 	ld [wcf91], a
+
 	ld bc, wEnemyMon1Level - wEnemyMon1
-	call AddNTimes
+	add hl, bc
 	ld a, [hl]
 	ld [wCurEnemyLVL], a
+	call LoadEnemyMonFromParty
 	ld a, [wPartyCount]
 	cp PARTY_LENGTH
 	jr c, .addToParty
@@ -127,10 +166,11 @@ DisplayGainMorphMenu:
 	cp MONS_PER_BOX
 	jr nc, .boxFull
 ; box not full
-	call LoadEnemyMonFromParty
 	jpab _GivePokemon_Common
 .addToParty
-	call AddEnemyMonToPlayerParty
+	xor a
+	ld [wMonDataLocation], a
+	call AddPartyMon
 	ld hl, GotMorphText
 	call PrintText
 	scf

@@ -1,23 +1,23 @@
 # Build Red/Blue. Yellow is WIP.
-roms := pokered.gbc pokeblue.gbc
+roms := pokered-animorphs.gbc pokeblue-animorphs.gbc
 
 
 .PHONY: all clean red blue yellow compare
 
 all:    $(roms)
-red:    pokered.gbc
-blue:   pokeblue.gbc
+red:    pokered-animorphs.gbc
+blue:   pokeblue-animorphs.gbc
 yellow: pokeyellow.gbc
 
-versions := red blue yellow
+versions := red-animorphs blue-animorphs yellow
 
 
 # Header options for rgbfix.
 dmg_opt = -cjsv -k 01 -l 0x33 -m 0x13 -p 0 -r 03
 cgb_opt = -cjsv -k 01 -l 0x33 -m 0x1b -p 0 -r 03
 
-red_opt    = $(dmg_opt) -t "POKEMON RED"
-blue_opt   = $(dmg_opt) -t "POKEMON BLUE"
+red-animorphs_opt    = $(dmg_opt) -t "POKEMON RED"
+blue-animorphs_opt   = $(dmg_opt) -t "POKEMON BLUE"
 yellow_opt = $(cgb_opt) -t "POKEMON YELLOW"
 
 

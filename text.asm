@@ -1115,6 +1115,7 @@ _EnemyMonFaintedText:: ; 0x896c7
 _ChooseMorphText::
 	text "Which morph"
 	line "to take?"
+	done
 	
 _GotMorphText::
 	text "Got morph!"

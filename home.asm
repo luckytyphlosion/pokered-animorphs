@@ -541,8 +541,32 @@ PrintStatusConditionNotFainted: ; 14f6
 ; hl = destination address
 ; [wLoadedMonLevel] = level
 PrintLevel:: ; 150b (0:150b)
-PrintLevelCommon::
-	ret
+	ld a,$6e ; ":L" tile ID
+	ld [hli],a
+	ld c,2 ; number of digits
+	ld a,[wLoadedMonLevel] ; level
+	cp a,100
+	jr c,PrintLevelCommon
+; if level at least 100, write over the ":L" tile
+	dec hl
+	inc c ; increment number of digits to 3
+	jr PrintLevelCommon
+
+; prints the level without leaving off ":L" regardless of level
+; INPUT:
+; hl = destination address
+; [wLoadedMonLevel] = level
+PrintLevelFull:: ; 151b (0:151b)
+	ld a,$6e ; ":L" tile ID
+	ld [hli],a
+	ld c,3 ; number of digits
+	ld a,[wLoadedMonLevel] ; level
+
+PrintLevelCommon:: ; 1523 (0:1523)
+	ld [wd11e],a
+	ld de,wd11e
+	ld b,LEFT_ALIGN | 1 ; 1 byte
+	jp PrintNumber
 
 ; copies the base stat data of a pokemon to wMonHeader
 ; INPUT:
@@ -3578,11 +3602,9 @@ CalcStats:: ; 3936 (0:3936)
 	inc c
 	call CalcStat
 	ld a, [H_MULTIPLICAND+1]
-	ld [de], a
-	inc de
+	ld [hli], a
 	ld a, [H_MULTIPLICAND+2]
-	ld [de], a
-	inc de
+	ld [hli], a
 	ld a, c
 	cp NUM_STATS
 	jr nz, .statsLoop
@@ -3611,7 +3633,7 @@ CalcStat:: ; 394a (0:394a)
 	add hl, bc
 ; 2HP + 100
 ; now get HP DV
-	push bc
+	push hl
 	ld hl, (wPartyMon1DVs - wPartyMon1)
 	add hl, de
 	ld a, [hli]
@@ -3639,8 +3661,7 @@ CalcStat:: ; 394a (0:394a)
 	ld c, a
 	ld a, b ; restore a
 	ld b, $1 ; multiply by 4
-	call CalcStat_GetDVModificationValue
-	jr .writeStat
+	jr .calcDVModificationValue
 .notHP
 	ld b, $0
 	add hl, bc ; get base stat
@@ -3670,6 +3691,7 @@ CalcStat:: ; 394a (0:394a)
 	ld c, b ; input for upcoming function
 	ld b, $0 ; multiply by 2
 	push bc ; bc as args doubles as partial output value
+.calcDVModificationValue
 	call CalcStat_GetDVModificationValue
 .writeStat
 	pop bc

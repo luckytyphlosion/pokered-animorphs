@@ -860,7 +860,7 @@ FaintEnemyPokemon: ; 0x3c567
 	coord de, 12, 6
 	call SlideDownFaintedMonPic
 	coord hl, 0, 0
-	lb bc, 4, 11
+	lb bc, 5, 11
 	call ClearScreenArea
 	ld a, [wIsInBattle]
 	dec a
@@ -1491,7 +1491,7 @@ EnemySendOutFirstMon: ; 3c92a (f:492a)
 .next4
 	call ClearSprites
 	coord hl, 0, 0
-	lb bc, 4, 11
+	lb bc, 5, 11
 	call ClearScreenArea
 	ld b, SET_PAL_BATTLE
 	call RunPaletteCommand
@@ -1916,9 +1916,9 @@ DrawPlayerHUDAndHPBar: ; 3cd60 (f:4d60)
 	ld de, wLoadedMonStatus
 	call PrintStatusConditionNotFainted
 	pop hl
-	jr nz, .asm_3cdae
+	jr nz, .skipPrintingLevel
 	call PrintLevel
-.asm_3cdae
+.skipPrintingLevel
 	ld a, [wLoadedMonSpecies]
 	ld [wcf91], a
 	coord hl, 10, 9
@@ -1954,13 +1954,21 @@ DrawEnemyHUDAndHPBar: ; 3cdec (f:4dec)
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED], a
 	coord hl, 0, 0
-	lb bc, 4, 12
+	lb bc, 5, 12
 	call ClearScreenArea
 	callab PlaceEnemyHUDTiles
 	ld de, wEnemyMonNick
 	coord hl, 1, 0
 	call CenterMonName
 	call PlaceString
+	ld hl, wEnemyMonSpecies
+	ld de, wLoadedMon
+	ld bc, $c
+	call CopyData
+	ld hl, wEnemyMonLevel
+	ld de, wLoadedMonLevel
+	ld bc, $b
+	call CopyData
 	coord hl, 4, 1
 	push hl
 	inc hl
@@ -1968,74 +1976,12 @@ DrawEnemyHUDAndHPBar: ; 3cdec (f:4dec)
 	call PrintStatusConditionNotFainted
 	pop hl
 	jr nz, .skipPrintLevel ; if the mon has a status condition, skip printing the level
-	ld a, [wEnemyMonLevel]
-	ld [wLoadedMonLevel], a
 	call PrintLevel
 .skipPrintLevel
-	ld hl, wEnemyMonHP
-	ld a, [hli]
-	ld [H_MULTIPLICAND + 1], a
-	ld a, [hld]
-	ld [H_MULTIPLICAND + 2], a
-	or [hl] ; is current HP zero?
-	jr nz, .hpNonzero
-; current HP is 0
-; set variables for DrawHPBar
-	ld c, a
-	ld e, a
-	ld d, $6
-	jp .drawHPBar
-.hpNonzero
-	xor a
-	ld [H_MULTIPLICAND], a
-	ld a, 48
-	ld [H_MULTIPLIER], a
-	call Multiply ; multiply current HP by 48
-	ld hl, wEnemyMonMaxHP
-	ld a, [hli]
-	ld b, a
-	ld a, [hl]
-	ld [H_DIVISOR], a
-	ld a, b
-	and a ; is max HP > 255?
-	jr z, .doDivide
-; if max HP > 255, scale both (current HP * 48) and max HP by dividing by 4 so that max HP fits in one byte
-; (it needs to be one byte so it can be used as the divisor for the Divide function)
-	ld a, [H_DIVISOR]
-	srl b
-	rr a
-	srl b
-	rr a
-	ld [H_DIVISOR], a
-	ld a, [H_PRODUCT + 2]
-	ld b, a
-	srl b
-	ld a, [H_PRODUCT + 3]
-	rr a
-	srl b
-	rr a
-	ld [H_PRODUCT + 3], a
-	ld a, b
-	ld [H_PRODUCT + 2], a
-.doDivide
-	ld a, [H_PRODUCT + 2]
-	ld [H_DIVIDEND], a
-	ld a, [H_PRODUCT + 3]
-	ld [H_DIVIDEND + 1], a
-	ld a, $2
-	ld b, a
-	call Divide ; divide (current HP * 48) by max HP
-	ld a, [H_QUOTIENT + 3]
-; set variables for DrawHPBar
-	ld e, a
-	ld a, $6
-	ld d, a
-	ld c, a
-.drawHPBar
-	xor a
-	ld [wHPBarType], a
+	ld a, [wLoadedMonSpecies]
+	ld [wcf91], a
 	coord hl, 2, 2
-	call DrawHPBar
+	predef DrawHP2
 	ld a, $1
 	ld [H_AUTOBGTRANSFERENABLED], a
 	ld hl, wEnemyHPBarColor
@@ -3290,8 +3236,7 @@ playPlayerMoveAnimation
 	call nz,Bankswitch
 	jr MirrorMoveCheck
 playerCheckIfFlyOrChargeEffect
-	ld c,30
-	call DelayFrames
+	call DelayFrame
 	ld a,[wPlayerMoveEffect]
 	cp a,FLY_EFFECT
 	jr z,.playAnim
@@ -4097,8 +4042,7 @@ PrintCriticalOHKOText: ; 3dc5c (f:5c5c)
 	xor a
 	ld [wCriticalHitOrOHKO], a
 .done
-	ld c, 20
-	jp DelayFrames
+	jp DelayFrame
 
 CriticalOHKOTextPointers: ; 3dc7a (f:5c7a)
 	dw CriticalHitText
@@ -5520,8 +5464,8 @@ MoveHitTest: ; 3e56b (f:656b)
 
 ; swap hl and de
 	push hl
-	ld d, h
-	ld e, l
+	ld h, d
+	ld l, e
 	pop de
 	
 	ld a, [hli]
@@ -5537,6 +5481,7 @@ MoveHitTest: ; 3e56b (f:656b)
 ; add it to defending speed
 ; hl = modified speed
 ; de = modified accuracy
+	add hl, bc
 	ld a, d
 	cp h ; check if d > h
 	jr c, .moveMissed
@@ -5802,8 +5747,7 @@ playEnemyMoveAnimation: ; 3e7a4 (f:67a4)
 
 EnemyCheckIfFlyOrChargeEffect: ; 3e7d1 (f:67d1)
 	call SwapPlayerAndEnemyLevels
-	ld c, 30
-	call DelayFrames
+	call DelayFrame
 	ld a, [wEnemyMoveEffect]
 	cp FLY_EFFECT
 	jr z, .playAnim
@@ -6213,19 +6157,17 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	ld [wEnemyMonSpecies], a
 	ld [wd0b5], a
 	call GetMonHeader
-	ld a, [wEnemyBattleStatus3]
 	xor a
 	ld hl, wEnemyMonDVs
 	ld [hli], a
-	ld [hl], a
-	ld de, wEnemyMonLevel
+	ld [hli], a
 	ld a, [wCurEnemyLVL]
-	ld [de], a
-	inc de
-	ld hl, wEnemyMonHP
-	push hl
+	ld [hli], a
+	push de
+	ld de, wLoadedMon
 	call CalcStats
-	pop hl
+	pop de
+	ld hl, wEnemyMonHP
 	ld a, [wIsInBattle]
 	cp $2 ; is it a trainer battle?
 	jr z, .copyHPAndStatusFromPartyData
@@ -7012,7 +6954,7 @@ _InitBattleCommon: ; 3efeb (f:6feb)
 	lb bc, 5, 10
 	call ClearScreenArea
 	coord hl, 1, 0
-	lb bc, 4, 10
+	lb bc, 5, 10
 	call ClearScreenArea
 	call ClearSprites
 	ld a, [wIsInBattle]

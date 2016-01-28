@@ -124,8 +124,9 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	ld [hli], a
 	ld a, [H_MULTIPLICAND+2]
 	ld [hli], a
-	xor a
+	ld a, [wCurEnemyLVL]
 	ld [hli], a         ; box level
+	xor a
 	ld [hli], a         ; status ailments
 	jr .copyMonTypesAndMoves
 .copyEnemyMonData
@@ -158,6 +159,39 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	ld [hli], a
 	
 	push hl ; save address of moves for AddPartyMon_WriteMovePPs
+	
+	ld a, [wMonDataLocation]
+	and $f ; are we adding to the player party?
+	jr nz, .writeFreshMoves
+	
+	ld a, [wIsInBattle]
+	cp $2 ; trainer battle?
+	jr nz, .writeFreshMoves
+	
+	push hl
+	push bc
+	ld a, [wWhichPokemon]
+	ld hl, wEnemyMon1Moves
+	ld bc, wEnemyMon2 - wEnemyMon1
+	call AddNTimes
+	ld d, h
+	ld e, l
+	pop bc
+	pop hl
+	
+	ld a, [de]
+	ld [hli], a
+	inc de
+	ld a, [de]
+	ld [hli], a
+	inc de
+	ld a, [de]
+	ld [hli], a
+	inc de
+	ld a, [de]
+	ld [hl], a
+	jr .writeTrainerID
+.writeFreshMoves
 	push hl ; save address of moves for WriteMonMoves
 	
 	
@@ -179,7 +213,7 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	pop de
 	
 	predef WriteMonMoves
-	
+.writeTrainerID
 	ld hl, wPartyMon1OTID - wPartyMon1
 	add hl, bc ; trainer ID
 	
@@ -210,17 +244,23 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	dec d
 	jr nz, .writeEVsLoop
 	
+	inc hl
+	inc hl ; skip past dvs
+	
 	ld d, h
 	ld e, l
 	pop hl ; restore address of moves from way back
+	
+	push bc
 	call AddPartyMon_WriteMovePP
+	pop bc
+
 	ld a, [wCurEnemyLVL]
-	ld [hli], a
+	ld [de], a
+	
 	ld a, [wIsInBattle]
-	cp $2
+	dec a
 	jr nz, .calcFreshStats
-	ld d, h ; output to de
-	ld e, l
 	ld hl, wEnemyMonMaxHP
 	ld bc, (wEnemyMonSpecial + 1) - wEnemyMonMaxHP
 	call CopyData          ; copy stats of cur enemy mon
@@ -228,6 +268,8 @@ _AddPartyMon: ; f2e5 (3:72e5)
 .calcFreshStats
 	ld hl, wPartyMon1MaxHP - wPartyMon1
 	add hl, bc
+	ld d, b
+	ld e, c
 	call CalcStats         ; calculate fresh set of stats
 .done
 	scf

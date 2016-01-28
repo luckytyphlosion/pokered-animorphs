@@ -38,7 +38,7 @@ SetupEnemyPartyPokeballs: ; 3a887 (e:6887)
 	ld hl, wBaseCoordX
 	ld a, $48
 	ld [hli], a
-	ld [hl], $20
+	ld [hl], $28
 	ld a, -8
 	ld [wHUDPokeballGfxOffsetX], a
 	ld hl, wOAMBuffer + PARTY_LENGTH * 4
@@ -136,7 +136,7 @@ PlaceEnemyHUDTiles: ; 3a919 (e:6919)
 	ld de, wHUDGraphicsTiles
 	ld bc, $3
 	call CopyData
-	coord hl, 1, 2
+	coord hl, 1, 3
 	ld de, $1
 	jr PlaceHUDTiles
 

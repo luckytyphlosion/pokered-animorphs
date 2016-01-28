@@ -403,7 +403,7 @@ MoveAnimation: ; 78d5e (1e:4d5e)
 	call ShareMoveAnimations
 	call PlayAnimation
 .AnimationFinished
-	call WaitForSoundToFinish
+	;call WaitForSoundToFinish
 	xor a
 	ld [wSubAnimSubEntryAddr],a
 	ld [wUnusedD09B],a
