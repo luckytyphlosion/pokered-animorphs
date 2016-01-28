@@ -399,15 +399,9 @@ MoveAnimation: ; 78d5e (1e:4d5e)
 	; check if battle animations are disabled in the options
 	ld a,[wOptions]
 	bit 7,a
-	jr nz,.AnimationsDisabled
+	jr nz,.AnimationFinished
 	call ShareMoveAnimations
 	call PlayAnimation
-	jr .next4
-.AnimationsDisabled
-	ld c,30
-	call DelayFrames
-.next4
-	call PlayApplyingAttackAnimation ; shake the screen or flash the pic in and out (to show damage)
 .AnimationFinished
 	call WaitForSoundToFinish
 	xor a

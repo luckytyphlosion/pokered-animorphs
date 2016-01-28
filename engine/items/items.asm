@@ -34,10 +34,10 @@ UseItem_: ; d5c7 (3:55c7)
 	jp [hl]
 
 ItemUsePtrTable: ; d5e1 (3:55e1)
-	dw ItemUseBall       ; MASTER_BALL
-	dw ItemUseBall       ; ULTRA_BALL
-	dw ItemUseBall       ; GREAT_BALL
-	dw ItemUseBall       ; POKE_BALL
+	dw UnusableItem      ; MASTER_BALL
+	dw UnusableItem      ; ULTRA_BALL
+	dw UnusableItem      ; GREAT_BALL
+	dw UnusableItem      ; POKE_BALL
 	dw ItemUseTownMap    ; TOWN_MAP
 	dw ItemUseBicycle    ; BICYCLE
 	dw ItemUseSurfboard  ; out-of-battle Surf effect

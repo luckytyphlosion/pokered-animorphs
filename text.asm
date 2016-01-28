@@ -1112,6 +1112,14 @@ _EnemyMonFaintedText:: ; 0x896c7
 	line "fainted!"
 	prompt
 
+_ChooseMorphText::
+	text "Which morph"
+	line "to take?"
+	
+_GotMorphText::
+	text "Got morph!"
+	done
+
 _MoneyForWinningText:: ; 896dd (22:56dd)
 	text $52, " got ¥@"
 	TX_BCD wAmountMoneyWon, $c3

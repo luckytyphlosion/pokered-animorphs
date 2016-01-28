@@ -1024,16 +1024,8 @@ TrainerBattleVictory: ; 3c696 (f:4696)
 	cp LINK_STATE_BATTLING
 	ret z
 	call ScrollTrainerPicAfterBattle
-	ld c, 40
-	call DelayFrames
 	call PrintEndBattleText
-; win money
-	ld hl, MoneyForWinningText
-	call PrintText
-	ld de, wPlayerMoney + 2
-	ld hl, wAmountMoneyWon + 2
-	ld c, $3
-	predef_jump AddBCDPredef
+	jp DisplayGainMorphMenu
 
 MoneyForWinningText: ; 3c6e4 (f:46e4)
 	TX_FAR _MoneyForWinningText
@@ -3234,10 +3226,8 @@ PlayerCanExecuteChargingMove: ; 3d6a9 (f:56a9)
 	res Invulnerable,[hl]
 PlayerCanExecuteMove: ; 3d6b0 (f:56b0)
 	call PrintMonName1Text
-	ld hl,DecrementPP
 	ld de,wPlayerSelectedMove ; pointer to the move just used
-	ld b,BANK(DecrementPP)
-	call Bankswitch
+	callab DecrementPP
 	ld a,[wPlayerMoveEffect] ; effect of the move just used
 	ld hl,ResidualEffects1
 	ld de,1
@@ -4332,7 +4322,7 @@ GetDamageVarsForPlayerAttack: ; 3ddcf (f:5dcf)
 	ld hl, wPlayerMovePower
 	ld a, [hli]
 	and a
-	ld d, a ; d = move power
+	ld d, a
 	ret z ; return if move power is zero
 	ld a, [hl] ; a = [wPlayerMoveType]
 	cp FIRE ; types >= FIRE are all special
@@ -4371,7 +4361,7 @@ GetDamageVarsForPlayerAttack: ; 3ddcf (f:5dcf)
 	ld hl, wEnemyMonSpecial
 	ld a, [hli]
 	ld b, a
-	ld c, [hl] ; bc = enemy special
+	ld c, [hl] ; de = enemy special
 	ld a, [wEnemyBattleStatus3]
 	bit HasLightScreenUp, a ; check for Light Screen
 	jr z, .specialAttackCritCheck
@@ -4405,33 +4395,7 @@ GetDamageVarsForPlayerAttack: ; 3ddcf (f:5dcf)
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = player's offensive stat
-	or b ; is either high byte nonzero?
-	jr z, .next ; if not, we don't need to scale
-; bc /= 4 (scale enemy's defensive stat)
-	srl b
-	rr c
-	srl b
-	rr c
-; defensive stat can actually end up as 0, leading to a division by 0 freeze during damage calculation
-; hl /= 4 (scale player's offensive stat)
-	srl h
-	rr l
-	srl h
-	rr l
-	ld a, l
-	or h ; is the player's offensive stat 0?
-	jr nz, .next
-	inc l ; if the player's offensive stat is 0, bump it up to 1
-.next
-	ld b, l ; b = player's offensive stat (possibly scaled)
-	        ; (c already contains enemy's defensive stat (possibly scaled))
-	ld a, [wBattleMonLevel]
-	ld e, a ; e = level
-	ld a, [wCriticalHitOrOHKO]
-	and a ; check for critical hit
-	jr z, .done
-	sla e ; double level if it was a critical hit
-.done
+
 	ld a, 1
 	and a
 	ret
@@ -4511,42 +4475,12 @@ GetDamageVarsForEnemyAttack: ; 3de75 (f:5e75)
 	call GetEnemyMonStat
 	ld hl, H_PRODUCT + 2
 	pop bc
-; if either the offensive or defensive stat is too large to store in a byte, scale both stats by dividing them by 4
-; this allows values with up to 10 bits (values up to 1023) to be handled
-; anything larger will wrap around
 .scaleStats
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = enemy's offensive stat
-	or b ; is either high byte nonzero?
-	jr z, .next ; if not, we don't need to scale
-; bc /= 4 (scale player's defensive stat)
-	srl b
-	rr c
-	srl b
-	rr c
-; defensive stat can actually end up as 0, leading to a division by 0 freeze during damage calculation
-; hl /= 4 (scale enemy's offensive stat)
-	srl h
-	rr l
-	srl h
-	rr l
-	ld a, l
-	or h ; is the enemy's offensive stat 0?
-	jr nz, .next
-	inc l ; if the enemy's offensive stat is 0, bump it up to 1
-.next
-	ld b, l ; b = enemy's offensive stat (possibly scaled)
-	        ; (c already contains player's defensive stat (possibly scaled))
-	ld a, [wEnemyMonLevel]
-	ld e, a
-	ld a, [wCriticalHitOrOHKO]
-	and a ; check for critical hit
-	jr z, .done
-	sla e ; double level if it was a critical hit
-.done
+	
 	ld a, $1
-	and a
 	and a
 	ret
 
@@ -4595,10 +4529,9 @@ GetEnemyMonStat: ; 3df1c (f:5f1c)
 
 CalculateDamage: ; 3df65 (f:5f65)
 ; input:
-;	b: attack
-;	c: opponent defense
-;	d: base power
-;	e: level
+; bc = defense
+; d = move power
+; hl = attack
 
 	ld a, [H_WHOSETURN] ; whose turn?
 	and a
@@ -4610,9 +4543,9 @@ CalculateDamage: ; 3df65 (f:5f65)
 ; EXPLODE_EFFECT halves defense.
 	cp a, EXPLODE_EFFECT
 	jr nz, .ok
-	srl c
+	call CalculateDamage_DivideBy2
 	jr nz, .ok
-	inc c ; ...with a minimum value of 1 (used as a divisor later on)
+	inc c ; ...with a minimum value of 1 (used for subtraction later on)
 .ok
 
 ; Multi-hit attacks may or may not have 0 bp.
@@ -4631,128 +4564,53 @@ CalculateDamage: ; 3df65 (f:5f65)
 	ret z
 .skipbp
 
-	xor a
-	ld hl, H_DIVIDEND
-	ldi [hl], a
-	ldi [hl], a
-	ld [hl], a
-
-; Multiply level by 2
-	ld a, e ; level
-	add a
-	jr nc, .nc
-	push af
-	ld a, 1
-	ld [hl], a
-	pop af
-.nc
-	inc hl
-	ldi [hl], a
-
-; Divide by 5
-	ld a, 5
-	ldd [hl], a
-	push bc
-	ld b, 4
-	call Divide
-	pop bc
-
-; Add 2
-	inc [hl]
-	inc [hl]
-
-	inc hl ; multiplier
-
-; Multiply by attack base power
-	ld [hl], d
-	call Multiply
-
-; Multiply by attack stat
-	ld [hl], b
-	call Multiply
-
-; Divide by defender's defense stat
-	ld [hl], c
-	ld b, 4
-	call Divide
-
-; Divide by 50
-	ld [hl], 50
-	ld b, 4
-	call Divide
-
+; add attack to move power
+	ld a, d
+	add l
+	ld l, a
+	jr nc, .noCarry
+	inc h
+.noCarry
+; subtract defense
+	ld a, l
+	sub c
+	ld c, a
+	ld a, h
+	sbc b
+	jr c, .noDamage
+; add eight
+	ld a, $8
+	add c
+	ld c, a
+	jr nc, .noCarry2
+	inc b
+.noCarry2
+; divide by 2 or 4, depending on critical hit
+	ld a, [wCriticalHitOrOHKO]
+	and a
+	jr nz, .divideBy2
+	call CalculateDamage_DivideBy2
+	jr z, .noDamage
+.divideBy2
+	call CalculateDamage_DivideBy2
+	jr nz, .moveDidDamage
+.noDamage
+	ld bc, $2
+.moveDidDamage
+; minimum damage is 2
 	ld hl, wDamage
-	ld b, [hl]
-	ld a, [H_QUOTIENT + 3]
-	add b
-	ld [H_QUOTIENT + 3], a
-	jr nc, .asm_3dfd0
-
-	ld a, [H_QUOTIENT + 2]
-	inc a
-	ld [H_QUOTIENT + 2], a
-	and a
-	jr z, .asm_3e004
-
-.asm_3dfd0
-	ld a, [H_QUOTIENT]
-	ld b, a
-	ld a, [H_QUOTIENT + 1]
-	or a
-	jr nz, .asm_3e004
-
-	ld a, [H_QUOTIENT + 2]
-	cp 998 / $100
-	jr c, .asm_3dfe8
-	cp 998 / $100 + 1
-	jr nc, .asm_3e004
-	ld a, [H_QUOTIENT + 3]
-	cp 998 % $100
-	jr nc, .asm_3e004
-
-.asm_3dfe8
-	inc hl
-	ld a, [H_QUOTIENT + 3]
-	ld b, [hl]
-	add b
-	ld [hld], a
-
-	ld a, [H_QUOTIENT + 2]
-	ld b, [hl]
-	adc b
-	ld [hl], a
-	jr c, .asm_3e004
-
-	ld a, [hl]
-	cp 998 / $100
-	jr c, .asm_3e00a
-	cp 998 / $100 + 1
-	jr nc, .asm_3e004
-	inc hl
-	ld a, [hld]
-	cp 998 % $100
-	jr c, .asm_3e00a
-
-.asm_3e004
-; cap at 997
-	ld a, 997 / $100
+	ld a, b
 	ld [hli], a
-	ld a, 997 % $100
-	ld [hld], a
-
-.asm_3e00a
-; add 2
-	inc hl
-	ld a, [hl]
-	add 2
-	ld [hld], a
-	jr nc, .done
-	inc [hl]
-
-.done
-; minimum damage is 1
+	ld [hl], c
 	ld a, 1
 	and a
+	ret
+
+CalculateDamage_DivideBy2:
+	srl b
+	rr c
+	ld a, b
+	or c
 	ret
 
 JumpToOHKOMoveEffect: ; 3e016 (f:6016)
@@ -5631,20 +5489,60 @@ MoveHitTest: ; 3e56b (f:656b)
 	ret nz ; if so, always hit regardless of accuracy/evasion
 .calcHitChance
 	call CalcHitChance ; scale the move accuracy according to attacker's accuracy and target's evasion
-	ld a,[wPlayerMoveAccuracy]
-	ld b,a
+	ld a, [wPlayerMoveAccuracy]
+	ld b, 0
+	ld c, a
+	ld hl, wPlayerMonUnmodifiedSpeed
+	ld de, wEnemyMonUnmodifiedSpeed
 	ld a,[H_WHOSETURN]
 	and a
 	jr z,.doAccuracyCheck
-	ld a,[wEnemyMoveAccuracy]
-	ld b,a
+	ld a, [wEnemyMoveAccuracy]
+	ld c, a
+	push hl
+	ld h, d
+	ld l, e
+	pop de
 .doAccuracyCheck
-; if the random number generated is greater than or equal to the scaled accuracy, the move misses
-; note that this means that even the highest accuracy is still just a 255/256 chance, not 100%
+; steal formula from animorphs
+; from stump's writeup:
+; "If the attacker's speed, plus an RNG byte, plus the attack's modifier to hit, plus 16 is greater than or equal to 1.5 times the defender's speed (rounded down), the attack succeeds."
+; so calculate unmodified speed + accuracy + 16 + RNG byte
+	ld a, [hli]
+	ld l, [hl]
+	ld h, a ; hl = attacking mon speed
+	add hl, bc ; speed + accuracy
 	call BattleRandom
-	cp b
-	jr nc,.moveMissed
-	ret
+	ld c, a
+	add hl, bc ; speed + accuracy + RNG
+	ld c, 16
+	add hl, bc ; speed + accuracy + RNG + 16
+
+; swap hl and de
+	push hl
+	ld d, h
+	ld e, l
+	pop de
+	
+	ld a, [hli]
+	ld l, [hl]
+	ld h, a ; hl = defending mon speed
+	
+; multiply defending speed by 1.5
+	ld b, h
+	ld c, l
+; divide bc by 2
+	srl b
+	rr c
+; add it to defending speed
+; hl = modified speed
+; de = modified accuracy
+	ld a, d
+	cp h ; check if d > h
+	jr c, .moveMissed
+	ld a, e
+	cp l ; check if e > l
+	ret nc ; return if we hit
 .moveMissed
 	xor a
 	ld hl,wDamage ; zero the damage
@@ -5738,6 +5636,7 @@ CalcHitChance: ; 3e624 (f:6624)
 
 ; multiplies damage by a random percentage from ~85% to 100%
 RandomizeDamage: ; 3e687 (f:6687)
+	ret ; nope
 	ld hl, wDamage
 	ld a, [hli]
 	and a
@@ -8874,3 +8773,5 @@ PlayBattleAnimationGotID: ; 3fbbc (f:7bbc)
 	pop de
 	pop hl
 	ret
+
+INCLUDE "engine/gain_morph.asm"

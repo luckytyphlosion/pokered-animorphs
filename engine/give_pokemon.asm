@@ -6,16 +6,17 @@ _GivePokemon: ; 4fda5 (13:7da5)
 	ld [wAddedToParty], a
 	ld a, [wPartyCount]
 	cp PARTY_LENGTH
-	jr c, .addToParty
+	jr c, _GivePokemon_AddToParty
 	ld a, [wNumInBox]
 	cp MONS_PER_BOX
-	jr nc, .boxFull
+	jr nc, _GivePokemon_BoxFull
 ; add to box
 	xor a
 	ld [wEnemyBattleStatus3], a
 	ld a, [wcf91]
 	ld [wEnemyMonSpecies2], a
 	callab LoadEnemyMonData
+_GivePokemon_Common:
 	call SetPokedexOwnedFlag
 	callab SendNewMonToBox
 	ld hl, wcf4b
@@ -37,12 +38,12 @@ _GivePokemon: ; 4fda5 (13:7da5)
 	call PrintText
 	scf
 	ret
-.boxFull
+_GivePokemon_BoxFull:
 	ld hl, BoxIsFullText
 	call PrintText
 	and a
 	ret
-.addToParty
+_GivePokemon_AddToParty:
 	call SetPokedexOwnedFlag
 	call AddPartyMon
 	ld a, 1
@@ -50,7 +51,7 @@ _GivePokemon: ; 4fda5 (13:7da5)
 	ld [wAddedToParty], a
 	scf
 	ret
-
+	
 SetPokedexOwnedFlag: ; 4fe11 (13:7e11)
 	ld a, [wcf91]
 	push af

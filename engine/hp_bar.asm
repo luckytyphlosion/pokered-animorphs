@@ -78,8 +78,8 @@ UpdateHPBar2:
 	ld e, a
 	ld a, [wHPBarNewHP+1]
 	ld d, a
-	ld a, [wOptions3]
-	bit 7, a
+	ld a, [wIsInBattle]
+	and a
 	jp nz, .updateHPBar_NoAnimation
 .animateHPBarLoop
 	push de

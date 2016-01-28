@@ -501,7 +501,7 @@ OaksLabScript14: ; 1ce6d (7:4e6d)
 .asm_1cea8
 	cp $4
 	ret nz
-	xor a ; [MBC1SRamEnable], a, SPRITE_FACING_DOWN
+	xor a ; ld a, SPRITE_FACING_DOWN
 	ld [wSpriteStateData1 + 9], a
 .done
 	ret

@@ -541,32 +541,8 @@ PrintStatusConditionNotFainted: ; 14f6
 ; hl = destination address
 ; [wLoadedMonLevel] = level
 PrintLevel:: ; 150b (0:150b)
-	ld a,$6e ; ":L" tile ID
-	ld [hli],a
-	ld c,2 ; number of digits
-	ld a,[wLoadedMonLevel] ; level
-	cp a,100
-	jr c,PrintLevelCommon
-; if level at least 100, write over the ":L" tile
-	dec hl
-	inc c ; increment number of digits to 3
-	jr PrintLevelCommon
-
-; prints the level without leaving off ":L" regardless of level
-; INPUT:
-; hl = destination address
-; [wLoadedMonLevel] = level
-PrintLevelFull:: ; 151b (0:151b)
-	ld a,$6e ; ":L" tile ID
-	ld [hli],a
-	ld c,3 ; number of digits
-	ld a,[wLoadedMonLevel] ; level
-
-PrintLevelCommon:: ; 1523 (0:1523)
-	ld [wd11e],a
-	ld de,wd11e
-	ld b,LEFT_ALIGN | 1 ; 1 byte
-	jp PrintNumber
+PrintLevelCommon::
+	ret
 
 ; copies the base stat data of a pokemon to wMonHeader
 ; INPUT:

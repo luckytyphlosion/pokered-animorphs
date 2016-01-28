@@ -7,6 +7,7 @@
 ; 03: learn TM/HM menu
 ; 04: swap pokemon positions menu
 ; 05: use evolution stone on pokemon menu
+; 06: morph menu
 ; otherwise, it is a message ID
 ; f0: poison healed
 ; f1: burn healed
@@ -23,7 +24,7 @@ DrawPartyMenu_: ; 12cd2 (4:6cd2)
 	call ClearScreen
 	call UpdateSprites
 	callba LoadMonPartySpriteGfxWithLCDDisabled ; load pokemon icon graphics
-
+	
 RedrawPartyMenu_: ; 12ce3 (4:6ce3)
 	ld a,[wPartyMenuTypeOrMessageID]
 	cp a,SWAP_MONS_PARTY_MENU
