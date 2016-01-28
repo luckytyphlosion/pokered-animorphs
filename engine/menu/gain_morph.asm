@@ -1,6 +1,7 @@
 DisplayGainMorphMenu:
 	xor a
 	ld [H_AUTOBGTRANSFERENABLED],a
+	call GBPalNormal
 	call ClearScreen
 	call UpdateSprites
 	callba LoadMonPartySpriteGfxWithLCDDisabled ; load pokemon icon graphics

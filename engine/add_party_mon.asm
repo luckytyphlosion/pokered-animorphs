@@ -280,8 +280,8 @@ LoadMovePPs: ; f473 (3:7473)
 	; fallthrough
 AddPartyMon_WriteMovePP: ; f476 (3:7476)
 ; input:
-; de = address of mon's moves
-; hl = output
+; hl = address of mon moves
+; de = pp of mon moves
 	ld b, NUM_MOVES
 .pploop
 	ld a, [hli]     ; read move ID

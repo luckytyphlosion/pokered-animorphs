@@ -1121,6 +1121,23 @@ _GotMorphText::
 	text "Got morph!"
 	done
 
+_GotFoodText::
+	text "Got food!"
+	done
+
+_GotSuperFoodText::
+	text "Got super food!"
+	done
+
+_GotMilkText::
+	text "Got milk!"
+	done
+	
+_GotSuperFoodAndMilkText::
+	text "Got super food"
+	line "and milk!"
+	done
+	
 _MoneyForWinningText:: ; 896dd (22:56dd)
 	text $52, " got ¥@"
 	TX_BCD wAmountMoneyWon, $c3
