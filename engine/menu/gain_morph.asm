@@ -137,18 +137,23 @@ DisplayGainMorphMenu:
 ; otherwise, it is 0
 .storeMaxMenuItemID
 	ld [hli], a
-	ld [hl], A_BUTTON
+	ld [hl], A_BUTTON | B_BUTTON
 	ld a,1
 	ld [wMenuWrappingEnabled],a
 	ld [wForcePlayerToChooseMon], a
 	ld a,$40
 	ld [wPartyMenuAnimMonEnabled],a
 	call HandleMenuInput_
+	
 	xor a
 	ld [wPartyMenuAnimMonEnabled], a
 	ld a, [wCurrentMenuItem]
 	ld [wWhichPokemon], a
 	
+	ld a, [hJoy5]
+	bit 1, a ; b button
+	ret nz
+
 	ld hl, wEnemyMon1
 	ld bc, wEnemyMon2 - wEnemyMon1
 	call AddNTimes

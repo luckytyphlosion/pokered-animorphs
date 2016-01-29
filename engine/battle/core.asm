@@ -1249,14 +1249,9 @@ RemoveFaintedPlayerMon: ; 3c741 (f:4741)
 	ld a, [wPlayerMonNumber]
 	ld [wWhichPokemon], a
 	ld c, a
-	xor a
-	ld [wRemoveMonFromBox], a
-	call RemovePokemon
-	push bc
 	ld hl, wPartyGainExpFlags
 	ld b, FLAG_RESET
 	predef FlagActionPredef ; clear gain exp flag for fainted mon
-	pop bc
 	ld hl, wEnemyBattleStatus1
 	res 2, [hl]   ; reset "attacking multiple times" flag
 	ld a, [wLowHealthAlarm]
@@ -1280,6 +1275,9 @@ RemoveFaintedPlayerMon: ; 3c741 (f:4741)
 	call SlideDownFaintedMonPic
 	ld a, $1
 	ld [wBattleResult], a
+	xor a
+	ld [wRemoveMonFromBox], a
+	call RemovePokemon
 
 ; When the player mon and enemy mon faint at the same time and the fact that the
 ; enemy mon has fainted is detected first (e.g. when the player mon knocks out
