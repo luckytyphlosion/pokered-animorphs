@@ -2977,7 +2977,6 @@ InitYesNoTextBoxParameters:: ; 35ff (0:35ff)
 	ret
 
 YesNoChoicePokeCenter:: ; 360a (0:360a)
-	call SaveScreenTilesToBuffer1
 	ld a, HEAL_CANCEL_MENU
 	ld [wTwoOptionMenuID], a
 	coord hl, 11, 6

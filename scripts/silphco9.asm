@@ -163,12 +163,15 @@ SilphCo9Text1: ; 5d8b8 (17:58b8)
 	TX_ASM
 	CheckEvent EVENT_BEAT_SILPH_CO_GIOVANNI
 	jr nz, .asm_5d8dc
+	CheckAndSetEvent EVENT_HEALED_IN_SILPHCO9
+	jr nz, .printDontGiveUpText
 	ld hl, SilphCo9Text_5d8e5
 	call PrintText
 	predef HealParty
 	call GBFadeOutToWhite
 	call Delay3
 	call GBFadeInFromWhite
+.printDontGiveUpText
 	ld hl, SilphCo9Text_5d8ea
 	call PrintText
 	jr .asm_5d8e2

@@ -2787,9 +2787,18 @@ _PokemonCenterWelcomeText:: ; a286d (28:686d)
 	text "Welcome to our"
 	line "#MON CENTER!"
 
-	para "We heal your"
+	para "For the low"
+	line "price of ¥1000,"	
+	
+	para "we heal your"
 	line "#MON back to"
 	cont "perfect health!"
+	prompt
+
+_PokemonCenterNotEnoughMoneyText::
+	text "We're sorry, but"
+	line "you don't have"
+	cont "enough money."
 	prompt
 
 _ShallWeHealYourPokemonText:: ; a28b4 (28:68b4)

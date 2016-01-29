@@ -15,14 +15,17 @@ PokemonTower5ScriptPointers: ; 60945 (18:4945)
 PokemonTower5Script0: ; 6094b (18:494b)
 	ld hl, CoordsData_60992
 	call ArePlayerCoordsInArray
-	jr c, .asm_60960
+	jr c, .inPurifiedZone
 	ld hl, wd72e
 	res 4, [hl]
 	ResetEvent EVENT_IN_PURIFIED_ZONE
 	jp CheckFightingMapTrainers
-.asm_60960
+.inPurifiedZone
 	CheckAndSetEvent EVENT_IN_PURIFIED_ZONE
 	ret nz
+	CheckAndSetEvent EVENT_ENTERED_PURIFIED_ZONE
+	ld a, $8
+	jr nz, .alreadyEnteredPurifiedZone
 	xor a
 	ld [hJoyHeld], a
 	ld a, $f0
@@ -31,16 +34,21 @@ PokemonTower5Script0: ; 6094b (18:494b)
 	set 4, [hl]
 	predef HealParty
 	call GBFadeOutToWhite
-	call Delay3
-	call Delay3
+	ld c, 6
+	call DelayFrames
 	call GBFadeInFromWhite
 	ld a, $7
+.alreadyEnteredPurifiedZone
 	ld [hSpriteIndexOrTextID], a
 	call DisplayTextID
 	xor a
 	ld [wJoyIgnore], a
 	ret
 
+PokemonTower5Text8:
+	TX_FAR _PokemonTower5Text8
+	db "@"
+	
 CoordsData_60992: ; 60992 (18:4992)
 	db $08,$0A
 	db $08,$0B
@@ -56,6 +64,7 @@ PokemonTower5TextPointers: ; 6099b (18:499b)
 	dw PokemonTower5Text5
 	dw PickUpItemText
 	dw PokemonTower5Text7
+	dw PokemonTower5Text8
 
 PokemonTower5TrainerHeaders: ; 609a9 (18:49a9)
 PokemonTower5TrainerHeader0: ; 609a9 (18:49a9)

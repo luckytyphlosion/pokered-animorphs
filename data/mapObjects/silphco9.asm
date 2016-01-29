@@ -1,3 +1,4 @@
+SECTION "fixed addresses silphco9",ROMX[$593f],BANK[$17]
 SilphCo9Object: ; 0x5d93f (size=74)
 	db $2e ; border block
 

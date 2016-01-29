@@ -6007,7 +6007,7 @@ INCLUDE "scripts/undergroundpathentranceroute7copy.asm"
 INCLUDE "data/mapObjects/undergroundpathentranceroute7copy.asm"
 
 INCLUDE "data/mapHeaders/silphco9.asm"
-INCLUDE "scripts/silphco9.asm"
+
 INCLUDE "data/mapObjects/silphco9.asm"
 SilphCo9Blocks: INCBIN "maps/silphco9.blk"
 
@@ -6019,6 +6019,8 @@ VictoryRoad1Blocks: INCBIN "maps/victoryroad1.blk"
 INCLUDE "engine/predefs17_2.asm"
 
 INCLUDE "engine/hidden_object_functions17.asm"
+
+INCLUDE "scripts/silphco9.asm"
 
 
 SECTION "bank18",ROMX,BANK[$18]
@@ -6053,7 +6055,6 @@ INCLUDE "data/mapObjects/pokemontower4.asm"
 PokemonTower4Blocks: INCBIN "maps/pokemontower4.blk"
 
 INCLUDE "data/mapHeaders/pokemontower5.asm"
-INCLUDE "scripts/pokemontower5.asm"
 INCLUDE "data/mapObjects/pokemontower5.asm"
 PokemonTower5Blocks: INCBIN "maps/pokemontower5.blk"
 
@@ -6141,6 +6142,7 @@ INCLUDE "scripts/silphco11.asm"
 INCLUDE "data/mapObjects/silphco11.asm"
 SilphCo11Blocks: INCBIN "maps/silphco11.blk"
 
+INCLUDE "scripts/pokemontower5.asm"
 INCLUDE "engine/hidden_object_functions18.asm"
 INCLUDE "engine/battle/battle_transitions.asm"
 

@@ -13,30 +13,13 @@ ENDC
 	cont "for you."
 	done
 
-_MomHealText1::
-IF DEF(_YELLOW)
-	text "MOM: ",$52,", if"
-	line "your drive your"
-	cont "#MON too hard,"
-	cont "they'll dislike"
-	cont "you."
-
-	para "You should take a"
-	line "rest."
-	prompt
-ELSE
+_MomDontPushYourselfText::
 	text "MOM: ",$52,"!"
-	line "You should take a"
-	cont "quick rest."
-	prompt
-ENDC
-
-_MomHealText2::
-	text "MOM: Oh good!"
-	line "You and your"
-	cont "#MON are"
-	cont "looking great!"
-	cont "Take care now!"
+	line "Be sure to have"
+	cont "fun on your"
+	cont "adventure, but"
+	cont "don't push"
+	cont "yourself too hard."
 	done
 
 _StandByMeText::

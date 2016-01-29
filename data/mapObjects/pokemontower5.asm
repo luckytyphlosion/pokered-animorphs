@@ -1,3 +1,4 @@
+SECTION "fixed addresses pokemontower5",ROMX[$4a48],BANK[$18]
 PokemonTower5Object: ; 0x60a48 (size=65)
 	db $1 ; border block
 

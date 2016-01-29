@@ -70,3 +70,10 @@ _PokemonTower5Text7:: ; 99a8b (26:5a8b)
 	line "are fully healed!"
 	done
 
+_PokemonTower5Text8::
+	text "Entered purified,"
+	line "protected zone!"
+	
+	para "But nothing"
+	line "happened..."
+	done

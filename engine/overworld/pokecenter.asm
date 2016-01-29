@@ -1,5 +1,8 @@
 DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	call SaveScreenTilesToBuffer1 ; save screen
+	ld a,MONEY_BOX
+	ld [wTextBoxID],a
+	call DisplayTextBoxID ; draw money text box
 	ld hl, PokemonCenterWelcomeText
 	call PrintText
 	ld hl, wd72e
@@ -14,6 +17,18 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	ld a, [wCurrentMenuItem]
 	and a
 	jr nz, .declinedHealing ; if the player chose No
+	ld hl, hMoney
+	xor a
+	ld [hli], a
+	ld a, $10
+	ld [hli], a
+	ld [hl], $0
+	call SubtractAmountPaidFromMoney
+	jr c, .notEnoughMoney
+; if the player had enough money
+	ld a,SFX_PURCHASE
+	call PlaySoundWaitForCurrent
+	call WaitForSoundToFinish
 	call SetLastBlackoutMap
 	call LoadScreenTilesFromBuffer1 ; restore screen
 	ld hl, NeedYourPokemonText
@@ -38,6 +53,9 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	ld c, a
 	call DelayFrames
 	jr .done
+.notEnoughMoney
+	ld hl, PokemonCenterNotEnoughMoneyText
+	call PrintText
 .declinedHealing
 	call LoadScreenTilesFromBuffer1 ; restore screen
 .done
@@ -54,6 +72,10 @@ ShallWeHealYourPokemonText: ; 7062 (1:7062)
 	TX_FAR _ShallWeHealYourPokemonText
 	db "@"
 
+PokemonCenterNotEnoughMoneyText:
+	TX_FAR _PokemonCenterNotEnoughMoneyText
+	db "@"
+	
 NeedYourPokemonText: ; 7068 (1:7068)
 	TX_FAR _NeedYourPokemonText
 	db "@"
@@ -63,6 +85,5 @@ PokemonFightingFitText: ; 706d (1:706d)
 	db "@"
 
 PokemonCenterFarewellText: ; 7072 (1:7072)
-	db $a
 	TX_FAR _PokemonCenterFarewellText
 	db "@"

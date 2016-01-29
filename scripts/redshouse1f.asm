@@ -9,21 +9,23 @@ RedsHouse1FText1: ; 4816f (12:416f) Mom
 	TX_ASM
 	ld a, [wd72e]
 	bit 3, a
-	jr nz, .heal ; if player has received a Pokémon from Oak, heal team
+	ld hl, MomDontPushYourselfText
+	jr nz, .printAltText ; if player has received a Pokémon from Oak, heal team
 	ld hl, MomWakeUpText
+.printAltText
 	call PrintText
-	jr .done
-.heal
-	call MomHealPokemon
-.done
 	jp TextScriptEnd
+
+MomDontPushYourselfText:
+	TX_FAR _MomDontPushYourselfText
+	db "@"
 
 MomWakeUpText: ; 48185 (12:4185)
 	TX_FAR _MomWakeUpText
 	db "@"
 
 MomHealPokemon: ; 4818a (12:418a)
-	ld hl, MomHealText1
+	ld hl, MomDontPushYourselfText
 	call PrintText
 	call GBFadeOutToWhite
 	call ReloadMapData
@@ -39,16 +41,10 @@ MomHealPokemon: ; 4818a (12:418a)
 	ld [wNewSoundID], a
 	call PlaySound
 	call GBFadeInFromWhite
-	ld hl, MomHealText2
+	ld hl, MomDontPushYourselfText
 	jp PrintText
 
-MomHealText1: ; 481bc (12:41bc)
-	TX_FAR _MomHealText1
-	db "@"
-MomHealText2: ; 481c1 (12:41c1)
-	TX_FAR _MomHealText2
-	db "@"
-
+SECTION "fixed addresses redshouse1f", ROMX[$41c6], BANK[$12]
 RedsHouse1FText2: ; 0x481c6 TV
 	TX_ASM
 	ld a,[wSpriteStateData1 + 9]
