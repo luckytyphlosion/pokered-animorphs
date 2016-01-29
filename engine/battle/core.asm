@@ -1247,10 +1247,16 @@ HandlePlayerMonFainted: ; 3c700 (f:4700)
 ; resets flags, slides mon's pic down, plays cry, and prints fainted message
 RemoveFaintedPlayerMon: ; 3c741 (f:4741)
 	ld a, [wPlayerMonNumber]
+	ld [wWhichPokemon], a
 	ld c, a
+	xor a
+	ld [wRemoveMonFromBox], a
+	call RemovePokemon
+	push bc
 	ld hl, wPartyGainExpFlags
 	ld b, FLAG_RESET
 	predef FlagActionPredef ; clear gain exp flag for fainted mon
+	pop bc
 	ld hl, wEnemyBattleStatus1
 	res 2, [hl]   ; reset "attacking multiple times" flag
 	ld a, [wLowHealthAlarm]
@@ -1698,6 +1704,9 @@ TrainerSentOutText: ; 3ca7e (f:4a7e)
 ; sets d = 0 if all fainted, d != 0 if some mons are still alive
 AnyPartyAlive: ; 3ca83 (f:4a83)
 	ld a, [wPartyCount]
+	and a
+	ld d, a
+	ret z
 	ld e, a
 	xor a
 	ld hl, wPartyMon1HP

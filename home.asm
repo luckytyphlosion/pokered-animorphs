@@ -336,46 +336,6 @@ GetCryData:: ; 13d9 (0:13d9)
 	add c
 	ret
 
-SaveScreenTilesToBuffer2:: ; 36f4 (0:36f4)
-	coord hl, 0, 0
-	ld de, wTileMapBackup2
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ret
-
-LoadScreenTilesFromBuffer2:: ; 3701 (0:3701)
-	call LoadScreenTilesFromBuffer2DisableBGTransfer
-	ld a, 1
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
-
-; loads screen tiles stored in wTileMapBackup2 but leaves H_AUTOBGTRANSFERENABLED disabled
-LoadScreenTilesFromBuffer2DisableBGTransfer:: ; 3709 (0:3709)
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ld hl, wTileMapBackup2
-	coord de, 0, 0
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ret
-
-SaveScreenTilesToBuffer1:: ; 3719 (0:3719)
-	coord hl, 0, 0
-	ld de, wTileMapBackup
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	jp CopyData
-
-LoadScreenTilesFromBuffer1:: ; 3725 (0:3725)
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ld hl, wTileMapBackup
-	coord de, 0, 0
-	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
-	call CopyData
-	ld a, 1
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
-
 
 DisplayPartyMenu:: ; 13fc (0:13fc)
 	ld a,[hTilesetType]
@@ -3592,6 +3552,46 @@ AddPartyMon:: ; 3927 (0:3927)
 	pop bc
 	pop de
 	pop hl
+	ret
+
+SaveScreenTilesToBuffer2:: ; 36f4 (0:36f4)
+	coord hl, 0, 0
+	ld de, wTileMapBackup2
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ret
+
+LoadScreenTilesFromBuffer2:: ; 3701 (0:3701)
+	call LoadScreenTilesFromBuffer2DisableBGTransfer
+	ld a, 1
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
+; loads screen tiles stored in wTileMapBackup2 but leaves H_AUTOBGTRANSFERENABLED disabled
+LoadScreenTilesFromBuffer2DisableBGTransfer:: ; 3709 (0:3709)
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ld hl, wTileMapBackup2
+	coord de, 0, 0
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ret
+
+SaveScreenTilesToBuffer1:: ; 3719 (0:3719)
+	coord hl, 0, 0
+	ld de, wTileMapBackup
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	jp CopyData
+
+LoadScreenTilesFromBuffer1:: ; 3725 (0:3725)
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ld hl, wTileMapBackup
+	coord de, 0, 0
+	ld bc, SCREEN_WIDTH * SCREEN_HEIGHT
+	call CopyData
+	ld a, 1
+	ld [H_AUTOBGTRANSFERENABLED], a
 	ret
 
 ; calculates all 5 stats of current mon and writes them to [hl]

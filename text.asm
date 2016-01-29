@@ -2855,6 +2855,9 @@ _CableClubNPCLinkClosedBecauseOfInactivityText:: ; a29db (28:69db)
 	cont "come again!"
 	done
 
+_AllPartyFaintedGameOverText::
+	text "GAME OVER!"
+	done
 
 SECTION "Text 10", ROMX, BANK[TEXT_10]
 

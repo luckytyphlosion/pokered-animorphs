@@ -3723,14 +3723,11 @@ _MoveMon: ; f51e (3:751e)
 	ld a, d
 	ld [wCurEnemyLVL], a
 	pop hl
+	ld d, h
+	ld e, l
 	ld bc, wBoxMon2 - wBoxMon1
 	add hl, bc
 	ld [hli], a
-	ld d, h
-	ld e, l
-	ld bc, -18
-	add hl, bc
-	ld b, $1
 	call CalcStats
 .asm_f664
 	and a

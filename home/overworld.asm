@@ -849,15 +849,25 @@ HandleBlackOut::
 	call GBFadeOutToBlack
 	ld a, $08
 	call StopMusic
-	ld hl, wd72e
-	res 5, [hl]
-	ld a, Bank(ResetStatusAndHalveMoneyOnBlackout) ; also Bank(SpecialWarpIn) and Bank(SpecialEnterMap)
-	call BankswitchCommon
-	call ResetStatusAndHalveMoneyOnBlackout
-	call SpecialWarpIn
-	call PlayDefaultMusicFadeOutCurrent
-	jp SpecialEnterMap
+	xor a
+	ld [hWY], a
+	ld [wUpdateSpritesEnabled], a
+	inc a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	call HideSprites
+	call ClearScreen
+	call LoadFontTilePatterns
+	call GBFadeInFromBlack
+	ld hl, AllPartyFaintedGameOverText
+	call PrintText
+	ld c, 0
+	call DelayFrames
+	jp Init
 
+AllPartyFaintedGameOverText:
+	TX_FAR _AllPartyFaintedGameOverText
+	db "@"
+	
 StopMusic::
 	ld [wAudioFadeOutControl], a
 	ld a, $ff
