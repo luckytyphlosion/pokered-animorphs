@@ -72,9 +72,9 @@ StatusScreen: ; 12953 (4:6953)
 	ld a, [wLoadedMonBoxLevel]
 	ld [wLoadedMonLevel], a
 	ld [wCurEnemyLVL], a
-	ld hl, wLoadedMonHPExp - 1
-	ld de, wLoadedMonStats
-	ld b, $1
+	ld hl, wLoadedMonStats
+	ld de, wLoadedMon
+	ld b, $0
 	call CalcStats ; Recalculate stats
 .DontRecalculate
 	ld hl, wd72c

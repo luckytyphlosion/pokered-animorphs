@@ -33,7 +33,10 @@ rLCDC_DEFAULT EQU %11100011
 ; * BG display enabled
 
 	di
-
+	
+	ld a, [wGBC]
+	ld [hGBC], a
+	
 	xor a
 	ld [rIF], a
 	ld [rIE], a
@@ -53,6 +56,9 @@ rLCDC_DEFAULT EQU %11100011
 	ld [rLCDC], a
 	call DisableLCD
 	
+	ld a, [hGBC]
+	and a
+	jr z, .skipSpeedSwitch
 	lb bc, $3f, rBGPI & $ff
 	ld a, %10000000
 	ld [$ff00+c], a
@@ -93,6 +99,9 @@ rLCDC_DEFAULT EQU %11100011
 	dec b
 	jr nz, .clearwram1
 	
+	ld a, [hGBC]
+	and a
+	jr z, .doNotClearExtraWRAMBanks
 	ld hl, $d000
 	ld bc, $1000
 	lb de, $d0, $10
@@ -125,12 +134,13 @@ rLCDC_DEFAULT EQU %11100011
 	call ClearVram
 	ld a, 1
 	ld [rVBK], a
+.doNotClearExtraWRAMBanks
 	call ClearVram
 	xor a
 	ld [rVBK], a
 
 	ld hl, $ff80
-	ld bc, $ffff - $ff80
+	ld bc, $fffe - $ff80
 	call FillMemory
 
 	call ClearSprites
@@ -147,7 +157,12 @@ rLCDC_DEFAULT EQU %11100011
 	ld [hSCX], a
 	ld [hSCY], a
 	ld [rIF], a
+	ld a, [hGBC]
+	and a
+	ld a, 1 << VBLANK + 1 << TIMER + 1 << SERIAL
+	jr z, .disableHBlankInterrupt
 	ld a, 1 << LCD_STAT + 1 << VBLANK + 1 << TIMER + 1 << SERIAL
+.disableHBlankInterrupt
 	ld [rIE], a
 	
 	ld a, $81
@@ -166,12 +181,18 @@ rLCDC_DEFAULT EQU %11100011
 	ld h, vBGMap1 / $100
 	call ClearBgMap
 	
+	ld a, [hGBC]
+	and a
+	jr nz, .continueWithInit
+	jpab CGBOnlyMessage
+.continueWithInit
+	ld a, 16
+	ld [hSoftReset], a
 	ld e, $0
 	callab CopyOffscreenTilesToWRAMBuffer
 	ld a, rLCDC_DEFAULT
 	ld [rLCDC], a
-	ld a, 16
-	ld [hSoftReset], a
+	
 	call StopAllSounds
 
 	ei

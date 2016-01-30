@@ -950,11 +950,12 @@ AfterBattle_HealSomeHP:
 	
 	ld a, b
 	cp d
-	jr nc, .setHealValueAsMaxHP
+	jr c, .setHealValueAsModifiedHP
+	jr nz, HealPokemonWithFood
 	ld a, c
 	cp e
-	jr c, HealPokemonWithFood
-.setHealValueAsMaxHP
+	jr nc, HealPokemonWithFood
+.setHealValueAsModifiedHP
 	ld d, b
 	ld e, c
 	jr HealPokemonWithFood
@@ -2677,6 +2678,8 @@ MoveSelectionMenu: ; 3d219 (f:5219)
 	ret
 
 .regularmenu
+	xor a
+	ld [wAnyMoveToSelectMon], a
 	call AnyMoveToSelect
 	ret z
 	ld a, [wOptions]
@@ -2936,22 +2939,16 @@ MoveSelectionMenu_MetronomeMode:
 	xor a
 	ret
 
-AnyMoveToSelect: ; 3d3f5 (f:53f5)
-; return z and Struggle as the selected move if all moves have 0 PP and/or are disabled
-	xor a
-	ld [wUsedMetronomeStruggle], a
-	ld a, [wSavedAnimationOptions]
-	ld [wOptions], a
-	bit 5, a
+
 	ld a, METRONOME
 	jr nz, .metronomeMode
 	ld a, STRUGGLE
 .metronomeMode
-	ld [wPlayerSelectedMove], a
+	ld [wEnemySelectedMove], a
 	ld a, [wPlayerDisabledMove]
 	and a
-	ld hl, wBattleMonPP
-	jr nz, .asm_3d40e
+	ld hl, wEnemyMonPP
+	jr nz, .handleDisabledMove
 	ld a, [hli]
 	or [hl]
 	inc hl
@@ -2960,43 +2957,125 @@ AnyMoveToSelect: ; 3d3f5 (f:53f5)
 	or [hl]
 	and $3f
 	ret nz
-	jr .asm_3d423
-.asm_3d40e
+	jr .noMovesLeft
+.handleDisabledMove
 	swap a
 	and $f
 	ld b, a
 	ld d, $5
 	xor a
-.asm_3d416
+.handleDisabledMovePPLoop
 	dec d
-	jr z, .asm_3d421
+	jr z, .allMovesChecked
 	ld c, [hl]
 	inc hl
 	dec b
-	jr z, .asm_3d416
+	jr z, .handleDisabledMovePPLoop
 	or c
-	jr .asm_3d416
-.asm_3d421
-	and a
+	jr .handleDisabledMovePPLoop
+.allMovesChecked
+	and $3f
 	ret nz
-.asm_3d423
+.noMovesLeft
 	ld hl, NoMovesLeftText
 	call PrintText
-	ld c, 60
+	ld c, 10 ; smaller delay for enemy
 	call DelayFrames
+	xor a
+	ret
+
+AnyEnemyMoveToSelect:
+	ld hl, wEnemyMonPP
+	ld bc, wEnemySelectedMove
+	ld de, wEnemyDisabledMove
+	jr AnyMoveToSelectCommon
+
+AnyMoveToSelect: ; 3d3f5 (f:53f5)
+; return z and Struggle as the selected move if all moves have 0 PP and/or are disabled
+	xor a
+	ld [wUsedMetronomeStruggle], a
+	ld hl, wBattleMonPP
+	ld bc, wPlayerSelectedMove
+	ld de, wPlayerDisabledMove
+AnyMoveToSelectCommon:
+	ld a, [wSavedAnimationOptions]
+	ld [wOptions], a
+	bit 5, a
+	ld a, METRONOME
+	jr nz, .metronomeMode
+	ld a, [wAnyMoveToSelectMon]
+	and a
+	jr nz, .doNotWriteToSelectedMove
+	ld a, STRUGGLE
+.metronomeMode
+	ld [bc], a
+.doNotWriteToSelectedMove
+	ld a, [de]
+	and a
+	jr nz, .handleDisabledMove
+	ld a, [hli]
+	or [hl]
+	inc hl
+	or [hl]
+	inc hl
+	or [hl]
+	and $3f
+	ret nz
+	jr .noMovesLeft
+.handleDisabledMove
+	swap a
+	and $f
+	ld b, a
+	ld d, $5
+	xor a
+.handleDisabledMovePPLoop
+	dec d
+	jr z, .allMovesChecked
+	ld c, [hl]
+	inc hl
+	dec b
+	jr z, .handleDisabledMovePPLoop
+	or c
+	jr .handleDisabledMovePPLoop
+.allMovesChecked
+	and $3f
+	ret nz
+.noMovesLeft
+	ld hl, NoMovesLeftText
+	call PrintText
+	ld a, [wAnyMoveToSelectMon]
+	and a
+	ld c, 10
+	jr nz, .handleEnemy
 	ld a, [wOptions]
 	bit 5, a
-	jr z, .xor_a_ret
+	jr z, .done
 	res 7, a
 	ld [wOptions], a
 	ld a, $1
 	ld [wUsedMetronomeStruggle], a
-.xor_a_ret
+.done
+	ld c, 60
+.handleEnemy
+	call DelayFrames
 	xor a
 	ret
 
 NoMovesLeftText: ; 3d430 (f:5430)
-	TX_FAR _NoMovesLeftText
+	TX_ASM
+	ld a, [wAnyMoveToSelectMon]
+	and a
+	ld hl, NoPlayerMovesLeftText
+	ret z
+	ld hl, NoEnemyMovesLeftText
+	ret
+
+NoPlayerMovesLeftText:
+	TX_FAR _NoPlayerMovesLeftText
+	db "@"
+	
+NoEnemyMovesLeftText:
+	TX_FAR _NoEnemyMovesLeftText
 	db "@"
 
 SwapMovesInMenu: ; 3d435 (f:5435)
@@ -3146,11 +3225,7 @@ PrintMenuItem: ; 3d4b6 (f:54b6)
 	jp DelayFrame
 
 DisabledText: ; 3d555 (f:5555)
-IF DEF(_YELLOW)
 	db "Disabled!@"
-ELSE
-	db "disabled!@"
-ENDC
 
 TypeText: ; 3d55f (f:555f)
 	db "TYPE@"
@@ -3176,7 +3251,7 @@ SelectEnemyMove: ; 3d564 (f:5564)
 	ld b, $0
 	add hl, bc
 	ld a, [hl]
-	jr .done
+	jp .done
 .noLinkBattle
 	ld a, [wEnemyBattleStatus2]
 	and (1 << NeedsToRecharge) | (1 << UsingRage) ; need to recharge or using rage
@@ -3211,11 +3286,19 @@ SelectEnemyMove: ; 3d564 (f:5564)
 	ld a, STRUGGLE ; struggle if the only move is disabled
 	jr nz, .done
 .atLeastTwoMovesAvailable
+	ld a, $1
+	ld [wAnyMoveToSelectMon], a
+	push hl
+	call AnyEnemyMoveToSelect
+	pop hl
+	ld a, STRUGGLE
+	jr z, .done
 	ld a, [wIsInBattle]
 	dec a
 	jr z, .chooseRandomMove ; wild encounter
 	callab AIEnemyTrainerChooseMoves
 .chooseRandomMove
+	ld de, wEnemyMonPP
 	push hl
 	call BattleRandom
 	ld b, $1
@@ -3223,14 +3306,17 @@ SelectEnemyMove: ; 3d564 (f:5564)
 	jr c, .moveChosen
 	inc hl
 	inc b
+	inc de
 	cp $7f ; select move 2, [3f,7e] (64/256 chance)
 	jr c, .moveChosen
 	inc hl
 	inc b
+	inc de
 	cp $be ; select move 3, [7f,bd] (63/256 chance)
 	jr c, .moveChosen
 	inc hl
 	inc b ; select move 4, [be,ff] (66/256 chance)
+	inc de
 .moveChosen
 	ld a, b
 	dec a
@@ -3244,6 +3330,11 @@ SelectEnemyMove: ; 3d564 (f:5564)
 	jr z, .chooseRandomMove ; move disabled, try again
 	and a
 	jr z, .chooseRandomMove ; move non-existant, try again
+	ld c, a ; save move chosen
+	ld a, [de]
+	and $3f ; does this move have PP?
+	ld a, c
+	jr z, .chooseRandomMove ; if not, try again
 .done
 	ld [wEnemySelectedMove], a
 	ret
@@ -3344,9 +3435,8 @@ PlayerCanExecuteChargingMove: ; 3d6a9 (f:56a9)
 	                    ; resulting in the Pokemon being invulnerable for the whole battle
 	res Invulnerable,[hl]
 PlayerCanExecuteMove: ; 3d6b0 (f:56b0)
-	call PrintMonName1Text
-	ld de,wPlayerSelectedMove ; pointer to the move just used
-	callab DecrementPP
+	call PrintMonNameUsedText
+	callab DecrementPlayerPP
 	ld a,[wPlayerMoveEffect] ; effect of the move just used
 	ld hl,ResidualEffects1
 	ld de,1
@@ -3514,11 +3604,7 @@ KeepTrackOfMovesUsed:
 	ret z
 ; keep track of all moves used (good for metronome)
 	ld a, $1
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
-	ld a, SRAM_ENABLE
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
+	call EnableSRAMAndSwitchSRAMBank
 	ld a, [wPlayerSelectedMove]
 	ld hl, sMoveUseRecord
 	dec a
@@ -3532,12 +3618,7 @@ KeepTrackOfMovesUsed:
 	dec hl
 	inc [hl]
 .noOverflow
-	xor a
-	ld [wSRAMBank], a
-	ld [MBC1SRamBank], a
-	ld [wSRAMEnabled], a
-	ld [MBC1SRamEnable], a
-	ret
+	jp DisableSRAMAndSwitchSRAMBank0
 
 PrintGhostText: ; 3d811 (f:5811)
 ; print the ghost battle messages
@@ -3973,8 +4054,8 @@ HandleSelfConfusionDamage: ; 3daad (f:5aad)
 	ld [H_WHOSETURN], a
 	jp ApplyDamageToPlayerPokemon
 
-PrintMonName1Text: ; 3daf5 (f:5af5)
-	ld hl, MonName1Text
+PrintMonNameUsedText: ; 3daf5 (f:5af5)
+	ld hl, MonNameUsedText
 	jp PrintText
 
 ; this function wastes time calling DetermineExclamationPointTextNum
@@ -3982,143 +4063,33 @@ PrintMonName1Text: ; 3daf5 (f:5af5)
 ; those text strings are identical and both continue at PrintInsteadText
 ; this likely had to do with Japanese grammar that got translated,
 ; but the functionality didn't get removed
-MonName1Text: ; 3dafb (f:5afb)
-	TX_FAR _MonName1Text
+MonNameUsedText: ; 3dafb (f:5afb)
+	TX_FAR _MonNameUsedText
 	TX_ASM
 	ld a, [H_WHOSETURN]
 	and a
 	ld a, [wPlayerMoveNum]
 	ld hl, wPlayerUsedMove
-	jr z, .asm_3db11
+	jr z, .player
 	ld a, [wEnemyMoveNum]
 	ld hl, wEnemyUsedMove
-.asm_3db11
+.player
 	ld [hl], a
 	ld [wd11e], a
-	call DetermineExclamationPointTextNum
 	ld a, [wMonIsDisobedient]
 	and a
-	ld hl, Used2Text
-	ret nz
-	ld a, [wd11e]
-	cp 3
-	ld hl, Used2Text
-	ret c
-	ld hl, Used1Text
-	ret
-
-Used1Text: ; 3db2d (f:5b2d)
-	TX_FAR _Used1Text
-	TX_ASM
-	jr PrintInsteadText
-
-Used2Text: ; 3db34 (f:5b34)
-	TX_FAR _Used2Text
-	TX_ASM
-	; fall through
-
-PrintInsteadText: ; 3db39 (f:5b39)
-	ld a, [wMonIsDisobedient]
-	and a
-	jr z, PrintMoveName
+	ld hl, MoveNameWithExclamationText
+	ret z	
 	ld hl, InsteadText
 	ret
 
 InsteadText: ; 3db43 (f:5b43)
 	TX_FAR _InsteadText
-	TX_ASM
 	; fall through
 
-PrintMoveName: ; 3db48 (f:5b48)
-	ld hl, _PrintMoveName
-	ret
-
-_PrintMoveName: ; 3db4c (f:5b4c)
-	TX_FAR _CF4BText
-	TX_ASM
-	ld hl, ExclamationPointPointerTable
-	ld a, [wd11e] ; exclamation point num
-	add a
-	push bc
-	ld b, $0
-	ld c, a
-	add hl, bc
-	pop bc
-	ld a, [hli]
-	ld h, [hl]
-	ld l, a
-	ret
-
-ExclamationPointPointerTable: ; 3db62 (f:5b62)
-	dw ExclamationPoint1Text
-	dw ExclamationPoint2Text
-	dw ExclamationPoint3Text
-	dw ExclamationPoint4Text
-	dw ExclamationPoint5Text
-
-ExclamationPoint1Text: ; 3db6c (f:5b6c)
-	TX_FAR _ExclamationPoint1Text
+MoveNameWithExclamationText: ; 3db48 (f:5b48)
+	TX_FAR _MoveNameWithExclamationText
 	db "@"
-
-ExclamationPoint2Text: ; 3db71 (f:5b71)
-	TX_FAR _ExclamationPoint2Text
-	db "@"
-
-ExclamationPoint3Text: ; 3db76 (f:5b76)
-	TX_FAR _ExclamationPoint3Text
-	db "@"
-
-ExclamationPoint4Text: ; 3db7b (f:5b7b)
-	TX_FAR _ExclamationPoint4Text
-	db "@"
-
-ExclamationPoint5Text: ; 3db80 (f:5b80)
-	TX_FAR _ExclamationPoint5Text
-	db "@"
-
-; this function does nothing useful
-; if the move being used is in set [1-4] from ExclamationPointMoveSets,
-; use ExclamationPoint[1-4]Text
-; otherwise, use ExclamationPoint5Text
-; but all five text strings are identical
-; this likely had to do with Japanese grammar that got translated,
-; but the functionality didn't get removed
-DetermineExclamationPointTextNum: ; 3db85 (f:5b85)
-	push bc
-	ld a, [wd11e] ; move ID
-	ld c, a
-	ld b, $0
-	ld hl, ExclamationPointMoveSets
-.loop
-	ld a, [hli]
-	cp $ff
-	jr z, .done
-	cp c
-	jr z, .done
-	and a
-	jr nz, .loop
-	inc b
-	jr .loop
-.done
-	ld a, b
-	ld [wd11e], a ; exclamation point num
-	pop bc
-	ret
-
-ExclamationPointMoveSets: ; 3dba3 (f:5ba3)
-	db SWORDS_DANCE, GROWTH
-	db $00
-	db RECOVER, BIDE, SELFDESTRUCT, AMNESIA
-	db $00
-	db MEDITATE, AGILITY, TELEPORT, MIMIC, DOUBLE_TEAM, BARRAGE
-	db $00
-	db POUND, SCRATCH, VICEGRIP, WING_ATTACK, FLY, BIND, SLAM, HORN_ATTACK, BODY_SLAM
-	db WRAP, THRASH, TAIL_WHIP, LEER, BITE, GROWL, ROAR, SING, PECK, COUNTER
-	db STRENGTH, ABSORB, STRING_SHOT, EARTHQUAKE, FISSURE, DIG, TOXIC, SCREECH, HARDEN
-	db MINIMIZE, WITHDRAW, DEFENSE_CURL, METRONOME, LICK, CLAMP, CONSTRICT, POISON_GAS
-	db LEECH_LIFE, BUBBLE, FLASH, SPLASH, ACID_ARMOR, FURY_SWIPES, REST, SHARPEN, SLASH, SUBSTITUTE
-	db $00
-	db $FF ; terminator
 
 PrintMoveFailureText: ; 3dbe2 (f:5be2)
 	ld de, wPlayerMoveEffect
@@ -4638,7 +4609,12 @@ GetEnemyMonStat: ; 3df1c (f:5f1c)
 	ld a, [hl]
 	ld [de], a
 	pop bc
-	ld b, $0
+	ld a, [wIsInBattle]
+	dec a ; is it a wild battle
+	ld b, $1
+	jr z, .wildBattle
+	dec b ; trainer battle, calculate normal HP
+.wildBattle
 	ld de, wLoadedMon ; set base address as de
 	call CalcStat
 	pop de
@@ -5846,7 +5822,8 @@ EnemyCanExecuteChargingMove: ; 3e70b (f:670b)
 EnemyCanExecuteMove: ; 3e72b (f:672b)
 	xor a
 	ld [wMonIsDisobedient], a
-	call PrintMonName1Text
+	call PrintMonNameUsedText
+	callab DecrementEnemyPP
 	ld a, [wEnemyMoveEffect]
 	ld hl, ResidualEffects1
 	ld de, $1
@@ -6336,6 +6313,12 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	ld [hli], a
 	ld a, [wCurEnemyLVL]
 	ld [hli], a
+	ld a, [wIsInBattle]
+	dec a
+	ld b, $1
+	jr z, .nerfHPStat
+	dec b
+.nerfHPStat
 	push de
 	ld de, wLoadedMon
 	call CalcStats

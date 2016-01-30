@@ -1248,8 +1248,14 @@ _MoveDisabledText:: ; 8987b (22:587b)
 	line "disabled!"
 	prompt
 
-_NoMovesLeftText:: ; 89892 (22:5892)
+_NoPlayerMovesLeftText:: ; 89892 (22:5892)
 	TX_RAM wBattleMonNick
+	text " has no"
+	line "moves left!"
+	done
+
+_NoEnemyMovesLeftText::
+	TX_RAM wEnemyMonNick
 	text " has no"
 	line "moves left!"
 	done
@@ -1355,42 +1361,16 @@ _MoveIsDisabledText:: ; 89a29 (22:5a29)
 	cont "disabled!"
 	prompt
 
-_MonName1Text:: ; 89a40 (22:5a40)
-	text $5a, "@@"
-
-_Used1Text:: ; 89a44 (22:5a44)
-	db $0
+_MonNameUsedText:: ; 89a40 (22:5a40)
+	text $5a
 	line "used @@"
-
-_Used2Text:: ; 89a4d (22:5a4d)
-	db $0
-	line "used @@"
-
+	
 _InsteadText:: ; 89a56 (22:5a56)
 	text "instead,"
-	cont "@@"
+	cont $55, "@@"
 
-_CF4BText:: ; 89a62 (22:5a62)
+_MoveNameWithExclamationText:: ; 89a62 (22:5a62)
 	TX_RAM wcf4b
-	text "@"
-
-_ExclamationPoint1Text:: ; 89a67 (22:5a67)
-	text "!"
-	done
-
-_ExclamationPoint2Text:: ; 89a6a (22:5a6a)
-	text "!"
-	done
-
-_ExclamationPoint3Text:: ; 89a6d (22:5a6d)
-	text "!"
-	done
-
-_ExclamationPoint4Text:: ; 89a70 (22:5a70)
-	text "!"
-	done
-
-_ExclamationPoint5Text:: ; 89a73 (22:5a73)
 	text "!"
 	done
 

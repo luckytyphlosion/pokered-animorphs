@@ -619,8 +619,9 @@ wTotalPayDayMoney:: ; cce5
 wSafariEscapeFactor:: ; cce8
 	ds 1
 wSafariBaitFactor:: ; cce9
-	ds 1;
+	ds 1
 
+wAnyMoveToSelectMon::
 	ds 1
 
 wTransformedEnemyMonOriginalDVs:: ; cceb

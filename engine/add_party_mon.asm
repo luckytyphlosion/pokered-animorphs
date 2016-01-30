@@ -112,7 +112,7 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	ld e, c
 	ld d, b ; stash base mon struct in de
 	
-	ld c, $1 ; calc HP
+	ld bc, $1 ; calc HP, not wild
 	call CalcStat      ; calc HP stat (set cur Hp to max HP)
 	
 	ld c, e
@@ -270,6 +270,7 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	add hl, bc
 	ld d, b
 	ld e, c
+	ld b, $0 ; not wild mon
 	call CalcStats         ; calculate fresh set of stats
 .done
 	scf

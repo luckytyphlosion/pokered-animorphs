@@ -1,4 +1,8 @@
 HealEffect_: ; 3b9ec (e:79ec)
+	call MoveHitTest
+	ld a, [wMoveMissed]
+	and a
+	jp nz, .failed
 	ld a, [H_WHOSETURN]
 	and a
 	ld de, wBattleMonHP

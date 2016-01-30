@@ -341,3 +341,4 @@ hDoBattleTransition EQU $FFFD
 ; presses the reset sequence (A+B+SEL+START).
 ; Soft reset when 0 is reached.
 hSoftReset EQU $FFFE
+hGBC EQU $FFFE ; only used during init to prevent dmg from going any further

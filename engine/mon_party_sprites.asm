@@ -303,13 +303,19 @@ MonPartySpritePointers: ; 717c0 (1c:57c0)
 	db BANK(MonPartySprites)
 	dw vSprites + $780
 
+WriteMonEnemySpriteOAMByPartyIndex:
+	push hl
+	ld hl, wEnemyPartyMons
+	jr WriteMonSpriteOAMByPartyIndexCommon
+	
 WriteMonPartySpriteOAMByPartyIndex: ; 71868 (1c:5868)
 ; Write OAM blocks for the party mon in [hPartyMonIndex].
 	push hl
+	ld hl, wPartySpecies
+WriteMonSpriteOAMByPartyIndexCommon:
 	push de
 	push bc
 	ld a, [hPartyMonIndex]
-	ld hl, wPartySpecies
 	ld e, a
 	ld d, 0
 	add hl, de

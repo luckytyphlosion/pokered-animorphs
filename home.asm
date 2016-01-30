@@ -121,7 +121,7 @@ Start::
 	xor a
 	jr .ok
 .gbc
-	ld a, 0
+	ld a, GBC
 .ok
 	ld [wGBC], a
 	jp Init
@@ -3610,6 +3610,7 @@ CalcStats:: ; 3936 (0:3936)
 	ret
 
 ; calculates stat c of current mon
+; b: wild mon or not?
 ; c: stat to calc (HP=1,Atk=2,Def=3,Spd=4,Spc=5)
 ; de: base struct of mon (no offset pointing to beginning of stats)
 ; assumes wMonHeader is loaded
@@ -3628,10 +3629,14 @@ CalcStat:: ; 394a (0:394a)
 	ld l, a
 	ld h, 0
 	add hl, hl ; double it
+	ld a, b
+	and a ; is this a wild mon?
+	jr nz, .doNotAdd100ToHP
 	ld bc, 100
 	add hl, bc
 ; 2HP + 100
 ; now get HP DV
+.doNotAdd100ToHP
 	push hl
 	ld hl, (wPartyMon1DVs - wPartyMon1)
 	add hl, de

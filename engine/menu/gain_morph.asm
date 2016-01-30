@@ -52,7 +52,7 @@ DisplayGainMorphMenu:
 	call GetPartyMonName
 	pop hl
 	call PlaceString ; print the pokemon's name
-	callba WriteMonPartySpriteOAMByPartyIndex ; place the appropriate pokemon icon
+	callba WriteMonEnemySpriteOAMByPartyIndex ; place the appropriate pokemon icon
 	ld a,[hPartyMonIndex]
 	ld [wWhichPokemon],a
 	inc a
@@ -93,6 +93,7 @@ DisplayGainMorphMenu:
 	ld a,[hFlags_0xFFF6]
 	res 0,a
 	ld [hFlags_0xFFF6],a
+	call SetMorphMenuHPBarColor
 	pop hl
 	
 	ld bc,10 ; move 10 columns to the right
@@ -150,10 +151,14 @@ DisplayGainMorphMenu:
 	ld a, [wCurrentMenuItem]
 	ld [wWhichPokemon], a
 	
+	ld b, a
+	
 	ld a, [hJoy5]
 	bit 1, a ; b button
 	ret nz
-
+	
+	ld a, b
+	
 	ld hl, wEnemyMon1
 	ld bc, wEnemyMon2 - wEnemyMon1
 	call AddNTimes
@@ -183,6 +188,19 @@ DisplayGainMorphMenu:
 	ret
 .boxFull
 	jpab _GivePokemon_BoxFull
+	
+SetMorphMenuHPBarColor:
+	ld hl, wPartyMenuHPBarColors
+	ld a, [wWhichPartyMenuHPBar]
+	ld c, a
+	ld b, 0
+	add hl, bc
+	call GetHealthBarColor
+	ld b, UPDATE_PARTY_MENU_BLK_PACKET
+	call RunPaletteCommand
+	ld hl, wWhichPartyMenuHPBar
+	inc [hl]
+	ret
 
 GotMorphText:
 	TX_FAR _GotMorphText

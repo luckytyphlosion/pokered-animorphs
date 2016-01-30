@@ -7,6 +7,21 @@ AIEnemyTrainerChooseMoves: ; 39719 (e:5719)
 	ld [hli], a   ; move 2
 	ld [hli], a   ; move 3
 	ld [hl], a    ; move 4
+	
+	ld hl, wBuffer
+	ld de, wEnemyMonPP
+	ld c, NUM_MOVES
+.banZeroPPLoop
+	ld a, [de]
+	inc de
+	and $3f ; does the move have zero PP?
+	jr nz, .moveHasPP
+	ld [hl], $50 ; forbid (highly discourage) move without PP
+.moveHasPP
+	inc hl
+	dec c
+	jr nz, .banZeroPPLoop
+	
 	ld a, [wEnemyDisabledMove] ; forbid disabled move (if any)
 	swap a
 	and $f

@@ -169,9 +169,9 @@ Evolution_PartyMonLoop: ; loop over party mons
 	ld [wMonHIndex], a
 	pop af
 	ld [wd11e], a
-	ld hl, wLoadedMonHPExp - 1
-	ld de, wLoadedMonStats
-	ld b, $1
+	ld hl, wLoadedMonStats
+	ld de, wLoadedMon
+	ld b, $0
 	call CalcStats
 	ld a, [wWhichPokemon]
 	ld hl, wPartyMon1

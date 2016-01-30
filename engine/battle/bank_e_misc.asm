@@ -101,22 +101,3 @@ InitList: ; 39bd5 (e:5bd5)
 	ld a, b
 	ld [wItemPrices + 1], a
 	ret
-
-; get species of mon e in list [wMonDataLocation] for LoadMonData
-GetMonSpecies: ; 39c37 (e:5c37)
-	ld hl, wPartySpecies
-	ld a, [wMonDataLocation]
-	and a
-	jr z, .getSpecies
-	dec a
-	jr z, .enemyParty
-	ld hl, wBoxSpecies
-	jr .getSpecies
-.enemyParty
-	ld hl, wEnemyPartyMons
-.getSpecies
-	ld d, 0
-	add hl, de
-	ld a, [hl]
-	ld [wcf91], a
-	ret

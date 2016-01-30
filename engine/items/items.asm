@@ -1333,13 +1333,11 @@ ItemUseMedicine: ; dabb (3:5abb)
 	call PrintText
 	jp GBPalWhiteOut
 .recalculateStats
+	ld d, h
+	ld e, l ; de now points to base mon struct
 	ld bc,wPartyMon1Stats - wPartyMon1
 	add hl,bc
-	ld d,h
-	ld e,l ; de now points to stats
-	ld bc,(wPartyMon1Exp + 2) - wPartyMon1Stats
-	add hl,bc ; hl now points to LSB of experience
-	ld b,1
+	ld b, $0
 	jp CalcStats ; recalculate stats
 .useRareCandy
 	push hl

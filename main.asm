@@ -95,7 +95,7 @@ LoadMonData_:
 
 	ld a, [wWhichPokemon]
 	ld e, a
-	callab GetMonSpecies
+	call GetMonSpecies
 
 .GetMonHeader
 	ld a, [wcf91]
@@ -128,6 +128,24 @@ LoadMonData_:
 	ld bc, wPartyMon2 - wPartyMon1
 	jp CopyData
 
+; get species of mon e in list [wMonDataLocation] for LoadMonData
+GetMonSpecies: ; 39c37 (e:5c37)
+	ld hl, wPartySpecies
+	ld a, [wMonDataLocation]
+	and a
+	jr z, .getSpecies
+	dec a
+	jr z, .enemyParty
+	ld hl, wBoxSpecies
+	jr .getSpecies
+.enemyParty
+	ld hl, wEnemyPartyMons
+.getSpecies
+	ld d, 0
+	add hl, de
+	ld a, [hl]
+	ld [wcf91], a
+	ret
 
 INCLUDE "data/item_prices.asm"
 INCLUDE "text/item_names.asm"
@@ -158,8 +176,7 @@ INCLUDE "engine/oam_dma.asm"
 
 PrintWaitingText:
 	coord hl, 3, 10
-	ld b, $1
-	ld c, $b
+	lb bc, 1, 11
 	ld a, [wIsInBattle]
 	and a
 	jr z, .asm_4c17
@@ -3728,6 +3745,7 @@ _MoveMon: ; f51e (3:751e)
 	ld bc, wBoxMon2 - wBoxMon1
 	add hl, bc
 	ld [hli], a
+	ld b, $0
 	call CalcStats
 .asm_f664
 	and a
@@ -5174,7 +5192,6 @@ INCLUDE "data/cries.asm"
 INCLUDE "engine/battle/unused_stats_functions.asm"
 INCLUDE "engine/battle/scroll_draw_trainer_pic.asm"
 INCLUDE "engine/battle/trainer_ai.asm"
-INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
 
 TradingAnimationGraphics:
 	INCBIN "gfx/game_boy.norepeat.2bpp"
@@ -5208,6 +5225,8 @@ INCLUDE "engine/menu/options.asm"
 INCLUDE "engine/battle/decrement_pp.asm"
 INCLUDE "engine/overworld/advance_player_sprite.asm"
 INCLUDE "engine/overworld/engage_map_trainer.asm"
+INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
+INCLUDE "engine/cgb_only.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 
