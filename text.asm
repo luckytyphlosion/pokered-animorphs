@@ -1133,9 +1133,8 @@ _GotMilkText::
 	text "Got milk!"
 	done
 	
-_GotSuperFoodAndMilkText::
-	text "Got super food"
-	line "and milk!"
+_GotSuperMilkText::
+	text "Got super milk!"
 	done
 	
 _MoneyForWinningText:: ; 896dd (22:56dd)

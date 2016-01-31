@@ -5192,6 +5192,7 @@ INCLUDE "data/cries.asm"
 INCLUDE "engine/battle/unused_stats_functions.asm"
 INCLUDE "engine/battle/scroll_draw_trainer_pic.asm"
 INCLUDE "engine/battle/trainer_ai.asm"
+INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
 
 TradingAnimationGraphics:
 	INCBIN "gfx/game_boy.norepeat.2bpp"
@@ -5225,8 +5226,8 @@ INCLUDE "engine/menu/options.asm"
 INCLUDE "engine/battle/decrement_pp.asm"
 INCLUDE "engine/overworld/advance_player_sprite.asm"
 INCLUDE "engine/overworld/engage_map_trainer.asm"
-INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
 INCLUDE "engine/cgb_only.asm"
+INCLUDE "engine/battle/food.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 

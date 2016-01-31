@@ -897,6 +897,8 @@ wTrainerSpriteOffset:: ; cd3d
 
 wMultiplyBy60Power:: ; cd3d
 
+wFoodPercentageAmount:: ; cd3d
+
 wUnusedCD3D:: ; cd3d
 	ds 1
 
