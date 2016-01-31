@@ -3,6 +3,37 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	ld a,MONEY_BOX
 	ld [wTextBoxID],a
 	call DisplayTextBoxID ; draw money text box
+	ld hl, wObtainedBadges
+	ld b, $1
+	call CountSetBits
+	ld hl, hItemPrice
+	ld de, hMoney
+	xor a
+	ld [hli], a
+	ld [de], a
+	inc de
+	ld a, $4
+	ld [hli], a
+	ld [de], a
+	inc de
+	ld a, $20
+	ld [hl], a
+	ld [de], a
+	ld a, [wNumSetBits]
+	and a
+	jr z, .noBadges
+.multiplyBCDLoop
+	push af
+	push hl
+	push de
+	ld c, $3
+	predef AddBCDPredef
+	pop de
+	pop hl
+	pop af
+	dec a
+	jr nz, .multiplyBCDLoop
+.noBadges
 	ld hl, PokemonCenterWelcomeText
 	call PrintText
 	ld hl, wd72e
@@ -17,12 +48,6 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	ld a, [wCurrentMenuItem]
 	and a
 	jr nz, .declinedHealing ; if the player chose No
-	ld hl, hMoney
-	xor a
-	ld [hli], a
-	ld a, $10
-	ld [hli], a
-	ld [hl], $0
 	call SubtractAmountPaidFromMoney
 	jr c, .notEnoughMoney
 ; if the player had enough money

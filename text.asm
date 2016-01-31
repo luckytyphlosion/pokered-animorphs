@@ -2767,8 +2767,11 @@ _PokemonCenterWelcomeText:: ; a286d (28:686d)
 	line "#MON CENTER!"
 
 	para "For the low"
-	line "price of ¥1000,"	
+	line "price of @"
+
+	TX_BCD hMoney + 1, 1 << 7 | 1 << 6 | 1 << 5 | $2
 	
+	db $0 ; text
 	para "we heal your"
 	line "#MON back to"
 	cont "perfect health!"

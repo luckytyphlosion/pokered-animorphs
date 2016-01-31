@@ -17,6 +17,8 @@ SoftReset::
 	ld c, 32
 .saveScumMode
 	call DelayFrames
+	ld a, GBC
+	ld [wGBC], a
 	; fallthrough
 
 Init::
@@ -38,6 +40,7 @@ rLCDC_DEFAULT EQU %11100011
 	ld [hGBC], a
 	
 	xor a
+	ld [wGBC], a
 	ld [rIF], a
 	ld [rIE], a
 	ld [rSCX], a
