@@ -1111,10 +1111,13 @@ RemoveFaintedPlayerMon: ; 3c741 (f:4741)
 	call SlideDownFaintedMonPic
 	ld a, $1
 	ld [wBattleResult], a
+	ld a, [wCurMap]
+	cp OAKS_LAB
+	jr z, .doNotRemoveMon ; don't remove the player mon as this is a tutorial-ish battle
 	xor a
 	ld [wRemoveMonFromBox], a
 	call RemovePokemon
-
+.doNotRemoveMon
 ; When the player mon and enemy mon faint at the same time and the fact that the
 ; enemy mon has fainted is detected first (e.g. when the player mon knocks out
 ; the enemy mon using a move with recoil and faints due to the recoil), don't
@@ -1171,6 +1174,15 @@ UseNextMonText: ; 3c7d3 (f:47d3)
 ChooseNextMon: ; 3c7d8 (f:47d8)
 	ld a, BATTLE_PARTY_MENU
 	ld [wPartyMenuTypeOrMessageID], a
+	ld a, [wPartyAndBillsPCSavedMenuItem]
+	ld b, a
+	ld a, [wPartyCount]
+	cp b ; is the cursor's current location greator than the party count? (handles the case of a mon fainting but the cursor being on the last mon)
+	jr c, .legalCurrentMenuItemValue ; note: because wPartyAnd... has values starting at zero, while wPartyCount will have a starting value of one for most cases, carry not being set will note that the cursor location is illegal, rather than being at the bottommost position of the menu
+	dec b
+	ld a, b
+	ld [wPartyAndBillsPCSavedMenuItem], a
+.legalCurrentMenuItemValue
 	call DisplayPartyMenu
 .checkIfMonChosen
 	jr nc, .monChosen
