@@ -1592,6 +1592,9 @@ wTrainerBaseMoney:: ; d046
 wMissableObjectCounter:: ; d048
 	ds 1
 
+wInBattleXItemFlags:: ; d049
+; used to determine if an x item has been used
+; to limit the player from spamming more than 1 x item of each per battle
 	ds 1
 
 wTrainerName:: ; d04a

@@ -2457,6 +2457,8 @@ PartyMenuOrRockOrRun:
 ; fall through to SwitchPlayerMon
 
 SwitchPlayerMon: ; 3d1ba (f:51ba)
+	xor a
+	ld [wInBattleXItemFlags], a
 	callab RetreatMon
 	ld c, 50
 	call DelayFrames
@@ -3248,7 +3250,7 @@ ExecutePlayerMove: ; 3d65e (f:565e)
 	ld [wMoveMissed], a
 	ld [wMonIsDisobedient], a
 	ld [wMoveDidntMiss], a
-	ld a, $a
+	ld a, 10
 	ld [wDamageMultipliers], a
 	ld a, [wActionResultOrTookBattleTurn]
 	and a ; has the player already used the turn (e.g. by using an item, trying to run or switching pokemon)
@@ -5197,34 +5199,54 @@ INCLUDE "data/type_effects.asm"
 ; ($05 is not very effective, $10 is neutral, $14 is super effective)
 ; as far is can tell, this is only used once in some AI code to help decide which move to use
 AIGetTypeEffectiveness: ; 3e449 (f:6449)
-	ld a,[wEnemyMoveType]
-	ld d,a                    ; d = type of enemy move
-	ld hl,wBattleMonType
-	ld b,[hl]                 ; b = type 1 of player's pokemon
-	inc hl
-	ld c,[hl]                 ; c = type 2 of player's pokemon
-	ld a,$10
-	ld [wTypeEffectiveness],a ; initialize to neutral effectiveness
-	ld hl,TypeEffects
-.loop
-	ld a,[hli]
-	cp a,$ff
-	ret z
-	cp d                      ; match the type of the move
-	jr nz,.nextTypePair1
-	ld a,[hli]
-	cp b                      ; match with type 1 of pokemon
-	jr z,.done
-	cp c                      ; or match with type 2 of pokemon
-	jr z,.done
-	jr .nextTypePair2
+	ld a, [wEnemyMoveType]
+	ld d, a                     ; d = type of enemy move
+	ld hl, wBattleMonType
+	ld a, [hli]                 ; b = type 1 of player's pokemon
+	ld b, a
+	ld c, [hl]                  ; c = type 2 of player's pokemon
+	ld e, $10                   ; e = initial weighting
+	ld hl, TypeEffects
+	jr .loop
 .nextTypePair1
 	inc hl
 .nextTypePair2
 	inc hl
+.loop
+	ld a,[hli]
+	cp a,$ff
+	jr z, .done
+	cp d                      ; match the type of the move
+	jr nz,.nextTypePair1
+	ld a,[hli]
+	cp b                      ; match with type 1 of pokemon
+	jr z,.applyModification
+	cp c                      ; or match with type 2 of pokemon
+	jr nz,.nextTypePair2
+.applyModification
+	ld a, [hli]
+	cp SE_MULTIPLIER
+	jr nz, .checkForNVEMultiplier
+	ld a, $5
+	add e
+	ld e, a
 	jr .loop
+.checkForNVEMultiplier
+	cp NVE_MULTIPLIER
+	jr nz, .checkForLEMultiplier
+	ld a, e
+	sub $5
+	ld e, a
+	jr .loop
+.checkForLEMultiplier
+	cp LE_MULTIPLIER
+	jr nz, .loop ; error checking
+	ld a, e
+	sub $8
+	ld e, a
+	jr .loop	
 .done
-	ld a,[hl]
+	ld a, e
 	ld [wTypeEffectiveness],a ; store damage multiplier
 	ret
 
@@ -5281,6 +5303,7 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	ld hl,wDamageMultipliers
 	set 7,[hl]
 .skipSameTypeAttackBonus
+	
 	ld a,[wMoveType]
 	ld b,a
 	ld hl,TypeEffects
@@ -5301,12 +5324,18 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	push hl
 	push bc
 	inc hl
-	ld a,[wDamageMultipliers]
-	and a,$80
-	ld b,a
-	ld a,[hl] ; a = damage multiplier
+	ld a, [wDamageMultipliers]
+	and $7f
+	ld b, a
+	ld a, [hl] ; a = damage multiplier
 	ld [H_MULTIPLIER],a
+	sub 10 ; get the additional value, negative or positive
 	add b
+	and $7f
+	ld b, a
+	ld a, [wDamageMultipliers]
+	and $80
+	or b
 	ld [wDamageMultipliers],a
 	xor a
 	ld [H_MULTIPLICAND],a
@@ -5316,7 +5345,7 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	ld a,[hld]
 	ld [H_MULTIPLICAND + 2],a
 	call Multiply
-	ld a,10
+	ld a, 10
 	ld [H_DIVISOR],a
 	ld b,$04
 	call Divide
@@ -5327,7 +5356,6 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	ld [hl],a
 	or b ; is damage 0?
 	jr nz,.skipTypeImmunity
-.typeImmunity
 ; if damage is 0, make the move miss
 ; this only occurs if a move that would do 2 or 3 damage is 0.25x effective against the target
 	inc a
@@ -5635,7 +5663,7 @@ ExecuteEnemyMove: ; 3e6bc (f:66bc)
 	xor a
 	ld [wMoveMissed], a
 	ld [wMoveDidntMiss], a
-	ld a, $a
+	ld a, 10
 	ld [wDamageMultipliers], a
 	call CheckEnemyStatusConditions
 	jr nz, .enemyHasNoSpecialConditions

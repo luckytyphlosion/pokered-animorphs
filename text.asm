@@ -1394,6 +1394,11 @@ _DoesntAffectMonText:: ; 89ab4 (22:5ab4)
 	line $59, "!"
 	prompt
 
+_ConfusedDoesntAffectMonText::
+	text "It doesn't affect"
+	line $59, "...?"
+	prompt
+
 _CriticalHitText:: ; 89ac9 (22:5ac9)
 	text "Critical hit!"
 	prompt
@@ -1565,6 +1570,11 @@ _SuperEffectiveText:: ; 89d22 (22:5d22)
 _NotVeryEffectiveText:: ; 89d38 (22:5d38)
 	text "It's not very"
 	line "effective..."
+	prompt
+
+_LittleEffectText::
+	text "It has little"
+	line "effect..."
 	prompt
 
 _SafariZoneEatingText:: ; 89d53 (22:5d53)
@@ -2761,6 +2771,17 @@ _HMCantDeleteText:: ; a284d (28:684d)
 	text "HM techniques"
 	line "can't be deleted!"
 	prompt
+
+_AlreadyUsedXItemText::
+	text "You've already used"
+	line "@"
+	TX_RAM wcf4b
+	text "."
+	para "You can only use"
+	line "one of each X"
+	cont "item per battle."
+	prompt
+	
 
 _PokemonCenterWelcomeText:: ; a286d (28:686d)
 	text "Welcome to our"

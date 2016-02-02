@@ -200,7 +200,7 @@ AIMoveChoiceModification2: ; 397e7 (e:57e7)
 	dec [hl] ; sligthly encourage this move
 	jr .nextMove
 
-; encourages moves that are effective against the player's mon (even if non-damaging).
+; encourages moves that are effective against the player's mon (unless non-damaging).
 ; discourage damaging moves that are ineffective or not very effective against the player's mon,
 ; unless there's no damaging move that deals at least neutral damage
 AIMoveChoiceModification3: ; 39817 (e:5817)
@@ -216,6 +216,9 @@ AIMoveChoiceModification3: ; 39817 (e:5817)
 	ret z ; no more moves in move set
 	inc de
 	call ReadMove
+	ld a, [wEnemyMovePower]
+	and a
+	jr z, .nextMove ; ignore moves with no power
 	push hl
 	push bc
 	push de

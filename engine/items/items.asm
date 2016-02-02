@@ -1551,15 +1551,6 @@ ItemUseRepelCommon: ; e005 (3:6005)
 	ld [wRepelRemainingSteps],a
 	jp PrintItemUseTextAndRemoveItem
 
-; handles X Accuracy item
-ItemUseXAccuracy: ; e013 (3:6013)
-	ld a,[wIsInBattle]
-	and a
-	jp z,ItemUseNotTime
-	ld hl,wPlayerBattleStatus2
-	set UsingXAccuracy,[hl] ; X Accuracy bit
-	jp PrintItemUseTextAndRemoveItem
-
 ; This function is bugged and never works. It always jumps to ItemUseNotTime.
 ; The Card Key is handled in a different way.
 ItemUseCardKey: ; e022 (3:6022)
@@ -1685,24 +1676,76 @@ ItemUseDireHit: ; e0f5 (3:60f5)
 	set GettingPumped,[hl] ; Focus Energy bit
 	jp PrintItemUseTextAndRemoveItem
 
+CheckIfXItemWasUsedAndSetXItemUsedFlag:
+; tests if the x item in c was used
+; and sets the flag as well if it wasn't used
+; starting from x atk to x acc
+; return carry and print text if x item was used
+	push bc
+	ld b, FLAG_TEST
+	ld hl, wInBattleXItemFlags
+	predef FlagActionPredef
+	ld a, c
+	and a
+	jr z, .xItemWasNotUsed
+	ld hl, AlreadyUsedXItemText
+	call PrintText
+	scf
+	pop bc
+	ret
+.xItemWasNotUsed
+	pop bc
+	ld b, FLAG_SET
+	ld hl, wInBattleXItemFlags
+	predef FlagActionPredef
+	and a
+	ret
+
+; handles X Accuracy item
+ItemUseXAccuracy: ; e013 (3:6013)
+	ld a,[wIsInBattle]
+	and a
+	jp z,ItemUseNotTime
+	ld c, (X_SPECIAL - X_ATTACK) + 1
+	call CheckIfXItemWasUsedAndSetXItemUsedFlag
+	jr nc, .xAccNotUsed
+	xor a
+	ld [wActionResultOrTookBattleTurn], a ; item not used
+	ret
+.xAccNotUsed
+	ld b, ACCURACY_UP1_EFFECT
+	jr RaiseStatFromXItem
+
 ItemUseXStat: ; e104 (3:6104)
 	ld a,[wIsInBattle]
 	and a
 	jr nz,.inBattle
 	call ItemUseNotTime
-	ld a,2
-	ld [wActionResultOrTookBattleTurn],a ; item not used
+	ld a, $2
+.itemNotUsed
+	ld [wActionResultOrTookBattleTurn], a ; item not used
 	ret
 .inBattle
+	ld a,[wcf91]
+	sub X_ATTACK
+	ld c, a
+	call CheckIfXItemWasUsedAndSetXItemUsedFlag
+	ld a, $0
+	jr c, .itemNotUsed
+	ld a, [wcf91]
+	sub X_ATTACK - ATTACK_UP1_EFFECT
+	ld b, a ; store stat to modify in b
+
+; fallthrough
+RaiseStatFromXItem:
+; raises the stat in b
 	ld hl,wPlayerMoveNum
 	ld a,[hli]
 	push af ; save [wPlayerMoveNum]
 	ld a,[hl]
 	push af ; save [wPlayerMoveEffect]
 	push hl
-	ld a,[wcf91]
-	sub a,X_ATTACK - ATTACK_UP1_EFFECT
-	ld [hl],a ; store player move effect
+	ld [hl], b
 	call PrintItemUseTextAndRemoveItem
 	ld a,XSTATITEM_ANIM ; X stat item animation ID
 	ld [wPlayerMoveNum],a
@@ -1717,6 +1760,10 @@ ItemUseXStat: ; e104 (3:6104)
 	pop af
 	ld [hl],a ; restore [wPlayerMoveNum]
 	ret
+
+AlreadyUsedXItemText:
+	TX_FAR _AlreadyUsedXItemText
+	db "@"
 
 ItemUsePokeflute: ; e140 (3:6140)
 	ld a,[wIsInBattle]
@@ -1795,6 +1842,14 @@ ItemUsePokeflute: ; e140 (3:6140)
 	ld hl,FluteWokeUpText
 	jp PrintText
 
+SECTION "fishing fix",ROMX[$624c],BANK[$3]
+ItemUseOldRod: ; e24c (3:624c)
+	call FishingInit
+	jp c, ItemUseNotTime
+	lb bc, 5, MAGIKARP
+	ld a, $1 ; set bite
+	jp RodResponse
+
 ; wakes up all party pokemon
 ; INPUT:
 ; hl must point to status of first pokemon in party (player's or enemy's)
@@ -1857,14 +1912,6 @@ ItemUseCoinCase: ; e23a (3:623a)
 CoinCaseNumCoinsText: ; e247 (3:6247)
 	TX_FAR _CoinCaseNumCoinsText
 	db "@"
-
-SECTION "fishing fix",ROMX[$624c],BANK[$3]
-ItemUseOldRod: ; e24c (3:624c)
-	call FishingInit
-	jp c, ItemUseNotTime
-	lb bc, 5, MAGIKARP
-	ld a, $1 ; set bite
-	jr RodResponse
 
 ItemUseGoodRod: ; e259 (3:6259)
 	call FishingInit
@@ -2324,12 +2371,13 @@ ItemUseNotTime: ; e581 (3:6581)
 ItemUseNotYoursToUse: ; e586 (3:6586)
 	ld hl,ItemUseNotYoursToUseText
 	jr ItemUseFailed
-
+	
 ThrowBallAtTrainerMon: ; e58b (3:658b)
 	call RunDefaultPaletteCommand
 	call LoadScreenTilesFromBuffer1 ; restore saved screen
 	call DelayFrame
 	ld a,TOSS_ANIM
+	ld [wAnimationID],a
 	ld [wAnimationID],a
 	predef MoveAnimation ; do animation
 	ld hl,ThrowBallAtTrainerMonText1
