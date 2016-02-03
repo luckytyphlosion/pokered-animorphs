@@ -2986,11 +2986,6 @@ _ItemUseBallText00:: ; a6729 (29:6729)
 	line "can't be caught!"
 	prompt
 
-_ItemUseBallText01:: ; a675f (29:675f)
-	text "You missed the"
-	line "#MON!"
-	prompt
-
 _ItemUseBallText02:: ; a6775 (29:6775)
 	text "Darn! The #MON"
 	line "broke free!"
@@ -3068,6 +3063,16 @@ _ThrewRockText:: ; a68cc (29:68cc)
 	text $52, " threw a"
 	line "ROCK."
 	done
+
+_MissedThePokemonText:: ; a675f (29:675f)
+	text "You missed the"
+	line "#MON!"
+	prompt
+
+_PokemonIgnoredBaitText::
+	text "The #MON"
+	line "ignored the bait!"
+	prompt
 
 _PlayedFluteNoEffectText:: ; a68dd (29:68dd)
 	text "Played the #"

@@ -6,7 +6,7 @@ ItemNames:: ; 472b (1:472b)
 	db "TOWN MAP@"
 	db "BICYCLE@"
 	db "?????@"
-	db "SAFARI BALL@"
+	db "SAFARI BOMB@"
 	db "POKéDEX@"
 	db "MOON STONE@"
 	db "ANTIDOTE@"

@@ -1,31 +1,20 @@
 PrintSafariZoneBattleText: ; 4277 (1:4277)
-	ld hl, wSafariBaitFactor
-	ld a, [hl]
-	and a
-	jr z, .asm_4284
-	dec [hl]
-	ld hl, SafariZoneEatingText
-	jr .asm_429f
-.asm_4284
-	dec hl
-	ld a, [hl]
-	and a
-	ret z
-	dec [hl]
+	ld a, [wSafariZoneRockBaitFlags]
+	bit 0, a
+	jr nz, .eatingBait
+	bit 1, a
+	jr z, .done ; not doing anything
+; angry at rock
 	ld hl, SafariZoneAngryText
-	jr nz, .asm_429f
-	push hl
-	ld a, [wEnemyMonSpecies]
-	ld [wd0b5], a
-	call GetMonHeader
-	ld a, [wMonHCatchRate]
-	ld [wEnemyMonCatchRate], a
-	pop hl
-.asm_429f
-	push hl
-	call LoadScreenTilesFromBuffer1
-	pop hl
-	jp PrintText
+	jr .printText
+.eatingBait
+	ld hl, SafariZoneEatingText
+.printText
+	call PrintText
+.done
+	xor a
+	ld [wSafariZoneRockBaitFlags], a
+	jp LoadScreenTilesFromBuffer1
 
 SafariZoneEatingText: ; 42a7 (1:42a7)
 	TX_FAR _SafariZoneEatingText

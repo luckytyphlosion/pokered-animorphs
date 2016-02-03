@@ -601,7 +601,10 @@ wAICount:: ; ccdf
 ; number of times remaining that AI action can occur
 	ds 1
 
-	ds 2
+wSafariZoneRockBaitFlags::
+	ds 1
+	
+	ds 1
 
 wEnemyMoveListIndex:: ; cce2
 	ds 1
@@ -615,6 +618,8 @@ wLastSwitchInEnemyMonHP:: ; cce3
 wTotalPayDayMoney:: ; cce5
 ; total amount of money made using Pay Day during the current battle
 	ds 3
+
+wSafariRockFactor:: ; cce8
 
 wSafariEscapeFactor:: ; cce8
 	ds 1
@@ -2063,7 +2068,6 @@ wUsedMetronomeStruggle::
 wSavedAnimationOptions::
 	ds 1
 
-wRepelRemainingSteps:: ; d0db
 	ds 1
 
 wMoves:: ; d0dc
@@ -3038,6 +3042,7 @@ wBeatGymFlags:: ; d72a
 ; used to determine whether to show name on statue and in two NPC text scripts
 	ds 1
 
+wRepelRemainingSteps:: ; d72b
 	ds 1
 
 wd72c:: ; d72c

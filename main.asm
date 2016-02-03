@@ -1447,7 +1447,7 @@ BattleMenuText: ; 7455 (1:7455)
 	next "ITEM  RUN@"
 
 SafariZoneBattleMenuText: ; 7468 (1:7468)
-	db   "BALL×       BAIT"
+	db   "BOMB×       BAIT"
 	next "THROW ROCK  RUN@"
 
 SwitchStatsCancelText: ; 7489 (1:7489)
@@ -2380,7 +2380,7 @@ SafariSteps: ; c579 (3:4579)
 	db "/500@"
 
 SafariBallText: ; c57e (3:457e)
-	db "BALL×× @"
+	db "BOMB×× @"
 
 GetTileAndCoordsInFrontOfPlayer: ; c586 (3:4586)
 	call GetPredefRegisters

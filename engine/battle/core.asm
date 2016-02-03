@@ -218,6 +218,34 @@ SetScrollXForSlidingPlayerBodyLeft: ; 3c110 (f:4110)
 	jr z, .loop
 	ret
 
+InitiatePlayerAttackAndSpeedForSafariBattle:
+	ld hl, wPlayerMonUnmodifiedLevel
+	ld bc, (wPlayerMonEvasionMod + 1 - wPlayerMonUnmodifiedLevel)
+	xor a
+	call FillMemory
+	ld hl, wBattleMon
+	ld bc, wTrainerClass - wBattleMon
+	xor a
+	call FillMemory
+	ld a, $69 ; Kappa
+	ld [wBattleMonMaxHP], a
+	ld [wBattleMonHP], a
+	ld a, $7
+	ld [wPlayerMonAccuracyMod], a
+	ld a, [wEnemyMonUnmodifiedSpeed+1]
+	cpl
+	inc a ; get inverse
+	srl a ; divide by 2
+	ld b, a
+	srl b
+	srl b
+	sub b ; subtract by 1/8, resulting in a multiplication of 3/8
+	ld [wPlayerMonUnmodifiedSpeed+1], a
+	ld a, [wEnemyMonCatchRate]
+	srl a ; divide by 2 again
+	ld [wBattleMonAttack+1], a
+	ret
+	
 StartBattle: ; 3c11e (f:411e)
 	xor a
 	ld [wPartyGainExpFlags], a
@@ -253,8 +281,13 @@ StartBattle: ; 3c11e (f:411e)
 	ld a, [wBattleType]
 	and a ; is it a normal battle?
 	jp z, .playerSendOutFirstMon ; if so, send out player mon
+	call InitiatePlayerAttackAndSpeedForSafariBattle
 ; safari zone battle
+.safariBattleMainLoop
+	call LoadScreenTilesFromBuffer1
 .displaySafariZoneBattleMenu
+	call DrawEnemyHUDAndHPBar
+	call SaveScreenTilesToBuffer1
 	call DisplayBattleMenu
 	ret c ; return if the player ran from battle
 	ld a, [wActionResultOrTookBattleTurn]
@@ -268,32 +301,56 @@ StartBattle: ; 3c11e (f:411e)
 	jp PrintText
 .notOutOfSafariBalls
 	callab PrintSafariZoneBattleText
-	ld a, [wEnemyMonSpeed + 1]
-	add a
-	ld b, a ; init b (which is later compared with random value) to (enemy speed % 256) * 2
-	jp c, EnemyRan ; if (enemy speed % 256) > 127, the enemy runs
-	ld a, [wSafariBaitFactor]
-	and a ; is bait factor 0?
-	jr z, .checkEscapeFactor
-; bait factor is not 0
-; divide b by 4 (making the mon less likely to run)
+	ld hl, wEnemyMonSpeed
+	ld a, [hli]
+	ld l, [hl]
+	ld h, a
+	ld a, [wEnemyMonCatchRate]
+	ld b, a
 	srl b
 	srl b
-.checkEscapeFactor
-	ld a, [wSafariEscapeFactor]
-	and a ; is escape factor 0?
-	jr z, .compareWithRandomValue
-; escape factor is not 0
-; multiply b by 2 (making the mon more likely to run)
-	sla b
-	jr nc, .compareWithRandomValue
-; cap b at 255
-	ld b, $ff
-.compareWithRandomValue
-	call Random
-	cp b
-	jr nc, .checkAnyPartyAlive
-	jr EnemyRan ; if b was greater than the random value, the enemy runs
+	ld a, h
+	and a ; does the high byte exist?
+	jr nz, .skipToCalculation
+	ld a, b
+	cp l ; is catch rate/4 greater than speed?
+	jr c, .skipToCalculation
+	ld b, $0 ; set catch rate as 0, but halve speed
+	srl h
+	rr l
+.skipToCalculation
+	ld d, h
+	ld e, l
+	call BattleRandom
+	ld l, a
+	ld h, 0
+	ld a, b
+	add l
+	ld l, a
+	jr nc, .noCarry
+	inc h
+.noCarry
+; de = modified enemy speed
+; hl = modified player speed
+	ld a, h
+	cp d
+	jr c, .safariMonFlees
+	jr nz, .safariMonStays
+	ld a, l
+	cp e
+	jr c, .safariMonFlees
+	jr nz, .safariMonStays
+; if both speeds are equal, do a coin flip
+	call BattleRandom
+	and $1
+	jr z, .safariMonStays
+.safariMonFlees
+	call LoadScreenTilesFromBuffer1
+	call DrawEnemyHUDAndHPBar
+	call SaveScreenTilesToBuffer1
+	jp EnemyRan
+.safariMonStays
+	jp .safariBattleMainLoop
 
 .outOfSafariBallsText
 	TX_FAR _OutOfSafariBallsText
@@ -338,6 +395,51 @@ StartBattle: ; 3c11e (f:411e)
 	call LoadScreenTilesFromBuffer1
 	call SendOutMon
 	jr MainInBattleLoop
+
+_HandleSafariBomb:
+	ld hl, wPlayerMovePower
+.tryAgain
+	call BattleRandom
+	ld b, a
+	ld c, a
+	ld a, $1
+.loop
+	srl b
+	jr nc, .gotPartialBasePower
+	add a
+	jr .loop
+.gotPartialBasePower
+	add c
+	jr c, .tryAgain
+	ld [hli], a ; power
+	xor a
+	ld [hli], a ; set to normal type
+	ld [hl], 50 percent ; acc
+	xor a
+	ld [wCriticalHitOrOHKO], a ; safari bomb damage can't be a Critical Hit
+	ld [wMoveMissed], a
+	call MoveHitTest
+	ld a, [wMoveMissed]
+	and a
+	jr nz, .safariBombMissed
+	call GetDamageVarsForPlayerAttack
+	call CalculateDamage ; ignores AdjustDamageForMoveType (type-less damage) and RandomizeDamage
+	call ApplyDamageToEnemyPokemon
+	ld hl, wEnemyMonHP
+	ld a, [hli]
+	or [hl] ; is enemy mon HP 0?
+	ret nz
+	call FaintEnemyPokemon
+	ld a, [wEnemyMonSpecies2]
+	ld [wCapturedMonSpecies], a
+	ret
+.safariBombMissed
+	ld hl, MissedThePokemonText2
+	jp PrintText
+	
+MissedThePokemonText2:
+	TX_FAR _MissedThePokemonText
+	db "@"
 
 ; wild mon or link battle enemy ran from battle
 EnemyRan: ; 3c202 (f:4202)
@@ -4842,6 +4944,9 @@ ApplyDamageToEnemyPokemon: ; 3e142 (f:6142)
 	ld [wHPBarType],a
 	predef UpdateHPBar2 ; animate the HP bar shortening
 ApplyAttackToEnemyPokemonDone: ; 3e19d (f:619d)
+	ld a, [wBattleType]
+	cp $2 ; safari battle?
+	jp z, DrawEnemyHUDAndHPBar
 	jp DrawHUDsAndHPBars
 
 ApplyAttackToPlayerPokemon: ; 3e1a0 (f:61a0)
@@ -5472,17 +5577,44 @@ MoveHitTest: ; 3e56b (f:656b)
 	ld l, e
 	pop de
 .doAccuracyCheck
-; steal formula from animorphs
+; take inspiration of formula from animorphs
 ; from stump's writeup:
 ; "If the attacker's speed, plus an RNG byte, plus the attack's modifier to hit, plus 16 is greater than or equal to 1.5 times the defender's speed (rounded down), the attack succeeds."
-; so calculate unmodified speed + accuracy + 16 + RNG byte
+; instead, calculate:
+; speed + (accuracy * 100 / 255) + 16
+; then calculate (enemy speed + rand(31,255)) * 2
+; then generate random ranges with those two values
+; and compare those
+; if the modified accuracy range is greater than the modified speed range, then the move hits
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = attacking mon speed
-	add hl, bc ; speed + accuracy
-	call BattleRandom
+	
+	ld a, c ; scale accuracy to 100
+	ld [H_MULTIPLIER], a
+	xor a
+	ld [H_MULTIPLICAND], a
+	ld [H_MULTIPLICAND+1], a
+	ld a, 100
+	ld [H_MULTIPLICAND+2], a
+	call Multiply
+	
+	ld a, [H_PRODUCT+3]
+	ld [H_DIVIDEND+1], a
+	ld a, [H_PRODUCT+2]
+	ld [H_DIVIDEND], a
+	xor a
+	ld [H_DIVIDEND+2], a
+	ld [H_DIVIDEND+3], a
+	dec a
+	ld [H_DIVISOR], a
+	ld b, $2
+	call Divide
+	ld a, [H_QUOTIENT+3]
 	ld c, a
-	add hl, bc ; speed + accuracy + RNG
+	ld b, $0
+	
+	add hl, bc ; speed + accuracy
 	ld c, 16
 	add hl, bc ; speed + accuracy + RNG + 16
 
@@ -5496,21 +5628,36 @@ MoveHitTest: ; 3e56b (f:656b)
 	ld l, [hl]
 	ld h, a ; hl = defending mon speed
 	
-; multiply defending speed by 1.5
-	ld b, h
-	ld c, l
-; divide bc by 2
-	srl b
-	rr c
-; add it to defending speed
+; add RNG byte between $1f and $ff
+.getGoodValue
+	call Random
+	cp $1f
+	jr c, .getGoodValue
+	ld c, a
+	ld b, $0
+	add hl, bc
+; double defending speed + rng byte
+	add hl, hl
 ; hl = modified speed
 ; de = modified accuracy
-	add hl, bc
-	ld a, d
-	cp h ; check if d > h
+; now generate random ranges using hl and de as upper values
+
+; first, figure out a bitmask for the upper bytes for efficiency
+; start with speed
+	call GetRandomRangeFor16BitValue
+	push hl
+	ld h, d
+	ld l, e
+	pop de ; swap hl and de
+	call GetRandomRangeFor16BitValue
+; hl = random range accuracy
+; de = random range speed
+	ld a, h
+	cp d ; check if h > d
 	jr c, .moveMissed
-	ld a, e
-	cp l ; check if e > l
+	ret nz
+	ld a, l
+	cp d ; check if l > e
 	ret nc ; return if we hit
 .moveMissed
 	xor a
@@ -5531,6 +5678,47 @@ MoveHitTest: ; 3e56b (f:656b)
 	res UsingTrappingMove,[hl] ; end multi-turn attack e.g. wrap
 	ret
 
+DetermineBitmaskForRandomRange:
+; find a bitmask for the value in a
+; and return it in a
+	ld c, a
+	ld a, $ff
+.loop
+	sla c
+	jr c, .done
+	srl a
+	jr .loop
+.done
+	ret
+
+GetRandomRangeFor16BitValue:
+	ld a, h
+	and a
+	jr z, .handleEightBitValue
+	call DetermineBitmaskForRandomRange
+	ld c, a
+.rejectionSampleLoop1
+	call BattleRandom
+	and c
+	cp h
+	jr z, .doRejectionSampleLoop2
+	jr nc, .rejectionSampleLoop1
+	ld h, a
+	call BattleRandom
+	ld l, a
+	pop de
+	ret
+.doRejectionSampleLoop2
+	ld h, a
+.handleEightBitValue
+	call BattleRandom
+	cp l
+	jr z, .gotLowerByte
+	jr nc, .handleEightBitValue
+.gotLowerByte
+	ld l, a
+	ret
+	
 ; values for player turn
 CalcHitChance: ; 3e624 (f:6624)
 	ld hl,wPlayerMoveAccuracy
@@ -7389,7 +7577,7 @@ PoisonEffect: ; 3f24f (f:724f)
 	cp POISON_EFFECT
 	ret nz
 .didntAffect
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	jp PrintDidntAffectText
 
@@ -8075,7 +8263,7 @@ SwitchAndTeleportEffect: ; 3f739 (f:7739)
 	srl b
 	cp b
 	jr nc, .asm_3f76e
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	ld a, [wPlayerMoveNum]
 	cp TELEPORT
@@ -8090,7 +8278,7 @@ SwitchAndTeleportEffect: ; 3f739 (f:7739)
 	ld a, [wPlayerMoveNum]
 	jr .asm_3f7e4
 .asm_3f77e
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	ld hl, IsUnaffectedText
 	ld a, [wPlayerMoveNum]
@@ -8117,7 +8305,7 @@ SwitchAndTeleportEffect: ; 3f739 (f:7739)
 	srl b
 	cp b
 	jr nc, .asm_3f7c1
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	ld a, [wEnemyMoveNum]
 	cp TELEPORT
@@ -8132,7 +8320,7 @@ SwitchAndTeleportEffect: ; 3f739 (f:7739)
 	ld a, [wEnemyMoveNum]
 	jr .asm_3f7e4
 .asm_3f7d1
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	ld hl, IsUnaffectedText
 	ld a, [wEnemyMoveNum]
@@ -8402,7 +8590,7 @@ BecameConfusedText: ; 3f9a1 (f:79a1)
 ConfusionEffectFailed: ; 3f9a6 (f:79a6)
 	cp CONFUSION_SIDE_EFFECT
 	ret z
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	jp ConditionalPrintButItFailed
 
@@ -8445,7 +8633,7 @@ RageEffect: ; 3f9df (f:79df)
 	ret
 
 MimicEffect: ; 3f9ed (f:79ed)
-	ld c, 50
+	ld c, 10
 	call DelayFrames
 	call MoveHitTest
 	ld a, [wMoveMissed]

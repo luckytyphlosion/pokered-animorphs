@@ -2,7 +2,7 @@ _FuchsiaCityText1:: ; a5e9c (29:5e9c)
 	text "Did you try the"
 	line "SAFARI GAME? Some"
 	cont "#MON can only"
-	cont "be caught there."
+	cont "be found there."
 	done
 
 _FuchsiaCityText2:: ; a5ede (29:5ede)
@@ -12,7 +12,7 @@ _FuchsiaCityText2:: ; a5ede (29:5ede)
 
 	para "Out back is the"
 	line "SAFARI GAME for"
-	cont "catching #MON."
+	cont "getting #MON."
 	done
 
 _FuchsiaCityText3:: ; a5f3e (29:5f3e)
@@ -39,7 +39,7 @@ _FuchsiaCityText11:: ; a5f99 (29:5f99)
 
 _FuchsiaCityText13:: ; a5fc1 (29:5fc1)
 	text "SAFARI GAME"
-	line "#MON-U-CATCH!"
+	line "DEFEAT-TO-GET!"
 	done
 
 _FuchsiaCityText16:: ; a5fdc (29:5fdc)
