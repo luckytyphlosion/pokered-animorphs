@@ -5562,16 +5562,12 @@ MoveHitTest: ; 3e56b (f:656b)
 	ret nz ; if so, always hit regardless of accuracy/evasion
 .calcHitChance
 	call CalcHitChance ; scale the move accuracy according to attacker's accuracy and target's evasion
-	ld a, [wPlayerMoveAccuracy]
-	ld b, 0
-	ld c, a
+; returns accuracy in bc
 	ld hl, wPlayerMonUnmodifiedSpeed
 	ld de, wEnemyMonUnmodifiedSpeed
 	ld a,[H_WHOSETURN]
 	and a
 	jr z,.doAccuracyCheck
-	ld a, [wEnemyMoveAccuracy]
-	ld c, a
 	push hl
 	ld h, d
 	ld l, e
@@ -5589,30 +5585,45 @@ MoveHitTest: ; 3e56b (f:656b)
 	ld a, [hli]
 	ld l, [hl]
 	ld h, a ; hl = attacking mon speed
-	
-	ld a, c ; scale accuracy to 100
+; calculate acc * 100 / 255
+	ld a, 100
 	ld [H_MULTIPLIER], a
 	xor a
 	ld [H_MULTIPLICAND], a
+	ld a, b
 	ld [H_MULTIPLICAND+1], a
-	ld a, 100
-	ld [H_MULTIPLICAND+2], a
+	ld a, c
+	ld [H_MULTIPLICAND+2], a ; scale accuracy to 100
 	call Multiply
 	
-	ld a, [H_PRODUCT+3]
+	ld a, [H_PRODUCT+1]
+	and a
+	ld b, $2
+	jr z, .twoByteDividend
+	ld [H_DIVIDEND], a
+	ld a, [H_PRODUCT+2]
 	ld [H_DIVIDEND+1], a
+	ld a, [H_PRODUCT]
+	ld [H_DIVIDEND+2], a
+	inc b
+	xor a
+	jr .divide
+.twoByteDividend
 	ld a, [H_PRODUCT+2]
 	ld [H_DIVIDEND], a
+	ld a, [H_PRODUCT+3]
+	ld [H_DIVIDEND+1], a
 	xor a
 	ld [H_DIVIDEND+2], a
+.divide
 	ld [H_DIVIDEND+3], a
 	dec a
 	ld [H_DIVISOR], a
-	ld b, $2
 	call Divide
 	ld a, [H_QUOTIENT+3]
 	ld c, a
-	ld b, $0
+	ld a, [H_QUOTIENT+2]
+	ld b, a
 	
 	add hl, bc ; speed + accuracy
 	ld c, 16
@@ -5781,12 +5792,9 @@ CalcHitChance: ; 3e624 (f:6624)
 	dec d
 	jr nz,.loop
 	ld a,[H_QUOTIENT + 2]
-	and a ; is the calculated hit chance over 0xFF?
+	ld b, a ; is the calculated hit chance over 0xFF?
 	ld a,[H_QUOTIENT + 3]
-	jr z,.storeAccuracy
-; if calculated hit chance over 0xFF
-	ld a,$ff ; set the hit chance to 0xFF
-.storeAccuracy
+	ld c, a
 	pop hl
 	ld [hl],a ; store the hit chance in the move accuracy variable
 	ret
@@ -5794,40 +5802,6 @@ CalcHitChance: ; 3e624 (f:6624)
 ; multiplies damage by a random percentage from ~85% to 100%
 RandomizeDamage: ; 3e687 (f:6687)
 	ret ; nope
-	ld hl, wDamage
-	ld a, [hli]
-	and a
-	jr nz, .DamageGreaterThanOne
-	ld a, [hl]
-	cp 2
-	ret c ; return if damage is equal to 0 or 1
-.DamageGreaterThanOne
-	xor a
-	ld [H_MULTIPLICAND], a
-	dec hl
-	ld a, [hli]
-	ld [H_MULTIPLICAND + 1], a
-	ld a, [hl]
-	ld [H_MULTIPLICAND + 2], a
-; loop until a random number greater than or equal to 217 is generated
-.loop
-	call BattleRandom
-	rrca
-	cp 217
-	jr c, .loop
-	ld [H_MULTIPLIER], a
-	call Multiply ; multiply damage by the random number, which is in the range [217, 255]
-	ld a, 255
-	ld [H_DIVISOR], a
-	ld b, $4
-	call Divide ; divide the result by 255
-; store the modified damage
-	ld a, [H_QUOTIENT + 2]
-	ld hl, wDamage
-	ld [hli], a
-	ld a, [H_QUOTIENT + 3]
-	ld [hl], a
-	ret
 
 ; for more detailed commentary, see equivalent function for player side (ExecutePlayerMove)
 ExecuteEnemyMove: ; 3e6bc (f:66bc)
