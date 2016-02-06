@@ -177,6 +177,14 @@ dn: MACRO
 	db (\1 << 4 | \2)
 	ENDM
 
+dnr: MACRO
+	rept _NARG / 2
+	db (\1) << 4 + (\2)
+	shift
+	shift
+	endr
+	ENDM
+
 ; macro for putting a byte then a word
 dbw: MACRO
 	db \1

@@ -3544,6 +3544,11 @@ CopyString:: ; 3829 (0:3829)
 RemovePokemon:: ; 391f (0:391f)
 	jpab _RemovePokemon
 
+AddPartyMon_ZeroDVs::
+	xor a
+	ld [wAddPartyMonDVs], a
+	ld [wAddPartyMonDVs+1], a
+; fallthrough
 AddPartyMon:: ; 3927 (0:3927)
 	push hl
 	push de
@@ -3674,8 +3679,9 @@ CalcStat:: ; 394a (0:394a)
 ; first, get the address of the mon's dvs
 	ld hl, (wPartyMon1DVs - wPartyMon1) - 1
 	add hl, de
+	dec c
 	ld a, c
-	cp $4 ; error checking
+	cp $5 ; error checking
 	jr c, .getNonHPDVloop
 	ld c, $1
 .getNonHPDVloop
@@ -4490,11 +4496,15 @@ GiveItem::
 	ret
 
 GivePokemon::
-; Give the player monster b at level c.
+; Give the player monster b at level c, with dvs de
 	ld a, b
 	ld [wcf91], a
 	ld a, c
 	ld [wCurEnemyLVL], a
+	ld a, d
+	ld [wAddPartyMonDVs], a
+	ld a, e
+	ld [wAddPartyMonDVs+1], a
 	xor a ; PLAYER_PARTY_DATA
 	ld [wMonDataLocation], a
 	jpba _GivePokemon

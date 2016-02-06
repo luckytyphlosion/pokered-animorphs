@@ -923,6 +923,9 @@ HandleEnemyMonFainted: ; 3c525 (f:4525)
 	jpab HealMonAfterBattle
 	
 FaintEnemyPokemon: ; 0x3c567
+	ld a, [wBattleType]
+	cp $2 ; safari battle?
+	jr z, .wild
 	call ReadPlayerMonCurHPAndStatus
 	ld a, [wIsInBattle]
 	dec a
@@ -6344,10 +6347,33 @@ LoadEnemyMonData: ; 3eb01 (f:6b01)
 	ld [wEnemyMonSpecies], a
 	ld [wd0b5], a
 	call GetMonHeader
-	xor a
+	ld a, [wBattleType]
+	cp $2 ; safari battle?
+	lb bc, $69, $69 ; Kappa b
+	jr z, .writeFixedDVs
+	ld a, [wIsInBattle]
+	dec a
+	lb bc, $00, $00
+	jr z, .writeFixedDVs ; set 0 dvs for wild pokemon
+	
+	ld hl, wEnemyMon1DVs
+	ld bc, wEnemyMon2 - wEnemyMon1
+	ld a, [wWhichPokemon]
+	call AddNTimes
+	ld a, [hli]
+	ld b, a
+	ld c, [hl]
+.writeFixedDVs
+	ld hl, wLoadedMonDVs
+	ld a, b
+	ld [hli], a
+	ld [hl], c
+	
 	ld hl, wEnemyMonDVs
 	ld [hli], a
+	ld a, c
 	ld [hli], a
+	
 	ld a, [wCurEnemyLVL]
 	ld [hli], a
 	ld a, [wIsInBattle]

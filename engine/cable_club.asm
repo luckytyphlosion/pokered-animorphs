@@ -969,3 +969,9 @@ CableClub_DrawHorizontalLine: ; 5ae0 (1:5ae0)
 	dec d
 	jr nz, .asm_5ae1
 	ret
+
+LoadTrainerInfoTextBoxTiles: ; 5ae6 (1:5ae6)
+	ld de, TrainerInfoTextBoxTileGraphics
+	ld hl, vChars2 + $760
+	lb bc, BANK(TrainerInfoTextBoxTileGraphics), (TrainerInfoTextBoxTileGraphicsEnd - TrainerInfoTextBoxTileGraphics) / $10
+	jp CopyVideoData

@@ -77,6 +77,7 @@ Lab4Text1: ; 75d6c (1d:5d6c)
 	ld a, [wFossilMon]
 	ld b, a
 	ld c, 30
+	lb de, $94, $f6
 	call GivePokemon
 	jr nc, .asm_75d93
 	ResetEvents EVENT_GAVE_FOSSIL_TO_LAB, EVENT_LAB_STILL_REVIVING_FOSSIL, EVENT_LAB_HANDING_OVER_FOSSIL_MON

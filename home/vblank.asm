@@ -102,9 +102,13 @@ DontUpdateWY:
 	and $f
 	cp $f
 	jr nz, .noSoftReset
-	ld hl, hSoftReset
-	dec [hl]
-	jr nz, .noSoftReset
+	ld a, [hSoftReset]
+	and a
+	jr z, .doSoftReset
+	dec a
+	ld [hSoftReset], a
+	jr .noSoftReset
+.doSoftReset
 	ld hl, [sp+$8] ; swag pinball strats
 	ld [hl], SoftReset & $ff
 	inc hl

@@ -249,19 +249,17 @@ PrintStatsBox: ; 12ae4 (4:6ae4)
 	and a ; a is 0 from the status screen
 	jr nz, .DifferentBox
 	coord hl, 0, 8
-	ld b, $8
-	ld c, $8
+	lb bc, 8, 8
 	call TextBoxBorder ; Draws the box
 	coord hl, 1, 9 ; Start printing stats from here
-	ld bc, $0019 ; Number offset
+	ld bc, 21 ; Number offset
 	jr .PrintStats
 .DifferentBox
 	coord hl, 9, 2
-	ld b, $8
-	ld c, $9
+	lb bc, 8, 9
 	call TextBoxBorder
 	coord hl, 11, 3
-	ld bc, $0018
+	ld bc, $18
 .PrintStats
 	push bc
 	push hl
@@ -270,22 +268,60 @@ PrintStatsBox: ; 12ae4 (4:6ae4)
 	pop hl
 	pop bc
 	add hl, bc
+	
+	ld a, [wLoadedMonDVs+1]
+	ld c, a
+	ld a, [wLoadedMonDVs]
+	ld b, a
+	
+	swap a
+	and $f
 	ld de, wLoadedMonAttack
-	lb bc, 2, 3
-	call PrintStat
+	call PrintStatsBox_PrintStat
+	
+	ld a, b
+	and $f
 	ld de, wLoadedMonDefense
-	call PrintStat
+	call PrintStatsBox_PrintStat
+	
+	ld a, c
+	swap a
+	and $f
 	ld de, wLoadedMonSpeed
-	call PrintStat
+	call PrintStatsBox_PrintStat
+	ld a, c
+	and $f
 	ld de, wLoadedMonSpecial
-	jp PrintNumber
-PrintStat
+
+; fallthrough
+PrintStatsBox_PrintStat:
+	push bc
 	push hl
+	cp $a
+	jr c, .doNotDecrementHL
+	dec hl
+.doNotDecrementHL
+	ld [wcd6d], a
+	push de
+	ld a, "("
+	ld [hli], a
+	ld de, wcd6d
+	lb bc, LEFT_ALIGN | 1, 2
+	call PrintNumber
+	ld a, ")"
+	ld [hli], a
+	inc hl
+	pop de
+	
+	lb bc, 2, 3
+	
 	call PrintNumber
 	pop hl
 	ld de, SCREEN_WIDTH * 2
 	add hl, de
+	pop bc
 	ret
+	
 
 StatsText: ; 12b3a (4:6b3a)
 	db   "ATTACK"

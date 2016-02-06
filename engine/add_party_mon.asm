@@ -105,8 +105,9 @@ _AddPartyMon: ; f2e5 (3:72e5)
 .trainerMon
 	ld hl, wPartyMon1DVs - wPartyMon1
 	add hl, bc
-	xor a ; no DVs
+	ld a, [wAddPartyMonDVs]
 	ld [hli], a
+	ld a, [wAddPartyMonDVs+1]
 	ld [hl], a         ; write IVs
 	
 	ld e, c
@@ -138,9 +139,9 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	ld [hl], a
 	ld hl, wEnemyMon1HP - wEnemyMon1
 	add hl, bc
-	ld a, [wEnemyMonHP]    ; copy HP from cur enemy mon
+	ld a, [wEnemyMonMaxHP]    ; copy HP from cur enemy mon
 	ld [hli], a
-	ld a, [wEnemyMonHP+1]
+	ld a, [wEnemyMonMaxHP+1]
 	ld [hli], a
 	xor a
 	ld [hli], a                ; box level
@@ -262,8 +263,10 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	dec a
 	jr nz, .calcFreshStats
 	ld hl, wEnemyMonMaxHP
-	ld bc, (wEnemyMonSpecial + 1) - wEnemyMonMaxHP
+	ld bc, wEnemyMonPP - wEnemyMonMaxHP
+	inc de
 	call CopyData          ; copy stats of cur enemy mon
+	
 	jr .done
 .calcFreshStats
 	ld hl, wPartyMon1MaxHP - wPartyMon1

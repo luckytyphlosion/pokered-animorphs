@@ -231,6 +231,7 @@ HandlePrizeChoice: ; 528c6 (14:68c6)
 	ld c,a
 	pop af
 	ld b,a
+	lb de, $45, $46
 	call GivePokemon
 
 ; If either the party or box was full, wait after displaying message.

@@ -333,6 +333,7 @@ SilphCo7Text1:
 	ld hl, .MeetLaprasGuyText
 	call PrintText
 	lb bc, LAPRAS, 15
+	lb de, $98, $88
 	call GivePokemon
 	jr nc, .done
 	ld a, [wSimulatedJoypadStatesEnd]

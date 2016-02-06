@@ -164,11 +164,21 @@ DisplayGainMorphMenu:
 	call AddNTimes
 	ld a, [hl]
 	ld [wcf91], a
-
+	
+	push hl
 	ld bc, wEnemyMon1Level - wEnemyMon1
 	add hl, bc
 	ld a, [hl]
 	ld [wCurEnemyLVL], a
+	pop hl
+	
+	ld bc, wEnemyMon1DVs - wEnemyMon1
+	add hl, bc
+	ld a, [hli]
+	ld [wAddPartyMonDVs], a
+	ld a, [hl]
+	ld [wAddPartyMonDVs+1], a
+	
 	call LoadEnemyMonFromParty
 	ld a, [wPartyCount]
 	cp PARTY_LENGTH

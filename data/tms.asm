@@ -1,4 +1,3 @@
-SECTION "randomizer tm fix",ROMX[$7773],BANK[$4]
 TechnicalMachines: ; 13773 (4:7773)
 	db MEGA_PUNCH
 	db RAZOR_WIND

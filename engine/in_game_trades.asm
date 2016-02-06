@@ -103,7 +103,7 @@ InGameTrade_DoTrade: ; 71c07 (1c:5c07)
 	ld a,[wcf91]
 	cp b
 	ld a,$2
-	jr nz,.tradeFailed ; jump if the selected mon's species is not the required one
+	jp nz,.tradeFailed ; jump if the selected mon's species is not the required one
 	ld a,[wWhichPokemon]
 	ld hl,wPartyMon1Level
 	ld bc, wPartyMon2 - wPartyMon1
@@ -128,6 +128,13 @@ InGameTrade_DoTrade: ; 71c07 (1c:5c07)
 	ld [wCurEnemyLVL],a
 	pop af
 	ld [wWhichPokemon],a
+	ld hl, wPartyMon1DVs
+	ld bc, wPartyMon2 - wPartyMon1
+	call AddNTimes
+	ld a, [hli]
+	ld [wAddPartyMonDVs], a
+	ld a, [hl]
+	ld [wAddPartyMonDVs+1], a
 	ld a,[wInGameTradeReceiveMonSpecies]
 	ld [wcf91],a
 	xor a

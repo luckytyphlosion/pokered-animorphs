@@ -17,6 +17,7 @@ SoftReset::
 	ld c, 32
 .saveScumMode
 	call DelayFrames
+Init_ForceGBC::
 	ld a, GBC
 	ld [wGBC], a
 	; fallthrough
@@ -214,8 +215,6 @@ rLCDC_DEFAULT EQU %11100011
 	
 	jr c, .skipIntroAndMainMenu
 	
-	;predef LoadSGB
-	
 	predef PlayIntro
 
 	call DisableLCD
@@ -226,7 +225,13 @@ rLCDC_DEFAULT EQU %11100011
 	ld [rLCDC], a
 
 	jp SetDefaultNamesBeforeTitlescreen
+.waitForNonSoftResetInput
+	call DelayFrame
 .skipIntroAndMainMenu
+	ld a, [hJoyInput]
+	and $f
+	cp $f
+	jr z, .waitForNonSoftResetInput
 	jp MainMenu
 	
 ClearVram:

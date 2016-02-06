@@ -14,9 +14,9 @@ DoClearSaveDialogue: ; 1c98a (7:498a)
 	call DisplayTextBoxID
 	ld a, [wCurrentMenuItem]
 	and a
-	jp z, Init
+	jp z, Init_ForceGBC
 	callba ClearSAV
-	jp Init
+	jp Init_ForceGBC
 
 ClearSaveDataText: ; 1c9c1 (7:49c1)
 	TX_FAR _ClearSaveDataText

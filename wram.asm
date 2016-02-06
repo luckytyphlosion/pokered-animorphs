@@ -582,7 +582,8 @@ wTestBattlePlayerSelectedMove:: ; ccd9
 ; The player's selected move during a test battle.
 ; InitBattleVariables sets it to the move Pound.
 	ds 1
-
+	
+wSafariZoneRockBaitFlags::
 	ds 1
 
 wMoveMenuType:: ; ccdb
@@ -601,10 +602,8 @@ wAICount:: ; ccdf
 ; number of times remaining that AI action can occur
 	ds 1
 
-wSafariZoneRockBaitFlags::
-	ds 1
-	
-	ds 1
+wAddPartyMonDVs::
+	ds 2
 
 wEnemyMoveListIndex:: ; cce2
 	ds 1
@@ -2318,6 +2317,7 @@ wPartyMon6:: party_struct wPartyMon6 ; d247
 
 wPartyMonOT::    ds NAME_LENGTH * PARTY_LENGTH ; d273
 wPartyMonNicks:: ds NAME_LENGTH * PARTY_LENGTH ; d2b5
+wPartyMonNicksEnd::
 
 wPartyDataEnd::
 

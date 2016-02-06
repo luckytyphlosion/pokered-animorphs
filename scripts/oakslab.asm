@@ -928,6 +928,10 @@ OaksLabMonChoiceMenu: ; 1d1b3 (7:51b3)
 	ld [wCurEnemyLVL], a
 	ld a, [wcf91]
 	ld [wd11e], a
+	ld a, $43
+	ld [wAddPartyMonDVs], a
+	ld a, $22
+	ld [wAddPartyMonDVs+1], a
 	call AddPartyMon
 	ld hl, wd72e
 	set 3, [hl]

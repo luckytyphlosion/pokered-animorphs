@@ -53,7 +53,7 @@ HallofFameRoomScript2: ; 5a4bb (16:64bb)
 	dec b
 	jr nz, .delayLoop
 	call WaitForTextScrollButtonPress
-	jp Init
+	jp Init_ForceGBC
 
 HallofFameRoomScript0: ; 5a50d (16:650d)
 	ld a, $ff
