@@ -55,6 +55,13 @@ DoInGameTradeDialogue: ; 71ad9 (1c:5ad9)
 	ld a,[wCurrentMenuItem]
 	and a
 	jr nz,.printText
+	ld a, [wPartyCount]
+	and a
+	jr nz, .canTrade
+	ld a, $5
+	ld [wInGameTradeTextPointerTableIndex],a
+	jr .printText
+.canTrade
 	call InGameTrade_DoTrade
 	jr c,.printText
 	ld hl, TradedForText
@@ -252,6 +259,7 @@ TradeTextPointers1: ; 71d6a (1c:5d6a)
 	dw WrongMon1Text
 	dw Thanks1Text
 	dw AfterTrade1Text
+	dw NoMonsToTrade1Text
 
 TradeTextPointers2: ; 71d74 (1c:5d74)
 	dw WannaTrade2Text
@@ -259,6 +267,7 @@ TradeTextPointers2: ; 71d74 (1c:5d74)
 	dw WrongMon2Text
 	dw Thanks2Text
 	dw AfterTrade2Text
+	dw NoMonsToTrade2Text
 
 TradeTextPointers3: ; 71d7e (1c:5d7e)
 	dw WannaTrade3Text
@@ -266,6 +275,7 @@ TradeTextPointers3: ; 71d7e (1c:5d7e)
 	dw WrongMon3Text
 	dw Thanks3Text
 	dw AfterTrade3Text
+	dw NoMonsToTrade3Text
 
 ConnectCableText: ; 71d88 (1c:5d88)
 	TX_FAR _ConnectCableText
@@ -295,6 +305,10 @@ AfterTrade1Text: ; 71da8 (1c:5da8)
 	TX_FAR _AfterTrade1Text
 	db "@"
 
+NoMonsToTrade1Text:
+	TX_FAR _NoMonsToTrade1Text
+	db "@"
+
 WannaTrade2Text: ; 71dad (1c:5dad)
 	TX_FAR _WannaTrade2Text
 	db "@"
@@ -315,6 +329,10 @@ AfterTrade2Text: ; 71dc1 (1c:5dc1)
 	TX_FAR _AfterTrade2Text
 	db "@"
 
+NoMonsToTrade2Text:
+	TX_FAR _NoMonsToTrade2Text
+	db "@"
+
 WannaTrade3Text: ; 71dc6 (1c:5dc6)
 	TX_FAR _WannaTrade3Text
 	db "@"
@@ -333,4 +351,8 @@ Thanks3Text: ; 71dd5 (1c:5dd5)
 
 AfterTrade3Text: ; 71dda (1c:5dda)
 	TX_FAR _AfterTrade3Text
+	db "@"
+
+NoMonsToTrade3Text:
+	TX_FAR _NoMonsToTrade3Text
 	db "@"

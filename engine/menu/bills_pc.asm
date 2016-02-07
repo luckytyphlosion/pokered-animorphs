@@ -200,9 +200,13 @@ ExitBillsPC: ; 21588 (8:5588)
 
 BillsPCDeposit: ; 215ac (8:55ac)
 	ld a, [wPartyCount]
+	and a
+	ld hl, YouDontHaveAnyPokemonText
+	jr z, .noMonsInParty
 	dec a
 	jr nz, .partyLargeEnough
 	ld hl, CantDepositLastMonText
+.noMonsInParty
 	call PrintText
 	jp BillsPCMenu
 .partyLargeEnough
@@ -468,6 +472,10 @@ DepositWhichMonText: ; 0x217f3
 
 MonWasStoredText: ; 0x217f8
 	TX_FAR _MonWasStoredText
+	db "@"
+
+YouDontHaveAnyPokemonText:
+	TX_FAR _YouDontHaveAnyPokemonText
 	db "@"
 
 CantDepositLastMonText: ; 0x217fd

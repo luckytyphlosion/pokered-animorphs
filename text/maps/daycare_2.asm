@@ -20,6 +20,12 @@ _DayCareOnlyHaveOneMonText:: ; 8c041 (23:4041)
 	line "#MON with you."
 	done
 
+_DayCareHaveNoMonsText::
+	text "You do not have"
+	line "any #MON"
+	cont "with you."
+	done
+
 _DayCareCantAcceptMonWithHMText:: ; 8c063 (23:4063)
 	text "I can't accept a"
 	line "#MON that"

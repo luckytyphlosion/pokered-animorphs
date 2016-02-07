@@ -1174,6 +1174,21 @@ _PlayerBlackedOutText2:: ; 89748 (22:5748)
 	line "out!"
 	prompt
 
+_PlayerBlackedOutText3::
+	text $52, " has no"
+	line "useable #MON!"
+	
+	para $52, " blacked"
+	line "out..."
+	cont "..."
+	cont "..."
+	cont "..."
+	cont "..."
+	cont "..."
+	cont "...and never "
+	cont "woke up..."
+	prompt
+
 _LinkBattleLostText:: ; 89772 (22:5772)
 	text $52, " lost to"
 	line "@"
@@ -1840,6 +1855,11 @@ _CantDepositLastMonText:: ; 0x8a177
 	line "the last #MON!"
 	prompt
 
+_YouDontHaveAnyPokemonText::
+	text "You don't have"
+	line "any #MON!"
+	prompt
+	
 _BoxFullText:: ; 0x8a198
 	text "Oops! This Box is"
 	line "full of #MON."
@@ -2804,6 +2824,12 @@ _PokemonCenterNotEnoughMoneyText::
 	cont "enough money."
 	prompt
 
+_NoPokemonWithYouText::
+	text "You don't seem to"
+	line "have any #MON"
+	cont "with you."
+	prompt
+
 _ShallWeHealYourPokemonText:: ; a28b4 (28:68b4)
 	text "Shall we heal your"
 	line "#MON?"
@@ -3319,6 +3345,12 @@ _AfterTrade1Text:: ; a8162 (2a:4162)
 	text " great?"
 	done
 
+_NoMonsToTrade1Text::
+	text "Huh? You don't"
+	line "have a #MON"
+	cont "on you!"
+	done
+
 _WannaTrade2Text:: ; a817c (2a:417c)
 	text "Hello there! Do"
 	line "you want to trade"
@@ -3367,6 +3399,12 @@ ELSE
 ENDC
 	done
 
+_NoMonsToTrade2Text::
+	text "You don't seem to"
+	line "have a #MON"
+	cont "with you..."
+	done
+
 _WannaTrade3Text:: ; a8240 (2a:4240)
 	text "Hi! Do you have"
 	line "@"
@@ -3411,6 +3449,12 @@ _AfterTrade3Text:: ; a82c9 (2a:42c9)
 	TX_RAM wInGameTradeGiveMonName
 	text " is"
 	line "doing great!"
+	done
+
+_NoMonsToTrade3Text::
+	text "Wait, you don't"
+	line "have any #MON"
+	cont "with you!"
 	done
 
 _NothingToCutText:: ; a82f8 (2a:42f8)

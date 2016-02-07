@@ -163,6 +163,10 @@ SilphCo9Text1: ; 5d8b8 (17:58b8)
 	TX_ASM
 	CheckEvent EVENT_BEAT_SILPH_CO_GIOVANNI
 	jr nz, .asm_5d8dc
+	ld a, [wPartyCount]
+	and a
+	ld hl, SilphCo9WhoWillSaveUsText
+	jr z, .printWhoWillSaveUsText
 	CheckAndSetEvent EVENT_HEALED_IN_SILPHCO9
 	jr nz, .printDontGiveUpText
 	ld hl, SilphCo9Text_5d8e5
@@ -173,6 +177,7 @@ SilphCo9Text1: ; 5d8b8 (17:58b8)
 	call GBFadeInFromWhite
 .printDontGiveUpText
 	ld hl, SilphCo9Text_5d8ea
+.printWhoWillSaveUsText
 	call PrintText
 	jr .asm_5d8e2
 .asm_5d8dc
@@ -180,6 +185,10 @@ SilphCo9Text1: ; 5d8b8 (17:58b8)
 	call PrintText
 .asm_5d8e2
 	jp TextScriptEnd
+
+SilphCo9WhoWillSaveUsText:
+	TX_FAR _SilphCo9WhoWillSaveUsText
+	db "@"
 
 SilphCo9Text_5d8e5: ; 5d8e5 (17:58e5)
 	TX_FAR _SilphCo9Text_5d8e5

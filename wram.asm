@@ -3048,6 +3048,7 @@ wRepelRemainingSteps:: ; d72b
 wd72c:: ; d72c
 ; bit 0: if not set, the 3 minimum steps between random battles have passed
 ; bit 1: prevent audio fade out
+; bit 2: player entered a battle with no pokemon
 	ds 1
 
 wd72d:: ; d72d

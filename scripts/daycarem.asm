@@ -18,6 +18,9 @@ DayCareMText1: ; 56254 (15:6254)
 	ld hl, DayCareComeAgainText
 	jp nz, .done
 	ld a, [wPartyCount]
+	and a
+	ld hl, DayCareHaveNoMonsText
+	jp z, .done
 	dec a
 	ld hl, DayCareOnlyHaveOneMonText
 	jp z, .done
@@ -254,6 +257,10 @@ DayCareNoRoomForMonText: ; 56440 (15:6440)
 
 DayCareOnlyHaveOneMonText: ; 56445 (15:6445)
 	TX_FAR _DayCareOnlyHaveOneMonText
+	db "@"
+
+DayCareHaveNoMonsText:
+	TX_FAR _DayCareHaveNoMonsText
 	db "@"
 
 DayCareCantAcceptMonWithHMText: ; 5644a (15:644a)

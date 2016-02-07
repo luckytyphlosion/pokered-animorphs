@@ -272,11 +272,22 @@ StartBattle: ; 3c11e (f:411e)
 	ld c, 40
 	call DelayFrames
 	call SaveScreenTilesToBuffer1
+	ld a, [wBattleType]
+	cp $2 ; safari battle?
+	jr z, .doNotCheckForPartyAlive
 .checkAnyPartyAlive
+	ld a, [wPartyCount]
+	and a
+	jr nz, .playerHasMons
+	ld hl, wd72c
+	set 2, [hl]
+	jp HandlePlayerBlackOut
+.playerHasMons
 	call AnyPartyAlive
 	ld a, d
 	and a
 	jp z, HandlePlayerBlackOut ; jump if no mon is alive
+.doNotCheckForPartyAlive
 	call LoadScreenTilesFromBuffer1
 	ld a, [wBattleType]
 	and a ; is it a normal battle?
@@ -1352,12 +1363,16 @@ HandlePlayerBlackOut: ; 3c837 (f:4837)
 .notSony1Battle
 	ld b, SET_PAL_BATTLE_BLACK
 	call RunPaletteCommand
-	ld hl, PlayerBlackedOutText2
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
-	jr nz, .noLinkBattle
 	ld hl, LinkBattleLostText
-.noLinkBattle
+	jr z, .gotText
+	ld a, [wd72c]
+	bit 2, a ; did we enter a battle with no pokemon?
+	ld hl, PlayerBlackedOutText2
+	jr z, .gotText
+	ld hl, PlayerBlackedOutText3
+.gotText
 	call PrintText
 	ld a, [wd732]
 	res 5, a
@@ -1372,6 +1387,10 @@ Sony1WinText: ; 3c884 (f:4884)
 
 PlayerBlackedOutText2: ; 3c889 (f:4889)
 	TX_FAR _PlayerBlackedOutText2
+	db "@"
+	
+PlayerBlackedOutText3:
+	TX_FAR _PlayerBlackedOutText3
 	db "@"
 
 LinkBattleLostText: ; 3c88e (f:488e)
@@ -7179,6 +7198,8 @@ _InitBattleCommon: ; 3efeb (f:6feb)
 	ld a, [wIsInBattle]
 	dec a ; is it a wild battle?
 	call z, DrawEnemyHUDAndHPBar ; draw enemy HUD and HP bar if it's a wild battle
+	ld hl, wd72c
+	res 2, [hl]
 	call StartBattle
 	callab EndOfBattle
 	pop af

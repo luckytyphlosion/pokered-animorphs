@@ -1910,6 +1910,9 @@ FlagAction:
 HealEnemyParty:
 	ld hl, wEnemyPartyMons
 	ld de, wEnemyMon1HP
+	ld a, [wEnemyPartyCount]
+	ld c, a
+	ld b, $1
 	jr HealParty_common
 
 HealParty:
@@ -1917,7 +1920,11 @@ HealParty:
 
 	ld hl, wPartySpecies
 	ld de, wPartyMon1HP
+	ld a, [wPartyCount]
+	ld c, a
+	ld b, $0
 HealParty_common:
+	push bc
 .healmon
 	ld a, [hli]
 	cp $ff
@@ -1997,11 +2004,17 @@ HealParty_common:
 	jr .healmon
 
 .done
+	pop bc
 	xor a
 	ld [wWhichPokemon], a
 	ld [wd11e], a
+	
+	dec b ; is this the enemy party?
+	jr z, .noPPup
+	ld a, c
+	and a ; do we have 0 pokemon?
+	jr z, .noPPup
 
-	ld a, [wPartyCount]
 	ld b, a
 .ppup
 	push bc
@@ -2011,6 +2024,7 @@ HealParty_common:
 	inc [hl]
 	dec b
 	jr nz, .ppup
+.noPPup
 	ret
 
 

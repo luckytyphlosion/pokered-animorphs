@@ -845,10 +845,13 @@ MapEntryAfterBattle:: ; 091f (0:091f)
 HandleBlackOut::
 ; For when all the player's pokemon faint.
 ; Does not print the "blacked out" message.
-
 	call GBFadeOutToBlack
 	ld a, $08
 	call StopMusic
+	ld hl, wd72c
+	bit 2, [hl]
+	res 2, [hl]
+	jr z, .regularBlackout
 	xor a
 	ld [hWY], a
 	ld [wUpdateSpritesEnabled], a
@@ -862,7 +865,17 @@ HandleBlackOut::
 	call PrintText
 	ld c, 0
 	call DelayFrames
-	jp Init
+	jp Init_ForceGBC
+.regularBlackout
+	ld hl, wd72e
+	res 5, [hl]
+	ld a, Bank(ResetStatusAndHalveMoneyOnBlackout) ; also Bank(SpecialWarpIn) and Bank(SpecialEnterMap)
+	ld [H_LOADEDROMBANK], a
+	ld [MBC1RomBank], a
+	call ResetStatusAndHalveMoneyOnBlackout
+	call SpecialWarpIn
+	call PlayDefaultMusicFadeOutCurrent
+	jp SpecialEnterMap
 
 AllPartyFaintedGameOverText:
 	TX_FAR _AllPartyFaintedGameOverText

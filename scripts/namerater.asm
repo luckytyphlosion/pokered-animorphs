@@ -46,6 +46,12 @@ NameRaterText1: ; 1da56 (7:5a56)
 	ld hl, NameRaterText_1dab3
 	call NameRaterScript_1da15
 	jr nz, .asm_1daae
+	ld a, [wPartyCount]
+	and a
+	jr nz, .playerHasPokemon
+	ld hl, NameRaterText_CantRateWithNoMons
+	jr .asm_1daa8
+.playerHasPokemon
 	ld hl, NameRaterText_1dab8
 	call PrintText
 	xor a
@@ -104,4 +110,8 @@ NameRaterText_1dacc: ; 1dacc (7:5acc)
 
 NameRaterText_1dad1: ; 1dad1 (7:5ad1)
 	TX_FAR _NameRaterText_1dad1
+	db "@"
+	
+NameRaterText_CantRateWithNoMons:
+	TX_FAR _NameRaterText_CantRateWithNoMons
 	db "@"

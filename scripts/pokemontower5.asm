@@ -23,8 +23,11 @@ PokemonTower5Script0: ; 6094b (18:494b)
 .inPurifiedZone
 	CheckAndSetEvent EVENT_IN_PURIFIED_ZONE
 	ret nz
-	CheckAndSetEvent EVENT_ENTERED_PURIFIED_ZONE
+	ld a, [wPartyCount]
+	and a
 	ld a, $8
+	jr z, .alreadyEnteredPurifiedZone
+	CheckAndSetEvent EVENT_ENTERED_PURIFIED_ZONE
 	jr nz, .alreadyEnteredPurifiedZone
 	xor a
 	ld [hJoyHeld], a

@@ -8,6 +8,12 @@ _NameRaterText_1dab3:: ; 9a308 (26:6308)
 	cont "your #MON?"
 	done
 
+_NameRaterText_CantRateWithNoMons::
+	text "I can't rate your"
+	line "#MON if you"
+	cont "don't have any..."
+	done
+
 _NameRaterText_1dab8:: ; 9a361 (26:6361)
 	text "Which #MON"
 	line "should I look at?"

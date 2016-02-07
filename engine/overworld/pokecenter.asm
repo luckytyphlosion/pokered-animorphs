@@ -48,6 +48,10 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	ld a, [wCurrentMenuItem]
 	and a
 	jr nz, .declinedHealing ; if the player chose No
+	ld a, [wPartyCount]
+	and a
+	ld hl, NoPokemonWithYouText
+	jr z, .noPokemonInParty
 	call SubtractAmountPaidFromMoney
 	jr c, .notEnoughMoney
 ; if the player had enough money
@@ -80,6 +84,7 @@ DisplayPokemonCenterDialogue_: ; 6fe6 (1:6fe6)
 	jr .done
 .notEnoughMoney
 	ld hl, PokemonCenterNotEnoughMoneyText
+.noPokemonInParty
 	call PrintText
 .declinedHealing
 	call LoadScreenTilesFromBuffer1 ; restore screen
@@ -95,6 +100,10 @@ PokemonCenterWelcomeText: ; 705d (1:705d)
 ShallWeHealYourPokemonText: ; 7062 (1:7062)
 	db $a
 	TX_FAR _ShallWeHealYourPokemonText
+	db "@"
+
+NoPokemonWithYouText:
+	TX_FAR _NoPokemonWithYouText
 	db "@"
 
 PokemonCenterNotEnoughMoneyText:

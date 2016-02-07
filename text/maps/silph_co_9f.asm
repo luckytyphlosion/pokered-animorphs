@@ -13,6 +13,12 @@ _SilphCo9Text_5d8ef:: ; 84c48 (21:4c48)
 	line "much!"
 	done
 
+_SilphCo9WhoWillSaveUsText::
+	text "Oh, who will save"
+	line "us from the"
+	cont "ROCKETs..."
+	done
+
 _SilphCo9BattleText1:: ; 84c5c (21:4c5c)
 	text "Your #MON seem"
 	line "to adore you, kid!"

@@ -46,8 +46,10 @@ SetupEnemyPartyPokeballs: ; 3a887 (e:6887)
 
 SetupPokeballs: ; 0x3a8a6
 	ld a, [de]
-	push af
+	and a
 	ld de, wBuffer
+	jr z, .allPokeballsEmpty
+	push af
 	ld c, PARTY_LENGTH
 	ld a, $34 ; empty pokeball
 .emptyloop
@@ -65,6 +67,12 @@ SetupPokeballs: ; 0x3a8a6
 	dec a
 	jr nz, .monloop
 	ret
+.allPokeballsEmpty
+	ld h, d
+	ld l, e
+	ld bc, PARTY_LENGTH
+	ld a, $34 ; empty pokeball
+	jp FillMemory
 
 PickPokeball: ; 3a8c2 (e:68c2)
 	inc hl
