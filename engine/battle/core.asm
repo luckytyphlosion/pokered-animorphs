@@ -5599,99 +5599,133 @@ MoveHitTest: ; 3e56b (f:656b)
 ; from stump's writeup:
 ; "If the attacker's speed, plus an RNG byte, plus the attack's modifier to hit, plus 16 is greater than or equal to 1.5 times the defender's speed (rounded down), the attack succeeds."
 ; instead, calculate:
-; speed + (accuracy * 100 / 255) + 16
-; then calculate (enemy speed + rand(31,255)) * 2
-; then generate random ranges with those two values
+; accuracy * sqrt(player speed / battle speed) + 16
+; (represented in the code as: sqrt(accuracy^2 * player speed / battle speed)
+; then generate a random range with the player side
+; and a random value of 255
 ; and compare those
-; if the modified accuracy range is greater than the modified speed range, then the move hits
-	ld a, [hli]
-	ld l, [hl]
-	ld h, a ; hl = attacking mon speed
-; calculate acc * 100 / 255
-	ld a, 100
-	ld [H_MULTIPLIER], a
+; if the modified accuracy range is greater than the random value, then the move hits
+
+; calculate acc ^ 2
+; check if it's too large to be used as a multiplier
 	xor a
 	ld [H_MULTIPLICAND], a
 	ld a, b
-	ld [H_MULTIPLICAND+1], a
-	ld a, c
-	ld [H_MULTIPLICAND+2], a ; scale accuracy to 100
-	call Multiply
-	
-	ld a, [H_PRODUCT+1]
 	and a
-	ld b, $2
-	jr z, .twoByteDividend
-	ld [H_DIVIDEND], a
-	ld a, [H_PRODUCT+2]
-	ld [H_DIVIDEND+1], a
-	ld a, [H_PRODUCT]
-	ld [H_DIVIDEND+2], a
-	inc b
-	xor a
-	jr .divide
-.twoByteDividend
-	ld a, [H_PRODUCT+2]
-	ld [H_DIVIDEND], a
-	ld a, [H_PRODUCT+3]
-	ld [H_DIVIDEND+1], a
-	xor a
-	ld [H_DIVIDEND+2], a
-.divide
-	ld [H_DIVIDEND+3], a
-	dec a
-	ld [H_DIVISOR], a
-	call Divide
-	ld a, [H_QUOTIENT+3]
-	ld c, a
-	ld a, [H_QUOTIENT+2]
-	ld b, a
-	
-	add hl, bc ; speed + accuracy
-	ld c, 16
-	add hl, bc ; speed + accuracy + RNG + 16
-
-; swap hl and de
+	jr z, .doNotScaleAccuracy
+; if it's too large, divide the multiplier by 2 and multiply the multiplicand by 2
 	push hl
-	ld h, d
-	ld l, e
-	pop de
-	
+	ld h, b
+	ld l, c
+	add hl, hl ; get multiplicand
+	ld a, h
+	ld [H_MULTIPLICAND+1], a
+	ld a, l
+	ld [H_MULTIPLICAND+2], a
+	srl b ; get multiplier
+	rr c
+	pop hl
+	jr .squareAccuracy
+.doNotScaleAccuracy
+	xor a
+	ld [H_MULTIPLICAND+1], a
+.squareAccuracy
+	ld a, c
+	ld [H_MULTIPLICAND+2], a
+	ld [H_MULTIPLIER], a
+	call Multiply
+; now calculate player speed * acc^2
+; first check if player speed is 16 bit, which if so scale both enemy speed and player speed by 2
 	ld a, [hli]
 	ld l, [hl]
-	ld h, a ; hl = defending mon speed
-	
-; add RNG byte between $1f and $ff
-.getGoodValue
-	call Random
-	cp $1f
-	jr c, .getGoodValue
-	ld c, a
-	ld b, $0
-	add hl, bc
-; double defending speed + rng byte
-	add hl, hl
-; hl = modified speed
-; de = modified accuracy
-; now generate random ranges using hl and de as upper values
-
-; first, figure out a bitmask for the upper bytes for efficiency
-; start with speed
-	call GetRandomRangeFor16BitValue
+	ld h, a ; hl = attacking mon speed
 	push hl
 	ld h, d
 	ld l, e
-	pop de ; swap hl and de
-	call GetRandomRangeFor16BitValue
-; hl = random range accuracy
-; de = random range speed
+	pop de ; swap de and hl
+	ld a, [hli]
+	ld l, [hl]
+	ld h, a
+; hl = enemy speed
+; de = player speed
+
+; check if either the player or enemy speed is a 16 bit integer, and scale by 2 if so
+	ld a, d
+	and a
+	jr nz, .scaleSpeeds
 	ld a, h
-	cp d ; check if h > d
-	jr c, .moveMissed
-	ret nz
+	and a
+	jr z, .doNotScaleSpeeds
+.scaleSpeeds
+; scale the speeds
+	srl h
+	rr l
+	srl d
+	rr e
+; check if either speed results in a zero
+; to avoid a division by zero error
+; (or possibly sqrt lockup?)
+	ld a, h
+	or l
+	jr nz, .enemySpeedGreaterThanOne
+	inc l
+.enemySpeedGreaterThanOne
+	ld a, d
+	or e
+	jr nz, .doNotScaleSpeeds
+	inc e
+.doNotScaleSpeeds
+	ld a, e ; player speed
+	ld [H_MULTIPLIER], a
+	ld a, [H_PRODUCT+3]
+	ld [H_MULTIPLICAND+2], a
+	ld a, [H_PRODUCT+2]
+	ld [H_MULTIPLICAND+1], a
+	ld a, [H_PRODUCT+1]
+	ld [H_MULTIPLICAND], a
+	call Multiply
+; now divide the product by the enemy speed
+; which is already scaled from earlier
 	ld a, l
-	cp d ; check if l > e
-	ret nc ; return if we hit
+	ld [H_DIVISOR], a
+; shift bytes if they're empty for efficiency
+	ld a, [H_DIVIDEND]
+	and a
+	ld b, $4
+	jr nz, .fourByteDividend
+	ld a, [H_PRODUCT+1]
+	ld [H_DIVIDEND], a
+	ld a, [H_PRODUCT+2]
+	ld [H_DIVIDEND+1], a
+	ld a, [H_PRODUCT+3]
+	ld [H_DIVIDEND+2], a
+	xor a
+	ld [H_DIVIDEND+3], a
+	dec b
+.fourByteDividend
+	call Divide
+	call LongIntegerSqrt
+	
+	ld bc, 16
+	add hl, bc ; modified accuracy + 16
+
+; hl = modified accuracy
+; now generate a random range for the accuracy
+
+; start with speed
+	call GetRandomRangeFor16BitValue
+; generate a random range between 0 and 255
+	call BattleRandom
+	ld c, a
+; hl = random range accuracy
+; c = random range 0 - 255
+
+	ld a, h
+	and a
+	ret nz ; if the random range for accuracy is 16-bit, it's guarenteed that we hit
+	ld a, l
+	cp c ; check lower byte
+	ret nc ; return if the lower byte of accuracy is greater than the random value
 .moveMissed
 	xor a
 	ld hl,wDamage ; zero the damage
@@ -5709,6 +5743,99 @@ MoveHitTest: ; 3e56b (f:656b)
 .playerTurn2
 	ld hl,wPlayerBattleStatus1
 	res UsingTrappingMove,[hl] ; end multi-turn attack e.g. wrap
+	ret
+
+LongIntegerSqrt:
+	ld a, [H_QUOTIENT]
+	and a
+	jp nz, .sqrt32bit
+	ld a, [H_QUOTIENT+1]
+	and a
+	jp z, .regularSqrt
+	ld de, 255 * 255
+	ld a, [H_QUOTIENT+3]
+	sub e
+	ld [H_QUOTIENT+3], a
+	ld a, [H_QUOTIENT+2]
+	sbc d
+	ld [H_QUOTIENT+2], a
+	ld a, [H_QUOTIENT+1]
+	sbc $0
+	ld [H_QUOTIENT+1], a
+	ld de, 509 ; (255 * 2) - 1
+	ld bc, 255
+.sqrtLongLoop_24Bit
+	inc bc
+	inc de
+	inc e
+	ld a, [H_QUOTIENT+3]
+	sub e
+	ld [H_QUOTIENT+3], a
+	ld a, [H_QUOTIENT+2]
+	sbc d
+	ld [H_QUOTIENT+2], a
+	ld a, [H_QUOTIENT+1]
+	sbc $0
+	ld [H_QUOTIENT+1], a
+	jr nc, .sqrtLongLoop_24Bit
+	ld h, b
+	ld l, c
+	ret
+.sqrt32bit
+	ld de, (4095 * 4095) & $ffff
+	ld a, [H_QUOTIENT+3]
+	sub e
+	ld [H_QUOTIENT+3], a
+	ld a, [H_QUOTIENT+2]
+	sbc d
+	ld [H_QUOTIENT+2], a
+	ld a, [H_QUOTIENT+1]
+	sbc (4095 * 4095) / $10000
+	ld [H_QUOTIENT+1], a
+	ld a, [H_QUOTIENT]
+	sbc $0
+	ld [H_QUOTIENT], a
+	ld c, 0
+	ld de, 8189 ; (4095 * 2) - 1
+	ld hl, 4095
+.sqrtLongLoop_32Bit
+	inc de
+	ld a, d
+	or e
+	jr nz, .noCarry
+	inc c
+.noCarry
+	inc e
+	inc hl
+	ld a, [H_QUOTIENT+3]
+	sub e
+	ld [H_QUOTIENT+3], a
+	ld a, [H_QUOTIENT+2]
+	sbc d
+	ld [H_QUOTIENT+2], a
+	ld a, [H_QUOTIENT+1]
+	sbc c
+	ld [H_QUOTIENT+1], a
+	ld a, [H_QUOTIENT]
+	sbc $0
+	ld [H_QUOTIENT], a
+	jr nc, .sqrtLongLoop_32Bit
+	ret
+.regularSqrt
+	ld a, [H_QUOTIENT+2]
+	ld h, a
+	ld a, [H_QUOTIENT+3]
+	ld l, a
+	ld a, -1
+	ld bc, $1
+.sqrtHLLoop
+	inc a
+	dec c
+	dec bc
+	add hl, bc
+	jr c, .sqrtHLLoop
+	ld l, a
+	ld h, $0
 	ret
 
 DetermineBitmaskForRandomRange:

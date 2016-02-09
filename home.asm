@@ -3679,7 +3679,6 @@ CalcStat:: ; 394a (0:394a)
 ; first, get the address of the mon's dvs
 	ld hl, (wPartyMon1DVs - wPartyMon1) - 1
 	add hl, de
-	dec c
 	ld a, c
 	cp $5 ; error checking
 	jr c, .getNonHPDVloop
