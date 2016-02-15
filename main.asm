@@ -2525,6 +2525,8 @@ INCLUDE "engine/sqrt.asm"
 
 INCLUDE "engine/battle/scroll_back_pic.asm"
 
+INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
+
 SECTION "NPC Sprites 1", ROMX, BANK[NPC_SPRITES_1]
 
 OakAideSprite:         INCBIN "gfx/sprites/oak_aide.2bpp"
@@ -3318,7 +3320,7 @@ INCLUDE "engine/overworld/advance_player_sprite.asm"
 INCLUDE "engine/overworld/engage_map_trainer.asm"
 INCLUDE "engine/cgb_only.asm"
 INCLUDE "engine/battle/food.asm"
-INCLUDE "engine/battle/draw_hud_pokeball_gfx.asm"
+INCLUDE "engine/battle/morph.asm"
 
 SECTION "bank11",ROMX,BANK[$11]
 

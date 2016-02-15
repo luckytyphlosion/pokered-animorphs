@@ -89,7 +89,7 @@ BattleTransition: ; 7096d (1c:496d)
 	jr nz, .clearSavedRegsloop
 	
 	ld a, $1
-	ld [hDoBattleTransition], a
+	ld [hSpecialVBlankFunction], a
 	ret
 	
 ; the three GetBattleTransitionID functions set the first
@@ -904,7 +904,7 @@ BattleTransitionPreparation:
 
 FinishedBattleTransition:
 	xor a
-	ld [hDoBattleTransition], a
+	ld [hSpecialVBlankFunction], a
 	jr reloadSP
 ReturnFromVBlankCall:
 	ld a, l

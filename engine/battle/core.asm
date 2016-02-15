@@ -1674,148 +1674,10 @@ TrainerSentOutText: ; 3ca7e (f:4a7e)
 	db "@"
 
 AnimateEnemyMorphMon:
-; animate the enemy trainer morphing
-; by drawing each line of the mon sprite every frame
-
-; first, re-order the first sprite buffer in the order of each tile line
-	xor a
-	ld [hStartTileID], a
-	coord hl, 12, 0
-	predef CopyUncompressedPicToTilemap
-	call RearrangeMonPicInLines
-
-; now copy each line to vram
-; save H_AUTOBGTRANSFERENABLED
-	ld a, [H_AUTOBGTRANSFERENABLED]
-	push af
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-; get base address of enemy pic and vram address
-	ld de, sSpriteBuffer3
-	ld hl, vFrontPic
-; offset to next column
-	ld bc, 7 * $10
-; number of lines
-	ld a, (7 * 8) / 2
-.loop
-	push af
-; first, wait for ly $38 (past enemy pic)
-.waitForSafeLY
-	ld a, [rLY]
-	cp $90 ; don't copy if in vblank period
-	jr nc, .waitForSafeLY
-	cp $38
-	jr c, .waitForSafeLY
-; copy during hblank
-	call CopyOneLineOfPic
-	call CopyOneLineOfPic
-	call DelayFrame
-	pop af
-	dec a
-	jr nz, .loop
-	pop af
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
+	jpab _AnimateEnemyMorphMon
 
 AnimatePlayerMonMorph:
-	ld a, $31
-	ld [hStartTileID], a
-	coord hl, 1, 5
-	predef CopyUncompressedPicToTilemap
-	call RearrangeMonPicInLines
-; now copy each line to vram
-; save H_AUTOBGTRANSFERENABLED
-	ld a, [H_AUTOBGTRANSFERENABLED]
-	push af
-	xor a
-	ld [H_AUTOBGTRANSFERENABLED], a
-; get base address of enemy pic and vram address
-	ld de, sSpriteBuffer3
-	ld hl, vBackPic
-; offset to next column
-	ld bc, 7 * $10
-; number of lines
-	ld a, (7 * 8) / 2
-.loop
-	push af
-; first, wait for ly $38 (past enemy pic)
-.waitForSafeLY
-	ld a, [rLY]
-	cp $90 ; don't copy if in vblank period
-	jr nc, .waitForSafeLY
-	cp $38
-	jr c, .waitForSafeLY
-; copy during hblank
-	call CopyOneLineOfPic
-	call CopyOneLineOfPic
-	call DelayFrame
-	pop af
-	dec a
-	jr nz, .loop
-	pop af
-	ld [H_AUTOBGTRANSFERENABLED], a
-	ret
-
-RearrangeMonPicInLines:
-	ld hl, sSpriteBuffer1
-	ld de, sSpriteBuffer3
-	ld b, 7 * 8
-.outerLoop
-	push hl
-	ld c, $7
-.innerLoop
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hld]
-	ld [de], a
-	inc de
-	ld a, 7 * $10
-	add l
-	ld l, a
-	jr nc, .noCarry
-	inc h
-.noCarry
-	dec c
-	jr nz, .innerLoop
-	pop hl
-	inc hl
-	inc hl
-	dec b
-	jr nz, .outerLoop
-	ret
-
-CopyOneLineOfTile:
-	ld a, [rSTAT]
-	and %10
-	jr z, CopyOneLineOfTile ; wait until we're not in hblank for full effect
-.waitForHBlank
-	ld a, [rSTAT]
-	and %10
-	jr nz, .waitForHBlank ; now wait for the beginning of hblank
-; copy one tile line
-	ld a, [de]
-	ld [hli], a
-	inc de
-	ld a, [de]
-	ld [hld], a
-	inc de
-	add hl, bc
-	ret
-	
-CopyOneLineOfPic:
-	ld a, $7
-	push hl
-.copyOneLineLoop
-	push af
-	call CopyOneLineOfTile
-	pop af
-	dec a
-	jr nz, .copyOneLineLoop
-	pop hl
-	inc hl
-	inc hl
-	ret
+	jpab _AnimatePlayerMonMorph
 
 ; tests if the player has any pokemon that are not fainted
 ; sets d = 0 if all fainted, d != 0 if some mons are still alive
@@ -6761,7 +6623,7 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 .waitForBattleTransition
 	call DelayFrame
 .noDelay
-	ld a, [hDoBattleTransition]
+	ld a, [hSpecialVBlankFunction]
 	and a
 	jr nz, .waitForBattleTransition
 	callab LoadHudAndHpBarAndStatusTilePatterns

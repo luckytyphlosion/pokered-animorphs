@@ -59,9 +59,15 @@ DontUpdateWY:
 .skipDec
 	call FadeOutAudio
 	
+	ld a, [hSpecialVBlankFunction]
+	inc a
+	jr nz, .noEnemyMorphing
+	ld a, BANK(DoEnemyMonSCXManipulation)
+	call BankswitchCommon
+	call DoEnemyMonSCXManipulation
+.noEnemyMorphing
 	ld a, [wAudioROMBank] ; music ROM bank
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
+	call BankswitchCommon
 
 	cp BANK(Audio1_UpdateMusic)
 	jr nz, .checkForAudio2
@@ -78,12 +84,11 @@ DontUpdateWY:
 .audio3
 	call Audio3_UpdateMusic
 .afterMusic
-	ld a, [hDoBattleTransition]
-	and a ; do battle transition?
-	jr z, .noBattleTransition
+	ld a, [hSpecialVBlankFunction]
+	dec a ; do battle transition?
+	jr nz, .noBattleTransition
 	ld a, BANK(BattleTransition)
-	ld [H_LOADEDROMBANK], a
-	ld [MBC1RomBank], a
+	call BankswitchCommon
 	call BattleTransitionPreparation
 	
 .noBattleTransition

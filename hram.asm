@@ -312,9 +312,9 @@ hVendingMachinePrice EQU $FFDC ; 3-byte BCD number
 ; the first tile ID in a sequence of tile IDs that increase by 1 each step
 hStartTileID EQU $FFE1
 
-hLYOverrides EQU $FFE2
+hWhichOverride EQU $FFE2
 
-hLYAddress EQU $FFE3
+hMaxLY EQU $FFE3
 
 hNewPartyLength EQU $FFE4
 
@@ -327,6 +327,8 @@ hSpriteVRAMSlotAndFacing EQU $FFE9
 hCoordsInFrontOfPlayerMatch EQU $FFEA
 
 hSpriteAnimFrameCounter EQU $FFEA
+
+hSavedLYAddressValue EQU $FFEF
 
 H_WHOSETURN EQU $FFF3 ; 0 on player’s turn, 1 on enemy’s turn
 
@@ -343,7 +345,8 @@ hDisableJoypadPolling EQU $FFF9
 hLastBGP EQU $FFFA
 hLastOBP0 EQU $FFFB
 hLastOBP1 EQU $FFFC
-hDoBattleTransition EQU $FFFD
+hSpecialVBlankFunction EQU $FFFD
+
 ; Initialized to 16.
 ; Decremented each input iteration if the player
 ; presses the reset sequence (A+B+SEL+START).
