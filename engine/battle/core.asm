@@ -97,7 +97,7 @@ SpecialEffectsCont: ; 3c049 (f:4049)
 	db -1
 
 SlidePlayerAndEnemySilhouettesOnScreen: ; 3c04c (f:404c)
-	call LoadPlayerBackPic
+	call LoadPlayerBackPicToSpriteVRAM
 	ld a, MESSAGE_BOX ; the usual text box at the bottom of the screen
 	ld [wTextBoxID], a
 	call DisplayTextBoxID
@@ -389,9 +389,6 @@ StartBattle: ; 3c11e (f:411e)
 	ld [wcf91], a
 	ld [wBattleMonSpecies2], a
 	call LoadScreenTilesFromBuffer1
-	coord hl, 1, 5
-	ld a, $9
-	call SlideTrainerPicOffScreen
 	call SaveScreenTilesToBuffer1
 	ld a, [wWhichPokemon]
 	ld c, a
@@ -1331,7 +1328,13 @@ ChooseNextMon: ; 3c7d8 (f:47d8)
 	call LoadBattleMonFromParty
 	call GBPalWhiteOut
 	call LoadHudTilePatterns
+	call DecompressPlayerBackPic
+	call LoadPlayerBackPic
 	call LoadScreenTilesFromBuffer1
+	ld a, $31
+	ld [hStartTileID], a
+	coord hl, 1, 5
+	predef CopyUncompressedPicToTilemap
 	call RunDefaultPaletteCommand
 	call GBPalNormal
 	call SendOutMon
@@ -1507,6 +1510,12 @@ EnemySendOut: ; 3c90e (f:490e)
 	ld [hl],a
 	pop bc
 	predef FlagActionPredef
+	ld a, $2
+	ld [hScrollTrainerPicDelay], a
+	ld a, $9
+	ld [hSlideAmount2], a
+	callab _ScrollTrainerPicAfterBattle
+	
 
 ; don't change wPartyGainExpFlags or wPartyFoughtCurrentEnemyFlags
 EnemySendOutFirstMon: ; 3c92a (f:492a)
@@ -1527,9 +1536,6 @@ EnemySendOutFirstMon: ; 3c92a (f:492a)
 	ld [wAICount],a
 	ld hl,wPlayerBattleStatus1
 	res 5,[hl]
-	coord hl, 18, 0
-	ld a,8
-	call SlideTrainerPicOffScreen
 	call PrintEmptyString
 	call SaveScreenTilesToBuffer1
 	ld a,[wLinkState]
@@ -1645,11 +1651,8 @@ EnemySendOutFirstMon: ; 3c92a (f:492a)
 	ld [wd0b5],a
 	call GetMonHeader
 	ld de,vFrontPic
-	call LoadMonFrontSprite
-	ld a,-$31
-	ld [hStartTileID],a
-	coord hl, 15, 6
-	predef AnimateSendingOutMon
+	call LoadMonFrontSpriteDoNotCopyToVRAM
+	call AnimateEnemyMorphMon
 	ld a,[wEnemyMonSpecies2]
 	call PlayCry
 	call DrawEnemyHUDAndHPBar
@@ -1669,6 +1672,150 @@ TrainerAboutToUseText: ; 3ca79 (f:4a79)
 TrainerSentOutText: ; 3ca7e (f:4a7e)
 	TX_FAR _TrainerSentOutText
 	db "@"
+
+AnimateEnemyMorphMon:
+; animate the enemy trainer morphing
+; by drawing each line of the mon sprite every frame
+
+; first, re-order the first sprite buffer in the order of each tile line
+	xor a
+	ld [hStartTileID], a
+	coord hl, 12, 0
+	predef CopyUncompressedPicToTilemap
+	call RearrangeMonPicInLines
+
+; now copy each line to vram
+; save H_AUTOBGTRANSFERENABLED
+	ld a, [H_AUTOBGTRANSFERENABLED]
+	push af
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+; get base address of enemy pic and vram address
+	ld de, sSpriteBuffer3
+	ld hl, vFrontPic
+; offset to next column
+	ld bc, 7 * $10
+; number of lines
+	ld a, (7 * 8) / 2
+.loop
+	push af
+; first, wait for ly $38 (past enemy pic)
+.waitForSafeLY
+	ld a, [rLY]
+	cp $90 ; don't copy if in vblank period
+	jr nc, .waitForSafeLY
+	cp $38
+	jr c, .waitForSafeLY
+; copy during hblank
+	call CopyOneLineOfPic
+	call CopyOneLineOfPic
+	call DelayFrame
+	pop af
+	dec a
+	jr nz, .loop
+	pop af
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
+AnimatePlayerMonMorph:
+	ld a, $31
+	ld [hStartTileID], a
+	coord hl, 1, 5
+	predef CopyUncompressedPicToTilemap
+	call RearrangeMonPicInLines
+; now copy each line to vram
+; save H_AUTOBGTRANSFERENABLED
+	ld a, [H_AUTOBGTRANSFERENABLED]
+	push af
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+; get base address of enemy pic and vram address
+	ld de, sSpriteBuffer3
+	ld hl, vBackPic
+; offset to next column
+	ld bc, 7 * $10
+; number of lines
+	ld a, (7 * 8) / 2
+.loop
+	push af
+; first, wait for ly $38 (past enemy pic)
+.waitForSafeLY
+	ld a, [rLY]
+	cp $90 ; don't copy if in vblank period
+	jr nc, .waitForSafeLY
+	cp $38
+	jr c, .waitForSafeLY
+; copy during hblank
+	call CopyOneLineOfPic
+	call CopyOneLineOfPic
+	call DelayFrame
+	pop af
+	dec a
+	jr nz, .loop
+	pop af
+	ld [H_AUTOBGTRANSFERENABLED], a
+	ret
+
+RearrangeMonPicInLines:
+	ld hl, sSpriteBuffer1
+	ld de, sSpriteBuffer3
+	ld b, 7 * 8
+.outerLoop
+	push hl
+	ld c, $7
+.innerLoop
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hld]
+	ld [de], a
+	inc de
+	ld a, 7 * $10
+	add l
+	ld l, a
+	jr nc, .noCarry
+	inc h
+.noCarry
+	dec c
+	jr nz, .innerLoop
+	pop hl
+	inc hl
+	inc hl
+	dec b
+	jr nz, .outerLoop
+	ret
+
+CopyOneLineOfTile:
+	ld a, [rSTAT]
+	and %10
+	jr z, CopyOneLineOfTile ; wait until we're not in hblank for full effect
+.waitForHBlank
+	ld a, [rSTAT]
+	and %10
+	jr nz, .waitForHBlank ; now wait for the beginning of hblank
+; copy one tile line
+	ld a, [de]
+	ld [hli], a
+	inc de
+	ld a, [de]
+	ld [hld], a
+	inc de
+	add hl, bc
+	ret
+	
+CopyOneLineOfPic:
+	ld a, $7
+	push hl
+.copyOneLineLoop
+	push af
+	call CopyOneLineOfTile
+	pop af
+	dec a
+	jr nz, .copyOneLineLoop
+	pop hl
+	inc hl
+	inc hl
+	ret
 
 ; tests if the player has any pokemon that are not fainted
 ; sets d = 0 if all fainted, d != 0 if some mons are still alive
@@ -1952,7 +2099,9 @@ SendOutMon: ; 3cc91 (f:4c91)
 	call DrawEnemyHUDAndHPBar
 .skipDrawingEnemyHUDAndHPBar
 	call DrawPlayerHUDAndHPBar
-	predef LoadMonBackPic
+	ld a, $1
+	ld [wCopySpriteToVRAM], a
+	call LoadMonBackPic_DoNotClearScreenArea
 	xor a
 	ld [hStartTileID], a
 	ld hl, wBattleAndStartSavedMenuItem
@@ -1977,18 +2126,12 @@ SendOutMon: ; 3cc91 (f:4c91)
 	call RunPaletteCommand
 	ld hl, wEnemyBattleStatus1
 	res UsingTrappingMove, [hl]
-	ld a, $1
-	ld [H_WHOSETURN], a
-	ld a, POOF_ANIM
-	call PlayMoveAnimation
-	coord hl, 4, 11
-	predef AnimateSendingOutMon
+	call AnimatePlayerMonMorph
 	ld a, [wcf91]
 	call PlayCry
 	call PrintEmptyString
 	jp SaveScreenTilesToBuffer1
 
-; show 2 stages of the player mon getting smaller before disappearing
 AnimateRetreatingPlayerMon: ; 3ccfa (f:4cfa)
 	coord hl, 1, 5
 	lb bc, 7, 7
@@ -2587,6 +2730,12 @@ SwitchPlayerMon: ; 3d1ba (f:51ba)
 	ld c, 50
 	call DelayFrames
 	call AnimateRetreatingPlayerMon
+	call DelayFrame
+	xor a
+	ld [H_AUTOBGTRANSFERENABLED], a
+	call DecompressPlayerBackPic
+	call LoadPlayerBackPic
+	callab Func_f429f
 	ld a, [wWhichPokemon]
 	ld [wPlayerMonNumber], a
 	ld c, a
@@ -4143,35 +4292,7 @@ DoesntAffectMonText: ; 3dc57 (f:5c57)
 
 ; if there was a critical hit or an OHKO was successful, print the corresponding text
 PrintCriticalOHKOText: ; 3dc5c (f:5c5c)
-	ld a, [wCriticalHitOrOHKO]
-	and a
-	jr z, .done ; do nothing if there was no critical hit or successful OHKO
-	dec a
-	add a
-	ld hl, CriticalOHKOTextPointers
-	ld b, $0
-	ld c, a
-	add hl, bc
-	ld a, [hli]
-	ld h, [hl]
-	ld l, a
-	call PrintText
-	xor a
-	ld [wCriticalHitOrOHKO], a
-.done
-	jp DelayFrame
-
-CriticalOHKOTextPointers: ; 3dc7a (f:5c7a)
-	dw CriticalHitText
-	dw OHKOText
-
-CriticalHitText: ; 3dc7e (f:5c7e)
-	TX_FAR _CriticalHitText
-	db "@"
-
-OHKOText: ; 3dc83 (f:5c83)
-	TX_FAR _OHKOText
-	db "@"
+	jpab _PrintCriticalOHKOText
 
 ; checks if a traded mon will disobey due to lack of badges
 ; stores whether the mon will use a move in Z flag
@@ -5316,7 +5437,7 @@ IncrementMovePP: ; 3e373 (f:6373)
 	inc [hl] ; increment PP in the party memory location
 	ret
 
-SECTION "updated types", ROMX[$6474],BANK[$f]
+;SECTION "updated types", ROMX[$6474],BANK[$f]
 INCLUDE "data/type_effects.asm"
 
 ; function to tell how effective the type of an enemy attack is on the player's current pokemon
@@ -5704,7 +5825,10 @@ MoveHitTest: ; 3e56b (f:656b)
 	dec b
 .fourByteDividend
 	call Divide
-	call LongIntegerSqrt
+	callab LongIntegerSqrt
+	
+	ld h, d
+	ld l, e
 	
 	ld bc, 16
 	add hl, bc ; modified accuracy + 16
@@ -5719,7 +5843,6 @@ MoveHitTest: ; 3e56b (f:656b)
 	ld c, a
 ; hl = random range accuracy
 ; c = random range 0 - 255
-
 	ld a, h
 	and a
 	ret nz ; if the random range for accuracy is 16-bit, it's guarenteed that we hit
@@ -5743,99 +5866,6 @@ MoveHitTest: ; 3e56b (f:656b)
 .playerTurn2
 	ld hl,wPlayerBattleStatus1
 	res UsingTrappingMove,[hl] ; end multi-turn attack e.g. wrap
-	ret
-
-LongIntegerSqrt:
-	ld a, [H_QUOTIENT]
-	and a
-	jp nz, .sqrt32bit
-	ld a, [H_QUOTIENT+1]
-	and a
-	jp z, .regularSqrt
-	ld de, 255 * 255
-	ld a, [H_QUOTIENT+3]
-	sub e
-	ld [H_QUOTIENT+3], a
-	ld a, [H_QUOTIENT+2]
-	sbc d
-	ld [H_QUOTIENT+2], a
-	ld a, [H_QUOTIENT+1]
-	sbc $0
-	ld [H_QUOTIENT+1], a
-	ld de, 509 ; (255 * 2) - 1
-	ld bc, 255
-.sqrtLongLoop_24Bit
-	inc bc
-	inc de
-	inc e
-	ld a, [H_QUOTIENT+3]
-	sub e
-	ld [H_QUOTIENT+3], a
-	ld a, [H_QUOTIENT+2]
-	sbc d
-	ld [H_QUOTIENT+2], a
-	ld a, [H_QUOTIENT+1]
-	sbc $0
-	ld [H_QUOTIENT+1], a
-	jr nc, .sqrtLongLoop_24Bit
-	ld h, b
-	ld l, c
-	ret
-.sqrt32bit
-	ld de, (4095 * 4095) & $ffff
-	ld a, [H_QUOTIENT+3]
-	sub e
-	ld [H_QUOTIENT+3], a
-	ld a, [H_QUOTIENT+2]
-	sbc d
-	ld [H_QUOTIENT+2], a
-	ld a, [H_QUOTIENT+1]
-	sbc (4095 * 4095) / $10000
-	ld [H_QUOTIENT+1], a
-	ld a, [H_QUOTIENT]
-	sbc $0
-	ld [H_QUOTIENT], a
-	ld c, 0
-	ld de, 8189 ; (4095 * 2) - 1
-	ld hl, 4095
-.sqrtLongLoop_32Bit
-	inc de
-	ld a, d
-	or e
-	jr nz, .noCarry
-	inc c
-.noCarry
-	inc e
-	inc hl
-	ld a, [H_QUOTIENT+3]
-	sub e
-	ld [H_QUOTIENT+3], a
-	ld a, [H_QUOTIENT+2]
-	sbc d
-	ld [H_QUOTIENT+2], a
-	ld a, [H_QUOTIENT+1]
-	sbc c
-	ld [H_QUOTIENT+1], a
-	ld a, [H_QUOTIENT]
-	sbc $0
-	ld [H_QUOTIENT], a
-	jr nc, .sqrtLongLoop_32Bit
-	ret
-.regularSqrt
-	ld a, [H_QUOTIENT+2]
-	ld h, a
-	ld a, [H_QUOTIENT+3]
-	ld l, a
-	ld a, -1
-	ld bc, $1
-.sqrtHLLoop
-	inc a
-	dec c
-	dec bc
-	add hl, bc
-	jr c, .sqrtHLLoop
-	ld l, a
-	ld h, $0
 	ret
 
 DetermineBitmaskForRandomRange:
@@ -5941,7 +5971,7 @@ CalcHitChance: ; 3e624 (f:6624)
 	dec d
 	jr nz,.loop
 	ld a,[H_QUOTIENT + 2]
-	ld b, a ; is the calculated hit chance over 0xFF?
+	ld b, a
 	ld a,[H_QUOTIENT + 3]
 	ld c, a
 	pop hl
@@ -6726,7 +6756,7 @@ DoBattleTransitionAndInitBattleVariables: ; 3ec32 (f:6c32)
 	ld de, sSpriteBuffer3
 	ld bc, 2*SPRITEBUFFERSIZE
 	call CopyData
-	call DecompressPlayerBackPic
+	call DecompressPlayerBackPicAndWritePlayerHeadOAM
 	jr .noDelay
 .waitForBattleTransition
 	call DelayFrame
@@ -6796,19 +6826,8 @@ SwapPlayerAndEnemyLevels: ; 3ec81 (f:6c81)
 	pop bc
 	ret
 
-; loads either red back pic or old man back pic
-; also writes OAM data and loads tile patterns for the Red or Old Man back sprite's head
-; (for use when scrolling the player sprite and enemy's silhouettes on screen)
-DecompressPlayerBackPic: ; 3ec92 (f:6c92)
-	ld a, [wBattleType]
-	dec a ; is it the old man tutorial?
-	ld de, RedPicBack
-	jr nz, .next
-	ld de, OldManPic
-.next
-	ld a, BANK(RedPicBack)
-	call UncompressSpriteFromDE
-	predef ScaleSpriteByTwo
+DecompressPlayerBackPicAndWritePlayerHeadOAM:
+	call DecompressPlayerBackPic
 	ld a, $1
 	ld [wDoOAMUpdate], a
 	ld hl, wOAMBuffer
@@ -6842,31 +6861,49 @@ DecompressPlayerBackPic: ; 3ec92 (f:6c92)
 	ld e, a
 	dec b
 	jr nz, .loop
+	ret
+
+; loads either red back pic or old man back pic
+; also writes OAM data and loads tile patterns for the Red or Old Man back sprite's head
+; (for use when scrolling the player sprite and enemy's silhouettes on screen)
+DecompressPlayerBackPic: ; 3ec92 (f:6c92)
+	ld a, [wBattleType]
+	dec a ; is it the old man tutorial?
+	ld de, RedPicBack
+	jr nz, .next
+	ld de, OldManPic
+.next
+	ld a, BANK(RedPicBack)
+	call UncompressSpriteFromDE
+	predef ScaleSpriteByTwo
 	ld a, $1
 	ld [wCopySpriteToVRAM], a
 	jp InterlaceMergeSpriteBuffers
 
-LoadPlayerBackPic:
-	ld a, $a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMEnabled], a
-	xor a
-	ld [MBC1SRamBank], a
-	ld [wSRAMBank], a
+LoadPlayerBackPicToSpriteVRAM:
 	ld [wDoOAMUpdate], a
+	call EnableSRAMAndSwitchSRAMBank
 	ld hl, vSprites
 	ld de, sSpriteBuffer1
 	ld a, [H_LOADEDROMBANK]
 	ld b, a
 	ld c, 7 * 7
 	call CopyVideoData
-	xor a
-	ld [MBC1SRamEnable], a
-	ld [wSRAMEnabled], a
+	call DisableSRAMAndSwitchSRAMBank0
 	ld a, $31
 	ld [hStartTileID], a
 	coord hl, 1, 5
 	predef_jump CopyUncompressedPicToTilemap
+
+LoadPlayerBackPic:
+	xor a
+	call EnableSRAMAndSwitchSRAMBank
+	ld hl, vBackPic
+	ld de, sSpriteBuffer1
+	ld a, [H_LOADEDROMBANK]
+	ld b, a
+	ld c, 7 * 7
+	jp CopyVideoData
 
 ; does nothing since no stats are ever selected (barring glitches)
 DoubleOrHalveSelectedStats: ; 3ed02 (f:6d02)
@@ -6874,6 +6911,10 @@ DoubleOrHalveSelectedStats: ; 3ed02 (f:6d02)
 	jpab HalveSelectedStats
 
 ScrollTrainerPicAfterBattle: ; 3ed12 (f:6d12)
+	ld a, $4
+	ld [hScrollTrainerPicDelay], a
+	ld a, $7
+	ld [hSlideAmount2], a
 	jpab _ScrollTrainerPicAfterBattle
 
 ApplyBurnAndParalysisPenaltiesToPlayer: ; 3ed1a (f:6d1a)
@@ -7462,12 +7503,12 @@ CopyUncompressedPicToHL: ; 3f0d0 (f:70d0)
 LoadMonBackPic: ; 3f103 (f:7103)
 ; Assumes the monster's attributes have
 ; been loaded with GetMonHeader.
+	coord hl, 1, 5
+	lb bc, 7, 8
+	call ClearScreenArea
+LoadMonBackPic_DoNotClearScreenArea:
 	ld a, [wBattleMonSpecies2]
 	ld [wcf91], a
-	coord hl, 1, 5
-	ld b, 7
-	ld c, 8
-	call ClearScreenArea
 	ld hl,  wMonHBackSprite - wMonHeader
 	call UncompressMonSprite
 	predef ScaleSpriteByTwo

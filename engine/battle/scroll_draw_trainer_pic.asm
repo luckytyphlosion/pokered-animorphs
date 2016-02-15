@@ -10,8 +10,8 @@ _ScrollTrainerPicAfterBattle: ; 396d3 (e:56d3)
 	ld c, $0
 .scrollLoop
 	inc c
-	ld a, c
-	cp 7
+	ld a, [hSlideAmount2]
+	cp c
 	ret z
 	ld d, $0
 	push bc
@@ -24,7 +24,8 @@ _ScrollTrainerPicAfterBattle: ; 396d3 (e:56d3)
 	ld d, a
 	dec c
 	jr nz, .drawTrainerPicLoop
-	ld c, 4
+	ld a, [hScrollTrainerPicDelay]
+	ld c, a
 	call DelayFrames
 	pop hl
 	pop bc
@@ -38,6 +39,11 @@ DrawTrainerPicColumn: ; 39707 (e:5707)
 	push bc
 	ld e, 7
 .loop
+	ld a, d
+	cp $31
+	jr c, .validTile
+	ld d, " "
+.validTile
 	ld [hl], d
 	ld bc, SCREEN_WIDTH
 	add hl, bc

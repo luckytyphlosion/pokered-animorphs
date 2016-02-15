@@ -85,6 +85,8 @@ hTilePlayerStandingOn EQU $FF93
 
 hSpritePriority EQU $FF94
 
+hSlideAmount2 EQU $FF94
+
 ; 2 bytes
 hSignCoordPointer EQU $FF95
 
@@ -92,6 +94,8 @@ hNPCMovementDirections2Index EQU $FF95
 
 ; CalcPositionOfPlayerRelativeToNPC
 hNPCSpriteOffset EQU $FF95
+
+hScrollTrainerPicDelay EQU $FF95
 
 ; temp value used when swapping bytes
 hSwapTemp EQU $FF95
@@ -307,6 +311,10 @@ hVendingMachinePrice EQU $FFDC ; 3-byte BCD number
 
 ; the first tile ID in a sequence of tile IDs that increase by 1 each step
 hStartTileID EQU $FFE1
+
+hLYOverrides EQU $FFE2
+
+hLYAddress EQU $FFE3
 
 hNewPartyLength EQU $FFE4
 

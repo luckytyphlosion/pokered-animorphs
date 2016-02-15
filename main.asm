@@ -2517,12 +2517,13 @@ NPCMovementDirectionsToJoypadMasksTable: ; f9d2 (3:79d2)
 	db NPC_MOVEMENT_RIGHT, D_RIGHT
 	db $ff
 
-; unreferenced
-	ret
-
 INCLUDE "engine/hp_bar.asm"
 
 INCLUDE "engine/hidden_object_functions3.asm"
+
+INCLUDE "engine/sqrt.asm"
+
+INCLUDE "engine/battle/scroll_back_pic.asm"
 
 SECTION "NPC Sprites 1", ROMX, BANK[NPC_SPRITES_1]
 
@@ -2596,6 +2597,7 @@ INCLUDE "engine/menu/start_sub_menus.asm"
 INCLUDE "engine/battle/end_of_battle.asm"
 INCLUDE "engine/battle/wild_encounters.asm"
 INCLUDE "engine/battle/get_trainer_name.asm"
+INCLUDE "engine/battle/critical_ohko_text.asm"
 
 SECTION "NPC Sprites 2", ROMX, BANK[NPC_SPRITES_2]
 
@@ -3280,7 +3282,6 @@ INCLUDE "data/moves.asm"
 BaseStats: INCLUDE "data/base_stats.asm"
 INCLUDE "data/cries.asm"
 INCLUDE "engine/battle/unused_stats_functions.asm"
-INCLUDE "engine/battle/scroll_draw_trainer_pic.asm"
 INCLUDE "engine/battle/trainer_ai.asm"
 
 TradingAnimationGraphics:
@@ -3298,6 +3299,7 @@ INCLUDE "engine/battle/moveEffects/heal_effect.asm"
 INCLUDE "engine/battle/moveEffects/transform_effect.asm"
 INCLUDE "engine/battle/moveEffects/reflect_light_screen_effect.asm"
 INCLUDE "engine/battle/trainer_dvs.asm"
+INCLUDE "engine/battle/scroll_draw_trainer_pic.asm"
 
 SECTION "bankF",ROMX,BANK[$F]
 
