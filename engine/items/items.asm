@@ -1459,7 +1459,7 @@ RaiseStatFromXItem:
 	call DelayFrame
 	xor a
 	ld [H_WHOSETURN],a ; set turn to player's turn
-	callba StatModifierUpEffect ; do stat increase move
+	callba StatModifierUpEffect_NoAccuracyCheck ; do stat increase move
 	pop hl
 	pop af
 	ld [hld],a ; restore [wPlayerMoveEffect]

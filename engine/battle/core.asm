@@ -406,23 +406,11 @@ StartBattle: ; 3c11e (f:411e)
 
 _HandleSafariBomb:
 	ld hl, wPlayerMovePower
-.tryAgain
 	call BattleRandom
-	ld b, a
-	ld c, a
-	ld a, $1
-.loop
-	srl b
-	jr nc, .gotPartialBasePower
-	add a
-	jr .loop
-.gotPartialBasePower
-	add c
-	jr c, .tryAgain
 	ld [hli], a ; power
 	xor a
 	ld [hli], a ; set to normal type
-	ld [hl], 50 percent ; acc
+	ld [hl], 75 percent ; acc
 	xor a
 	ld [wCriticalHitOrOHKO], a ; safari bomb damage can't be a Critical Hit
 	ld [wMoveMissed], a
@@ -7815,6 +7803,11 @@ FireDefrostedText: ; 3f423 (f:7423)
 	db "@"
 
 StatModifierUpEffect: ; 3f428 (f:7428)
+	call MoveHitTest
+	ld a, [wMoveMissed]
+	and a
+	jp nz, PrintButItFailedText_
+StatModifierUpEffect_NoAccuracyCheck:
 	ld hl, wPlayerMonStatMods
 	ld de, wPlayerMoveEffect
 	ld a, [H_WHOSETURN]
