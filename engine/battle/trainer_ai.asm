@@ -204,6 +204,8 @@ AIMoveChoiceModification2: ; 397e7 (e:57e7)
 ; discourage damaging moves that are ineffective or not very effective against the player's mon,
 ; unless there's no damaging move that deals at least neutral damage
 AIMoveChoiceModification3: ; 39817 (e:5817)
+	xor a
+	ld [wFoundNormalOrSEMove], a
 	ld hl, wBuffer - 1 ; temp move selection array (-1 byte offset)
 	ld de, wEnemyMonMoves ; enemy moves
 	ld b, NUM_MOVES + 1
@@ -213,12 +215,16 @@ AIMoveChoiceModification3: ; 39817 (e:5817)
 	inc hl
 	ld a, [de]
 	and a
-	ret z ; no more moves in move set
+	jr z, .tryEncouragingDamagingMoves ; no more moves in move set
 	inc de
 	call ReadMove
 	ld a, [wEnemyMovePower]
-	and a
-	jr z, .nextMove ; ignore moves with no power
+	cp 10
+	jr nc, .moveHasPower
+	and a ; does the move do damage?
+	jr z, .nextMove ; ignore status moves
+	jr .specialDamageMove
+.moveHasPower
 	push hl
 	push bc
 	push de
@@ -228,51 +234,42 @@ AIMoveChoiceModification3: ; 39817 (e:5817)
 	pop hl
 	ld a, [wTypeEffectiveness]
 	cp $10
-	jr z, .nextMove
-	jr c, .notEffectiveMove
-	dec [hl] ; sligthly encourage this move
+	jr z, .specialDamageMove
+	jr c, .discourageMove
+	dec [hl] ; slightly encourage this move
+.specialDamageMove
+	ld a, $1
+	ld [wFoundNormalOrSEMove], a
 	jr .nextMove
-.notEffectiveMove ; discourages non-effective moves if better moves are available
-	push hl
-	push de
-	push bc
-	ld a, [wEnemyMoveType]
-	ld d, a
-	ld hl, wEnemyMonMoves  ; enemy moves
+.discourageMove
+	inc [hl]
+	jr .nextMove
+.tryEncouragingDamagingMoves
+	ld a, [wFoundNormalOrSEMove]
+	and a
+	ret nz
+	
+	ld hl, wBuffer - 1 ; temp move selection array (-1 byte offset)
+	ld de, wEnemyMonMoves ; enemy moves
 	ld b, NUM_MOVES + 1
-	ld c, $0
-.loopMoves
+.findDamagingMoveLoop
 	dec b
-	jr z, .done
-	ld a, [hli]
+	ret z ; processed all 4 moves
+	inc hl
+	ld a, [de]
 	and a
-	jr z, .done
+	ret z ; no more moves in move set
+	inc de
 	call ReadMove
-	ld a, [wEnemyMoveEffect]
-	cp SUPER_FANG_EFFECT
-	jr z, .betterMoveFound ; Super Fang is considered to be a better move
-	cp SPECIAL_DAMAGE_EFFECT
-	jr z, .betterMoveFound ; any special damage moves are considered to be better moves
-	cp FLY_EFFECT
-	jr z, .betterMoveFound ; Fly is considered to be a better move
-	ld a, [wEnemyMoveType]
-	cp d
-	jr z, .loopMoves
 	ld a, [wEnemyMovePower]
-	and a
-	jr nz, .betterMoveFound ; damaging moves of a different type are considered to be better moves
-	jr .loopMoves
-.betterMoveFound
-	ld c, a
-.done
-	ld a, c
-	pop bc
-	pop de
-	pop hl
-	and a
-	jr z, .nextMove
-	inc [hl] ; sligthly discourage this move
-	jr .nextMove
+	cp 10
+	jr c, .nextMove ; ignore moves that don't do normal damage
+	call Random
+	and $1 ; 50/50 chance of encouraging a NVE move
+	jr z, .findDamagingMoveLoop
+	dec [hl]
+	jr .findDamagingMoveLoop
+	
 AIMoveChoiceModification4: ; 39883 (e:5883)
 	ret
 
